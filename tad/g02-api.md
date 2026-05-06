@@ -1,0 +1,150 @@
+---
+id: g02
+title: API Design — Endpoint Registry, Pagination, Health/Version, Key Responses
+parent: 00-tad-system-overview.md
+type: global
+source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7)
+---
+
+# g02 — API Design
+
+> Parent: [00-tad-system-overview.md](00-tad-system-overview.md)
+
+---
+
+## 1. Full Endpoint Registry
+
+> [v1.1 MUST-FIX 1 + 2] Async endpoints + Stock Detail by run
+
+| Method | Endpoint | Response | Phase | Description |
+|---|---|---|---|---|
+| GET | /health | 200 {"status": "ok"} | 0 | Health check |
+| GET | /version | 200 {versions} | 0 | App + doc + model versions |
+| POST | /auth/login | 200 {token} | 2 | Login → JWT |
+| PUT | /auth/password | 200 | 2 | Change password |
+| POST | /refresh/all | **202** {refresh_id} | 1 | Async refresh all |
+| POST | /refresh/prices | **202** {refresh_id} | 1 | Async refresh prices only |
+| GET | /refresh/{id}/status | 200 {status, progress} | 1 | Poll refresh status |
+| POST | /run | **202** {run_id, status} | 1 | Async start screening |
+| GET | /runs | 200 {items[], total} | 3 | List runs, paginated |
+| GET | /runs/{run_id} | 200 {summary} | 1 | Run metadata |
+| GET | /runs/{run_id}/status | 200 {status, progress} | 2 | Poll run progress |
+| GET | /runs/{run_id}/results | 200 {results[]} | 2 | Full results array |
+| GET | /runs/{run_id}/dashboard | 200 {aggregate} | 2 | 6 charts + KPIs |
+| GET | /runs/{run_id}/stocks/{ticker} | 200 {detail} | 2 | **[v1.1 NEW]** Stock analysis by run |
+| GET | /runs/{run_id}/compare/{run_id_b} | 200 {diff} | 3 | Compare 2 runs |
+| GET | /stocks | 200 {items[], total} | 2 | Whitelist + latest prices, paginated |
+| GET | /stocks/{ticker} | 200 {static info} | 2 | Static info + latest price |
+| GET | /stocks/{ticker}/prices | 200 {prices[]} | 2 | Historical OHLCV |
+| GET | /news | 200 {items[], total} | 3 | News list, paginated |
+| GET | /news/sentiment/{ticker} | 200 {summary} | 3 | Sentiment for ticker |
+| GET | /portfolio | 200 {items[]} | 3 | Holdings |
+| POST | /portfolio | 201 {holding} | 3 | Add holding |
+| PUT | /portfolio/{id} | 200 {holding} | 3 | Update holding |
+| DELETE | /portfolio/{id} | 204 | 3 | Delete holding |
+| POST | /backtest | 202 {backtest_id} | 4 | Start backtest |
+| GET | /backtest/{id} | 200 {metrics} | 4 | Backtest results |
+| GET | /export/pdf/{run_id} | 200 binary/pdf | 3 | Download PDF |
+| POST | /share | 201 {token, url, expires} | 4 | Create share link |
+| GET | /share/{token} | 200 {read-only results} | 4 | View shared |
+| POST | /telegram/test | 200 {sent, error} | 3 | Test send |
+| GET | /settings | 200 {settings} | 3 | Get settings |
+| PUT | /settings | 200 {settings} | 3 | Update settings |
+
+---
+
+## 2. Pagination Standard
+
+> [v1.1 SHOULD-FIX] Basic pagination
+
+```
+GET /news?limit=20&offset=0
+GET /runs?limit=10&offset=0
+GET /stocks?limit=100&offset=0
+
+Response:
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "total": 245,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## 3. Health & Version Responses
+
+```json
+GET /health → 200
+{"status": "ok", "active_job": null}
+
+GET /version → 200
+{
+  "app_version": "0.1.0",
+  "prd_version": "v0.5A",
+  "srs_version": "v1.0",
+  "tad_version": "v1.1",
+  "model_version": "baseline_v1",
+  "db_tables": 16
+}
+```
+
+---
+
+## 4. Key Response: GET /runs/{run_id}/stocks/{ticker}
+
+> [v1.1 MUST-FIX 2] Stock Detail scoped to run
+
+```json
+{
+  "success": true,
+  "data": {
+    "ticker": "KDH",
+    "name": "Khang Điền",
+    "run_id": "run_20260504_001",
+    "static": {
+      "exchange": "HOSE",
+      "sector": "Residential",
+      "current_price": 32.5
+    },
+    "scoring": {
+      "ai_score": 82,
+      "recommendation": "MUA",
+      "confidence_raw": 82,
+      "confidence_penalty": 5,
+      "confidence": 77,
+      "target_price_3m": 38.5,
+      "upside_pct": 18.5
+    },
+    "entry": {
+      "signal": "BUY_NOW",
+      "reason_code": "VALUATION_ATTRACTIVE+BULLISH_TREND",
+      "support_zone": 30.5,
+      "resistance_zone": 36.0
+    },
+    "risk": {
+      "stop_loss_price": 29.25,
+      "allocation_amount": 150000000,
+      "allocation_weight": 0.30,
+      "warning_badges": ["HIGH_INVENTORY"]
+    },
+    "reasons": [
+      {"text": "ROE cao (16.8%)", "feature_id": "F03", "value": 16.8},
+      {"text": "D/E thấp (0.8)", "feature_id": "F06", "value": 0.8}
+    ],
+    "features": {
+      "F01": 12.5, "F02": 1.8, "F03": 16.8,
+      "T01": 78, "T03": 52, "T05": 0.45
+    },
+    "feature_availability": 36,
+    "radar": {
+      "fundamental": 82, "technical": 68,
+      "macro": 55, "realestate": 75, "sentiment": 52
+    }
+  }
+}
+```

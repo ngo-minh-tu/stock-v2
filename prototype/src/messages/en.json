@@ -1,0 +1,74 @@
+{
+  "app": {
+    "brand": {
+      "name": "Ngô Minh Tú",
+      "tagline": "Navigation data, the decision is yours"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access VN Real Estate AI Screener",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "error": "Sign-in failed. Please try again."
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "topMua": "Top BUY",
+    "redFlags": "Red Flags",
+    "stockDetail": "Stock Detail",
+    "priceBoard": "Price Board",
+    "news": "News",
+    "portfolio": "Portfolio",
+    "runHistory": "Run History",
+    "settings": "Settings"
+  },
+  "header": {
+    "themeAria": "Select theme",
+    "logout": "Sign out"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": {
+      "label": "Theme",
+      "description": "Choose one of four theme states. Applied instantly.",
+      "options": {
+        "classic-dark": "Classic — Dark",
+        "classic-light": "Classic — Light",
+        "light": "Light",
+        "oled": "OLED"
+      }
+    },
+    "language": {
+      "label": "Language",
+      "description": "Choose display language. Applied instantly.",
+      "options": {
+        "vi": "Tiếng Việt (VIE)",
+        "en": "English (ENG)"
+      }
+    },
+    "comingSoon": {
+      "title": "Other sections",
+      "body": "BUY/HOLD/SELL thresholds, news sources, Telegram, password — coming in Cluster 6."
+    }
+  },
+  "common": {
+    "disclaimer": "This tool only supports analysis, it is NOT formal investment advice. All decisions are the user's responsibility.",
+    "loading": "Loading…",
+    "comingSoon": {
+      "title": "Feature in development",
+      "body": "This feature will arrive in Cluster {cluster}."
+    },
+    "placeholder": {
+      "cluster2": "This feature will arrive in Cluster 2.",
+      "cluster3": "This feature will arrive in Cluster 3.",
+      "cluster4": "This feature will arrive in Cluster 4.",
+      "cluster5": "This feature will arrive in Cluster 5.",
+      "cluster6": "This feature will arrive in Cluster 6."
+    }
+  }
+}

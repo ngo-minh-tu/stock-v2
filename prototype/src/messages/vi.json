@@ -1,0 +1,74 @@
+{
+  "app": {
+    "brand": {
+      "name": "Ngô Minh Tú",
+      "tagline": "Dữ liệu dẫn đường, quyết định thuộc về bạn"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Đăng nhập",
+      "subtitle": "Truy cập VN Real Estate AI Screener",
+      "passwordLabel": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập…",
+      "error": "Đăng nhập thất bại. Vui lòng thử lại."
+    }
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "topMua": "Top MUA",
+    "redFlags": "Mã rủi ro",
+    "stockDetail": "Chi tiết mã",
+    "priceBoard": "Bảng giá",
+    "news": "Tin tức",
+    "portfolio": "Danh mục",
+    "runHistory": "Lịch sử chạy",
+    "settings": "Cài đặt"
+  },
+  "header": {
+    "themeAria": "Chọn giao diện",
+    "logout": "Đăng xuất"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "theme": {
+      "label": "Giao diện",
+      "description": "Chọn 1 trong 4 trạng thái giao diện. Áp dụng ngay.",
+      "options": {
+        "classic-dark": "Classic — Tối",
+        "classic-light": "Classic — Sáng",
+        "light": "Sáng",
+        "oled": "OLED"
+      }
+    },
+    "language": {
+      "label": "Ngôn ngữ",
+      "description": "Chọn ngôn ngữ hiển thị. Áp dụng ngay.",
+      "options": {
+        "vi": "Tiếng Việt (VIE)",
+        "en": "English (ENG)"
+      }
+    },
+    "comingSoon": {
+      "title": "Các mục khác",
+      "body": "Ngưỡng MUA/GIỮ/BÁN, nguồn tin, Telegram, đổi mật khẩu — sẽ có trong Cluster 6."
+    }
+  },
+  "common": {
+    "disclaimer": "Công cụ chỉ hỗ trợ phân tích, KHÔNG phải khuyến nghị đầu tư chính thức. Mọi quyết định là trách nhiệm của người dùng.",
+    "loading": "Đang tải…",
+    "comingSoon": {
+      "title": "Tính năng đang phát triển",
+      "body": "Tính năng này sẽ có trong Cluster {cluster}."
+    },
+    "placeholder": {
+      "cluster2": "Tính năng này sẽ có trong Cluster 2.",
+      "cluster3": "Tính năng này sẽ có trong Cluster 3.",
+      "cluster4": "Tính năng này sẽ có trong Cluster 4.",
+      "cluster5": "Tính năng này sẽ có trong Cluster 5.",
+      "cluster6": "Tính năng này sẽ có trong Cluster 6."
+    }
+  }
+}

@@ -1,0 +1,222 @@
+/*
+ * 4 theme states. Source: design.md §4 (Classic Dark, Light, OLED).
+ * `classic-light` is derived: surfaces from theme-light, accent crimson + buy/sell preserved,
+ * VN stock market colors per Light variant.
+ *
+ * Apply via <html data-theme="...">. Stock market colors (--ssi-up, --ssi-down, etc.)
+ * exist in every theme — kept stable across themes per AC-17-03 (PRD §8.2).
+ */
+
+/* ====================================================================
+   classic-dark — design.md §4.1 — DEFAULT
+==================================================================== */
+[data-theme='classic-dark'] {
+  --color-theme-primary: #020210;
+  --color-theme-secondary: #1c1a29;
+  --color-theme-tertiary: #282637;
+  --color-theme-midnight: #201d31;
+  --color-theme-onyx: #2a263c;
+  --color-theme-charcoal: #3f4160;
+  --color-theme-neutral: #363645;
+  --color-theme-disabled: #363645;
+  --color-theme-explain: #292737;
+  --color-theme-highlight: #6c697b;
+  --color-theme-invert: #3d3950;
+  --color-theme-overlay: #00000094;
+
+  --color-theme-text-primary: #c1c1c1;
+  --color-theme-text-secondary: #eaecef;
+  --color-theme-text-tertiary: #ffffff;
+  --color-theme-text-highlight: #ffffff;
+  --color-theme-text-invert: #ffffff;
+  --color-theme-text-dark: #1e2329;
+  --color-theme-text-explain: #dfe1e3;
+
+  --color-theme-crimson: #d32f2f;
+  --color-theme-buy: #1aa67c;
+  --color-theme-sell: #c9111f;
+
+  --color-theme-input-background: #1c1a29;
+  --color-theme-input-border: #3f4160;
+  --color-theme-input-disabled: #45444f;
+
+  --color-theme-dropdown-background: #3d3950;
+  --color-theme-dropdown-active: #6c697b;
+
+  --color-theme-table-border: #3f4160;
+  --color-theme-table-header: #383644;
+  --color-theme-table-row-even: #1c1a29;
+  --color-theme-table-row-odd: #282637;
+
+  --color-theme-card-bg: #282638;
+  --color-theme-panel-background: #282637;
+
+  /* Stock market — Classic variant */
+  --ssi-ceil: #f23aff;
+  --ssi-up: #0bdf39;
+  --ssi-ref: #fdff12;
+  --ssi-down: #ff0017;
+  --ssi-floor: #00c9ff;
+  --ssi-stable: #dfe1e3;
+}
+
+/* ====================================================================
+   classic-light — derived: surfaces from Light, accents kept
+   (PRD §8.2 toggle Sáng/Tối within Classic theme)
+==================================================================== */
+[data-theme='classic-light'] {
+  --color-theme-primary: #ededed;
+  --color-theme-secondary: #ffffff;
+  --color-theme-tertiary: #f4f4f4;
+  --color-theme-midnight: #f4f4f4;
+  --color-theme-onyx: #e6e6e8;
+  --color-theme-charcoal: #cfd2d8;
+  --color-theme-neutral: #f5f6f7;
+  --color-theme-disabled: #ececee;
+  --color-theme-explain: #f4f4f4;
+  --color-theme-highlight: #f4f4f4;
+  --color-theme-invert: #e5e5e5;
+  --color-theme-overlay: #00000094;
+
+  --color-theme-text-primary: #1e2329;
+  --color-theme-text-secondary: #5a6068;
+  --color-theme-text-tertiary: #1e2329;
+  --color-theme-text-highlight: #d32f2f;
+  --color-theme-text-invert: #ffffff;
+  --color-theme-text-dark: #1e2329;
+  --color-theme-text-explain: #5a6068;
+
+  /* Accents preserved from Classic */
+  --color-theme-crimson: #d32f2f;
+  --color-theme-buy: #1aa67c;
+  --color-theme-sell: #c9111f;
+
+  --color-theme-input-background: #fafbfc;
+  --color-theme-input-border: #dfe1e6;
+  --color-theme-input-disabled: #e3e3e3;
+
+  --color-theme-dropdown-background: #ffffff;
+  --color-theme-dropdown-active: #f4f4f4;
+
+  --color-theme-table-border: #dfe1e6;
+  --color-theme-table-header: #fafafa;
+  --color-theme-table-row-even: #f4f4f4;
+  --color-theme-table-row-odd: #ffffff;
+
+  --color-theme-card-bg: #ffffff;
+  --color-theme-panel-background: #ffffff;
+
+  /* Stock market — Light variant */
+  --ssi-ceil: #be00be;
+  --ssi-up: #078c54;
+  --ssi-ref: #e78b03;
+  --ssi-down: #ff0017;
+  --ssi-floor: #088db7;
+  --ssi-stable: #1e2329;
+}
+
+/* ====================================================================
+   light — design.md §4.2
+==================================================================== */
+[data-theme='light'] {
+  --color-theme-primary: #ededed;
+  --color-theme-secondary: #ffffff;
+  --color-theme-tertiary: #f4f4f4;
+  --color-theme-midnight: #f4f4f4;
+  --color-theme-onyx: #e6e6e8;
+  --color-theme-charcoal: #848e9c;
+  --color-theme-neutral: #f5f6f7;
+  --color-theme-disabled: #ececee;
+  --color-theme-explain: #f4f4f4;
+  --color-theme-highlight: #f4f4f4;
+  --color-theme-invert: #e5e5e5;
+  --color-theme-overlay: #00000094;
+
+  --color-theme-text-primary: #1e2329;
+  --color-theme-text-secondary: #8f8f8f;
+  --color-theme-text-tertiary: #1e2329;
+  --color-theme-text-highlight: #d32f2f;
+  --color-theme-text-invert: #ffffff;
+  --color-theme-text-dark: #1e2329;
+  --color-theme-text-explain: #c1c1c1;
+
+  --color-theme-crimson: #d32f2f;
+  --color-theme-buy: #1aa67c;
+  --color-theme-sell: #c9111f;
+
+  --color-theme-input-background: #fafbfc;
+  --color-theme-input-border: #dfe1e6;
+  --color-theme-input-disabled: #e3e3e3;
+
+  --color-theme-dropdown-background: #ffffff;
+  --color-theme-dropdown-active: #f4f4f4;
+
+  --color-theme-table-border: #dfe1e6;
+  --color-theme-table-header: #fafafa;
+  --color-theme-table-row-even: #f4f4f4;
+  --color-theme-table-row-odd: #ffffff;
+
+  --color-theme-card-bg: #ffffff;
+  --color-theme-panel-background: #ffffff;
+
+  /* Stock market — Light variant */
+  --ssi-ceil: #be00be;
+  --ssi-up: #078c54;
+  --ssi-ref: #e78b03;
+  --ssi-down: #ff0017;
+  --ssi-floor: #088db7;
+  --ssi-stable: #1e2329;
+}
+
+/* ====================================================================
+   oled — design.md §4.3
+==================================================================== */
+[data-theme='oled'] {
+  --color-theme-primary: #000000;
+  --color-theme-secondary: #0a0a0a;
+  --color-theme-tertiary: #141414;
+  --color-theme-midnight: #1a1a1a;
+  --color-theme-onyx: #1f1f1f;
+  --color-theme-charcoal: #3d3b44;
+  --color-theme-neutral: #1f1f1f;
+  --color-theme-disabled: #2a2a2a;
+  --color-theme-explain: #1a1a1a;
+  --color-theme-highlight: #404040;
+  --color-theme-invert: #2a2a2a;
+  --color-theme-overlay: #00000094;
+
+  --color-theme-text-primary: #c1c1c1;
+  --color-theme-text-secondary: #eaecef;
+  --color-theme-text-tertiary: #ffffff;
+  --color-theme-text-highlight: #ffffff;
+  --color-theme-text-invert: #ffffff;
+  --color-theme-text-dark: #1e2329;
+  --color-theme-text-explain: #dfe1e3;
+
+  --color-theme-crimson: #d32f2f;
+  --color-theme-buy: #1aa67c;
+  --color-theme-sell: #c9111f;
+
+  --color-theme-input-background: #0a0a0a;
+  --color-theme-input-border: #2a2a2a;
+  --color-theme-input-disabled: #1a1a1a;
+
+  --color-theme-dropdown-background: #1f1f1f;
+  --color-theme-dropdown-active: #404040;
+
+  --color-theme-table-border: #1f1f1f;
+  --color-theme-table-header: #141414;
+  --color-theme-table-row-even: #0a0a0a;
+  --color-theme-table-row-odd: #000000;
+
+  --color-theme-card-bg: #0a0a0a;
+  --color-theme-panel-background: #0a0a0a;
+
+  /* Stock market — OLED variant per design.md §3.2 */
+  --ssi-ceil: #fd02fd;
+  --ssi-up: #0bdf39;
+  --ssi-ref: #fdff12;
+  --ssi-down: #ff0d0d;
+  --ssi-floor: #52d3f9;
+  --ssi-stable: #d6d6d6;
+}

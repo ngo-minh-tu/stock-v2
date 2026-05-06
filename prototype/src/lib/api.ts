@@ -1,0 +1,70 @@
+// fetch wrapper. Auto-attaches JWT (Bearer), parses {success,data}|{success,error} envelope (g05 §3).
+// 401 → clear token + redirect /login. 409 → throw JobConflictError (cluster 2 will use it).
+
+import { STORAGE_KEYS } from './constants';
+import type { ApiEnvelope } from './types';
+
+export class ApiError extends Error {
+  code: string;
+  status: number;
+  detail?: string;
+  constructor(code: string, message: string, status: number, detail?: string) {
+    super(message);
+    this.code = code;
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+export class JobConflictError extends ApiError {
+  constructor(message: string, detail?: string) {
+    super('JOB_CONFLICT', message, 409, detail);
+    this.name = 'JobConflictError';
+  }
+}
+
+function readToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(STORAGE_KEYS.token);
+}
+
+function clearTokenAndRedirect() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(STORAGE_KEYS.token);
+  if (window.location.pathname !== '/login') {
+    window.location.assign('/login');
+  }
+}
+
+export async function apiFetch<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const token = readToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(opts.headers as Record<string, string> | undefined),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(path, { ...opts, headers });
+
+  let body: ApiEnvelope<T> | null = null;
+  try {
+    body = (await res.json()) as ApiEnvelope<T>;
+  } catch {
+    throw new ApiError('PARSE_ERROR', `Cannot parse response (status ${res.status})`, res.status);
+  }
+
+  if (res.status === 401) {
+    clearTokenAndRedirect();
+    const msg = body && !body.success ? body.error.message : 'Unauthorized';
+    throw new ApiError('UNAUTHORIZED', msg, 401);
+  }
+
+  if (!body.success) {
+    if (res.status === 409 || body.error.code === 'JOB_CONFLICT') {
+      throw new JobConflictError(body.error.message, body.error.detail);
+    }
+    throw new ApiError(body.error.code, body.error.message, res.status, body.error.detail);
+  }
+
+  return body.data;
+}
