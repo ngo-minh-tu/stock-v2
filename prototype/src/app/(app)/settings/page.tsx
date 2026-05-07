@@ -4,6 +4,7 @@ import { Construction } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { LanguagePicker } from '@/components/settings/LanguagePicker';
+import { MockOutcomePicker } from '@/components/settings/MockOutcomePicker';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 
 export default function SettingsPage() {
@@ -39,6 +40,18 @@ export default function SettingsPage() {
           </p>
         </div>
         <LanguagePicker layout="list" />
+      </section>
+
+      <section className="card p-6 flex flex-col gap-4">
+        <div>
+          <h2 className="text-md font-medium" style={{ color: 'var(--color-theme-text-tertiary)' }}>
+            {tSettings('mockOutcome.label')}
+          </h2>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-theme-text-secondary)' }}>
+            {tSettings('mockOutcome.description')}
+          </p>
+        </div>
+        <MockOutcomePicker />
       </section>
 
       <section

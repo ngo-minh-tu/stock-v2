@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
  * Starts the MSW worker in development. Children render only after the worker
  * is ready so the very first fetch (e.g. token-check on mount) is intercepted.
  *
- * Production builds short-circuit immediately (no worker, real backend will plug in later).
+ * Production builds short-circuit by default (real backend will plug in later),
+ * but can opt in via NEXT_PUBLIC_ENABLE_MSW=1 for prototype demos.
  */
 export function MswBootstrap({ children }: { children: React.ReactNode }) {
-  const enabled = process.env.NODE_ENV === 'development';
+  const enabled =
+    process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_MSW === '1';
   const [ready, setReady] = useState(!enabled);
 
   useEffect(() => {

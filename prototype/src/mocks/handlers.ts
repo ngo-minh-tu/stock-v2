@@ -1,12 +1,25 @@
-// MSW handlers for the 6 cluster-1 endpoints + a catch-all 404 for unimplemented routes.
+// MSW handlers — cluster 1 (auth/version/health/settings) + cluster 2 (run lifecycle).
 // Response envelope follows TAD g05 §3.
 
 import { http, HttpResponse } from 'msw';
 
 import { MOCK_JWT_PREFIX } from '@/lib/constants';
-import type { ApiSuccess, ApiError, HealthResponseData, LoginResponseData } from '@/lib/types';
+import type {
+  ApiSuccess,
+  ApiError,
+  DashboardResponse,
+  HealthResponseData,
+  LoginResponseData,
+  RunResultsResponse,
+  RunStartRequest,
+  RunStartResponse,
+  RunStatusResponse,
+  RunSummary,
+  RunsListResponse,
+} from '@/lib/types';
 
 import { getSettings, patchSettings } from './data/settings';
+import { runsStore, type RunOutcomeMode } from './data/runs-store';
 import { versionPayload } from './data/version';
 
 function ok<T>(data: T): ApiSuccess<T> {
@@ -18,7 +31,7 @@ function err(code: string, message: string, detail?: string): ApiError {
 }
 
 export const handlers = [
-  // POST /api/auth/login (c08 §2)
+  // ---------- Cluster 1 ----------
   http.post('/api/auth/login', async () => {
     const data: LoginResponseData = {
       token: `${MOCK_JWT_PREFIX}${Date.now()}`,
@@ -27,28 +40,22 @@ export const handlers = [
     return HttpResponse.json(ok(data));
   }),
 
-  // PUT /api/auth/password (c08 §2)
   http.put('/api/auth/password', async () => {
     return HttpResponse.json(ok({ changed: true }));
   }),
 
-  // GET /api/version (g02 §3)
-  http.get('/api/version', () => {
-    return HttpResponse.json(ok(versionPayload));
-  }),
+  http.get('/api/version', () => HttpResponse.json(ok(versionPayload))),
 
-  // GET /api/health (g02 §3)
   http.get('/api/health', () => {
-    const data: HealthResponseData = { status: 'ok', active_job: null };
+    const data: HealthResponseData = {
+      status: 'ok',
+      active_job: runsStore.activeJob() ? 'screening_run' : null,
+    };
     return HttpResponse.json(ok(data));
   }),
 
-  // GET /api/settings (SRS f15)
-  http.get('/api/settings', () => {
-    return HttpResponse.json(ok(getSettings()));
-  }),
+  http.get('/api/settings', () => HttpResponse.json(ok(getSettings()))),
 
-  // PUT /api/settings — echoes patch with bumped settings_version + updated_at
   http.put('/api/settings', async ({ request }) => {
     let patch: Record<string, unknown> = {};
     try {
@@ -59,7 +66,108 @@ export const handlers = [
     return HttpResponse.json(ok(patchSettings(patch)));
   }),
 
-  // Catch-all for unmocked /api/* routes — keeps cluster 1 honest about scope.
+  // ---------- Cluster 2: run lifecycle ----------
+
+  // POST /api/run — 202 Accepted | 409 CONFLICT
+  http.post('/api/run', async ({ request }) => {
+    const url = new URL(request.url);
+    const outcomeParam = url.searchParams.get('outcome') as RunOutcomeMode | 'conflict' | null;
+    let body: Partial<RunStartRequest> = {};
+    try {
+      body = (await request.json()) as Partial<RunStartRequest>;
+    } catch {
+      // Empty body permitted — defaults to capital=0 (skip allocation)
+    }
+
+    if (outcomeParam === 'conflict') {
+      return HttpResponse.json(
+        err('JOB_CONFLICT', 'Đang có tác vụ chạy: screening_run. Vui lòng đợi hoàn thành.'),
+        { status: 409 },
+      );
+    }
+
+    if (runsStore.activeJob()) {
+      return HttpResponse.json(
+        err('JOB_CONFLICT', `Đang có tác vụ chạy: ${runsStore.activeJob()}. Vui lòng đợi hoàn thành.`),
+        { status: 409 },
+      );
+    }
+
+    const total_capital = typeof body.total_capital === 'number' ? body.total_capital : 0;
+    const outcome: RunOutcomeMode =
+      outcomeParam === 'failed' || outcomeParam === 'warnings' ? outcomeParam : 'success';
+
+    const record = runsStore.start({ total_capital, outcome });
+    const data: RunStartResponse = { run_id: record.run_id, status: record.status };
+    return HttpResponse.json(ok(data), { status: 202 });
+  }),
+
+  // GET /api/runs?limit=10&offset=0
+  http.get('/api/runs', ({ request }) => {
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get('limit') ?? 10);
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    const { items, total } = runsStore.list(limit, offset);
+    const data: RunsListResponse = { items, total, limit, offset };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // GET /api/runs/:run_id/status — polling endpoint
+  http.get('/api/runs/:run_id/status', ({ params }) => {
+    const r = runsStore.get(params.run_id as string);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', 'Run không tồn tại'), { status: 404 });
+    }
+    const data: RunStatusResponse = {
+      run_id: r.run_id,
+      status: r.status,
+      progress_percent: r.progress_percent,
+      current_step: r.current_step,
+      warnings: r.warnings,
+      run_error: r.run_error,
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // GET /api/runs/:run_id/results
+  http.get('/api/runs/:run_id/results', ({ params }) => {
+    const r = runsStore.get(params.run_id as string);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', 'Run không tồn tại'), { status: 404 });
+    }
+    if (!r.computed) {
+      return HttpResponse.json(err('NOT_READY', 'Run chưa hoàn thành'), { status: 409 });
+    }
+    const data: RunResultsResponse = {
+      run_id: r.run_id,
+      results: r.computed.results,
+      excluded: r.computed.excluded,
+      warnings: r.warnings,
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // GET /api/runs/:run_id/dashboard
+  http.get('/api/runs/:run_id/dashboard', ({ params }) => {
+    const data = runsStore.dashboard(params.run_id as string);
+    if (!data) {
+      return HttpResponse.json(err('NOT_FOUND', 'Run không tồn tại hoặc chưa hoàn thành'), {
+        status: 404,
+      });
+    }
+    return HttpResponse.json(ok<DashboardResponse>(data));
+  }),
+
+  // GET /api/runs/:run_id — summary
+  http.get('/api/runs/:run_id', ({ params }) => {
+    const summary = runsStore.summary(params.run_id as string);
+    if (!summary) {
+      return HttpResponse.json(err('NOT_FOUND', 'Run không tồn tại'), { status: 404 });
+    }
+    return HttpResponse.json(ok<RunSummary>(summary));
+  }),
+
+  // ---------- Catch-all ----------
   http.all('/api/*', ({ request }) => {
     const url = new URL(request.url);
     return HttpResponse.json(

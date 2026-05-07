@@ -10,11 +10,13 @@
     "msw:init": "msw init public/ --save"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.20.5",
+    "lucide-react": "0.452.0",
     "next": "14.2.15",
     "next-intl": "3.20.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "lucide-react": "0.452.0"
+    "recharts": "^2.13.0"
   },
   "devDependencies": {
     "@types/node": "20.16.11",

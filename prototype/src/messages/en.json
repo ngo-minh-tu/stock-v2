@@ -31,6 +31,171 @@
     "themeAria": "Select theme",
     "logout": "Sign out"
   },
+  "run": {
+    "button": {
+      "label": "Run",
+      "starting": "Initializing…",
+      "running": "Running…"
+    },
+    "modal": {
+      "capital": {
+        "title": "Total capital for this run",
+        "description": "Capital allocated across BUY recommendations. Skip to score only.",
+        "label": "Total capital",
+        "placeholder": "e.g. 500000000",
+        "skipAllocation": "Skip allocation — score only",
+        "submit": "Run",
+        "cancel": "Cancel",
+        "close": "Close",
+        "errorInvalid": "Please enter a positive number."
+      }
+    },
+    "card": {
+      "initializing": "Initializing run…",
+      "warningsCount": "{count} warnings",
+      "cancel": "Cancel",
+      "cancelDisabled": "Cancel not supported in MVP",
+      "close": "Dismiss"
+    },
+    "status": {
+      "PENDING": "PENDING",
+      "CHECKING_DATA": "CHECKING DATA",
+      "SCREENING": "SCREENING",
+      "SCORING": "SCORING",
+      "COMPLETED": "COMPLETED",
+      "COMPLETED_WITH_WARNINGS": "COMPLETED (WARNINGS)",
+      "FAILED": "FAILED"
+    }
+  },
+  "recommendation": {
+    "MUA": "BUY",
+    "GIU": "HOLD",
+    "BAN": "SELL"
+  },
+  "entry": {
+    "signal": {
+      "BUY_STRONG": "Strong Buy",
+      "BUY_NOW": "Buy Now",
+      "WAIT_FOR_BREAKOUT": "Wait for Breakout",
+      "WAIT_FOR_PULLBACK": "Wait for Pullback",
+      "WAIT_FOR_CONFIRMATION": "Wait for Confirmation",
+      "NO_ENTRY": "No Entry",
+      "INSUFFICIENT_DATA": "Insufficient Data"
+    }
+  },
+  "warning": {
+    "HIGH_DEBT": "High Debt",
+    "NEGATIVE_OCF": "Negative OCF",
+    "LEGAL_RISK": "Legal Risk",
+    "HIGH_INVENTORY": "High Inventory"
+  },
+  "dashboard": {
+    "loading": "Loading dashboard…",
+    "errorLoad": "Could not load dashboard. Please retry.",
+    "runId": "Run: {id}",
+    "empty": {
+      "message": "No data yet — press Run to start your first screening."
+    },
+    "kpi": {
+      "totalScored": "Total scored",
+      "muaCount": "BUY count",
+      "holdCount": "HOLD count",
+      "sellCount": "SELL count",
+      "alpha": "Alpha vs VN-Index",
+      "topUpside": "Top: {ticker} +{pct}%"
+    },
+    "chart": {
+      "treemap": {
+        "title": "Market Treemap",
+        "subtitle": "Size = market cap · Color = recommendation"
+      },
+      "pie": {
+        "title": "Recommendation breakdown",
+        "subtitle": "BUY / HOLD / SELL"
+      },
+      "line": {
+        "title": "VN-Index & Real Estate trend",
+        "subtitle": "Last 6 months"
+      },
+      "bar": {
+        "title": "Top 10 by AI Score",
+        "subtitle": "Sorted descending"
+      },
+      "radar": {
+        "title": "5-group feature radar",
+        "subtitle": "Sector average"
+      }
+    },
+    "runSelector": {
+      "label": "Run"
+    }
+  },
+  "topMua": {
+    "loading": "Loading results…",
+    "noRun": "No runs yet — press Run to start.",
+    "searchPlaceholder": "Search ticker or name…",
+    "noMatch": "No tickers match the filter.",
+    "empty": {
+      "title": "No BUY recommendations in this run",
+      "hint": "Try lowering the BUY threshold in Settings (Cluster 6)."
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "aiScore": "AI Score",
+      "recommendation": "Reco",
+      "confidence": "Confidence",
+      "upside": "Upside",
+      "entry": "Entry",
+      "warnings": "Warnings"
+    },
+    "expand": {
+      "reasons": "Reasons (3-5)",
+      "riskAndAllocation": "Risk & Allocation",
+      "buyPrice": "Reference buy price",
+      "stopLoss": "Stop loss",
+      "allocation": "Allocation",
+      "confidence": "Confidence raw − penalty",
+      "warnings": "Warnings",
+      "noWarnings": "No warnings.",
+      "viewDetail": "View detail"
+    }
+  },
+  "redFlags": {
+    "loading": "Loading…",
+    "noRun": "No runs yet.",
+    "filter": {
+      "all": "All",
+      "round": "Round",
+      "reason": "Reason",
+      "badge": "Badge"
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "round": "Excluded round",
+      "reasonCode": "Reason code",
+      "reasonText": "Detail",
+      "aiScore": "AI Score",
+      "recommendation": "Reco",
+      "badges": "Badges",
+      "penalty": "Penalty"
+    },
+    "section": {
+      "excluded": {
+        "title": "Excluded stocks",
+        "description": "Filtered out across 4 rounds — not scored.",
+        "empty": "No excluded stocks in this run.",
+        "count": "{n}/{total} stocks"
+      },
+      "warnings": {
+        "title": "Stocks with warnings",
+        "description": "Scored but with ≥1 warning badge → confidence penalised.",
+        "empty": "No warning badges in this run.",
+        "count": "{n} stocks"
+      }
+    }
+  },
   "settings": {
     "title": "Settings",
     "theme": {
@@ -49,6 +214,17 @@
       "options": {
         "vi": "Tiếng Việt (VIE)",
         "en": "English (ENG)"
+      }
+    },
+    "mockOutcome": {
+      "label": "UX test outcome (dev only)",
+      "description": "Force the next run's outcome to test all 4 UX branches (success/warnings/failed/conflict) without a real backend.",
+      "hint": "Applies to next run.",
+      "options": {
+        "success": "Success",
+        "warnings": "With warnings",
+        "failed": "Failed",
+        "conflict": "409 CONFLICT"
       }
     },
     "comingSoon": {

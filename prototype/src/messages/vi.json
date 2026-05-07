@@ -31,6 +31,171 @@
     "themeAria": "Chọn giao diện",
     "logout": "Đăng xuất"
   },
+  "run": {
+    "button": {
+      "label": "Chạy",
+      "starting": "Đang khởi tạo…",
+      "running": "Đang chạy…"
+    },
+    "modal": {
+      "capital": {
+        "title": "Tổng vốn cho run này",
+        "description": "Số vốn dùng để phân bổ cho các mã MUA. Có thể bỏ qua nếu chỉ muốn chấm điểm.",
+        "label": "Tổng vốn",
+        "placeholder": "VD: 500000000",
+        "skipAllocation": "Bỏ qua, chạy không tính phân bổ vốn",
+        "submit": "Chạy",
+        "cancel": "Hủy",
+        "close": "Đóng",
+        "errorInvalid": "Vui lòng nhập số dương."
+      }
+    },
+    "card": {
+      "initializing": "Đang khởi tạo run…",
+      "warningsCount": "{count} cảnh báo",
+      "cancel": "Hủy",
+      "cancelDisabled": "MVP chưa hỗ trợ hủy run",
+      "close": "Đóng thông báo"
+    },
+    "status": {
+      "PENDING": "PENDING",
+      "CHECKING_DATA": "CHECKING DATA",
+      "SCREENING": "SCREENING",
+      "SCORING": "SCORING",
+      "COMPLETED": "HOÀN THÀNH",
+      "COMPLETED_WITH_WARNINGS": "HOÀN THÀNH (CẢNH BÁO)",
+      "FAILED": "THẤT BẠI"
+    }
+  },
+  "recommendation": {
+    "MUA": "MUA",
+    "GIU": "GIỮ",
+    "BAN": "BÁN"
+  },
+  "entry": {
+    "signal": {
+      "BUY_STRONG": "Mua mạnh",
+      "BUY_NOW": "Mua ngay",
+      "WAIT_FOR_BREAKOUT": "Chờ breakout",
+      "WAIT_FOR_PULLBACK": "Chờ pullback",
+      "WAIT_FOR_CONFIRMATION": "Chờ xác nhận",
+      "NO_ENTRY": "Không vào",
+      "INSUFFICIENT_DATA": "Thiếu dữ liệu"
+    }
+  },
+  "warning": {
+    "HIGH_DEBT": "Đòn bẩy cao",
+    "NEGATIVE_OCF": "Dòng tiền âm",
+    "LEGAL_RISK": "Rủi ro pháp lý",
+    "HIGH_INVENTORY": "Tồn kho cao"
+  },
+  "dashboard": {
+    "loading": "Đang tải dashboard…",
+    "errorLoad": "Không tải được dashboard. Vui lòng thử lại.",
+    "runId": "Run: {id}",
+    "empty": {
+      "message": "Chưa có dữ liệu — Bấm Chạy để bắt đầu run sàng lọc đầu tiên."
+    },
+    "kpi": {
+      "totalScored": "Tổng mã",
+      "muaCount": "Mã MUA",
+      "holdCount": "Mã GIỮ",
+      "sellCount": "Mã BÁN",
+      "alpha": "Alpha vs VN-Index",
+      "topUpside": "Top: {ticker} +{pct}%"
+    },
+    "chart": {
+      "treemap": {
+        "title": "Bản đồ thị trường (Treemap)",
+        "subtitle": "Kích cỡ = vốn hóa · Màu = khuyến nghị"
+      },
+      "pie": {
+        "title": "Tỷ lệ khuyến nghị",
+        "subtitle": "MUA / GIỮ / BÁN"
+      },
+      "line": {
+        "title": "Xu hướng VN-Index & ngành BĐS",
+        "subtitle": "6 tháng gần nhất"
+      },
+      "bar": {
+        "title": "Top 10 mã theo AI Score",
+        "subtitle": "Sắp xếp giảm dần"
+      },
+      "radar": {
+        "title": "Radar 5 nhóm features",
+        "subtitle": "Trung bình toàn ngành"
+      }
+    },
+    "runSelector": {
+      "label": "Run"
+    }
+  },
+  "topMua": {
+    "loading": "Đang tải kết quả…",
+    "noRun": "Chưa có run nào — Bấm Chạy để bắt đầu.",
+    "searchPlaceholder": "Tìm theo mã hoặc tên…",
+    "noMatch": "Không có mã nào khớp bộ lọc.",
+    "empty": {
+      "title": "Không có mã MUA trong run này",
+      "hint": "Thử hạ ngưỡng MUA trong Cài đặt khi Cluster 6 ra mắt."
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "aiScore": "AI Score",
+      "recommendation": "Khuyến nghị",
+      "confidence": "Tin cậy",
+      "upside": "Upside",
+      "entry": "Entry",
+      "warnings": "Cảnh báo"
+    },
+    "expand": {
+      "reasons": "Lý do (3-5)",
+      "riskAndAllocation": "Rủi ro & Phân bổ",
+      "buyPrice": "Giá tham chiếu mua",
+      "stopLoss": "Stop loss",
+      "allocation": "Phân bổ",
+      "confidence": "Tin cậy raw − penalty",
+      "warnings": "Cảnh báo",
+      "noWarnings": "Không có cảnh báo nào.",
+      "viewDetail": "Xem chi tiết"
+    }
+  },
+  "redFlags": {
+    "loading": "Đang tải…",
+    "noRun": "Chưa có run nào.",
+    "filter": {
+      "all": "Tất cả",
+      "round": "Vòng",
+      "reason": "Lý do",
+      "badge": "Loại badge"
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "round": "Loại ở vòng",
+      "reasonCode": "Mã lý do",
+      "reasonText": "Chi tiết",
+      "aiScore": "AI Score",
+      "recommendation": "Khuyến nghị",
+      "badges": "Cảnh báo",
+      "penalty": "Penalty"
+    },
+    "section": {
+      "excluded": {
+        "title": "Mã bị loại",
+        "description": "Bị loại qua 4 vòng lọc — không tham gia chấm điểm.",
+        "empty": "Không có mã bị loại trong run này.",
+        "count": "{n}/{total} mã"
+      },
+      "warnings": {
+        "title": "Mã có cảnh báo",
+        "description": "Đã chấm điểm nhưng có ≥1 warning badge → confidence bị trừ.",
+        "empty": "Không có mã có cảnh báo trong run này.",
+        "count": "{n} mã"
+      }
+    }
+  },
   "settings": {
     "title": "Cài đặt",
     "theme": {
@@ -49,6 +214,17 @@
       "options": {
         "vi": "Tiếng Việt (VIE)",
         "en": "English (ENG)"
+      }
+    },
+    "mockOutcome": {
+      "label": "Chế độ test UX (dev only)",
+      "description": "Quyết định kết cục của run kế tiếp khi bấm Chạy. Dùng để test 4 nhánh UX (success/warnings/failed/conflict) mà không cần backend thật.",
+      "hint": "Áp dụng cho run kế tiếp.",
+      "options": {
+        "success": "Thành công",
+        "warnings": "Có cảnh báo",
+        "failed": "Thất bại",
+        "conflict": "409 CONFLICT"
       }
     },
     "comingSoon": {

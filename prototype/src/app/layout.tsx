@@ -4,9 +4,13 @@ import { Roboto } from 'next/font/google';
 import '@/styles/globals.css';
 
 import { MswBootstrap } from '@/components/common/MswBootstrap';
+import { ToastViewport } from '@/components/common/ToastViewport';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
+import { MockOutcomeProvider } from '@/contexts/MockOutcomeContext';
+import { RunProvider } from '@/contexts/RunContext';
 import { ThemeProvider, themeBootScript } from '@/contexts/ThemeContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 const roboto = Roboto({
   subsets: ['latin', 'vietnamese'],
@@ -32,7 +36,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MswBootstrap>
           <LocaleProvider>
             <ThemeProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <ToastProvider>
+                <MockOutcomeProvider>
+                  <AuthProvider>
+                    <RunProvider>
+                      {children}
+                      <ToastViewport />
+                    </RunProvider>
+                  </AuthProvider>
+                </MockOutcomeProvider>
+              </ToastProvider>
             </ThemeProvider>
           </LocaleProvider>
         </MswBootstrap>

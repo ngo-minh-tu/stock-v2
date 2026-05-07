@@ -4,6 +4,7 @@ import { ChevronDown, LogOut, Menu, Palette } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
+import { RunButton } from '@/components/run/RunButton';
 import { LanguagePicker } from '@/components/settings/LanguagePicker';
 import { ThemePicker } from '@/components/settings/ThemePicker';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,6 +77,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <RunButton />
+
         <div className="relative" ref={themeRef}>
           <button
             type="button"

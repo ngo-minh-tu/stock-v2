@@ -42,9 +42,67 @@ export function backendToLocale(lang: BackendLanguage): Locale {
   return lang === 'VIE' ? 'vi' : 'en';
 }
 
-// TAD g02 RunStatus (used by later clusters)
-export const RUN_STATUS = ['QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'TIMEOUT', 'PARTIAL'] as const;
+// TAD g01-runtime §2.1 — canonical 7-state RunStatus enum (shared by SRS + TAD).
+export const RUN_STATUS = [
+  'PENDING',
+  'CHECKING_DATA',
+  'SCREENING',
+  'SCORING',
+  'COMPLETED',
+  'COMPLETED_WITH_WARNINGS',
+  'FAILED',
+] as const;
 export type RunStatus = (typeof RUN_STATUS)[number];
+
+export const RUN_TERMINAL_STATES: ReadonlySet<RunStatus> = new Set([
+  'COMPLETED',
+  'COMPLETED_WITH_WARNINGS',
+  'FAILED',
+]);
+
+// SRS g03 — Recommendation enum (VIE labels are canonical, ENG mirror in messages).
+export const RECOMMENDATIONS = ['MUA', 'GIU', 'BAN'] as const;
+export type Recommendation = (typeof RECOMMENDATIONS)[number];
+
+// SRS f03 / TAD c03 — Entry signal enum.
+export const ENTRY_SIGNALS = [
+  'BUY_STRONG',
+  'BUY_NOW',
+  'WAIT_FOR_BREAKOUT',
+  'WAIT_FOR_PULLBACK',
+  'WAIT_FOR_CONFIRMATION',
+  'NO_ENTRY',
+  'INSUFFICIENT_DATA',
+] as const;
+export type EntrySignal = (typeof ENTRY_SIGNALS)[number];
+
+// SRS f07 — Warning badge enum (4 risk flags, contribute to confidence penalty).
+export const WARNING_BADGES = [
+  'HIGH_DEBT',
+  'NEGATIVE_OCF',
+  'LEGAL_RISK',
+  'HIGH_INVENTORY',
+] as const;
+export type WarningBadge = (typeof WARNING_BADGES)[number];
+
+// SRS f01 — Excluded round (4 filters before scoring).
+export type ExcludedRound = 1 | 2 | 3 | 4;
+
+export const EXCLUDED_REASONS = [
+  'HIGH_DE',
+  'LEGAL_BLOCK',
+  'PENNY_PRICE',
+  'LOW_LIQUIDITY',
+  'INSUFFICIENT_DATA',
+  'NEWLY_LISTED',
+] as const;
+export type ExcludedReasonCode = (typeof EXCLUDED_REASONS)[number];
+
+// Mock outcome toggle for UX testing (cluster prompt §7.2).
+export const MOCK_RUN_OUTCOMES = ['success', 'warnings', 'failed', 'conflict'] as const;
+export type MockRunOutcome = (typeof MOCK_RUN_OUTCOMES)[number];
+
+export const MOCK_RUN_OUTCOME_KEY = 'mock_run_outcome';
 
 // LocalStorage keys
 export const STORAGE_KEYS = {
