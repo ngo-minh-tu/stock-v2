@@ -392,6 +392,253 @@
       "justNow": "vừa xong"
     }
   },
+  "portfolio": {
+    "loading": "Đang tải danh mục…",
+    "errorLoad": "Không tải được danh mục. Vui lòng thử lại.",
+    "subtitle": "Theo dõi mã đã mua + lãi/lỗ chưa thực hiện. Giá hiện tại lấy từ phiên gần nhất.",
+    "addButton": "Thêm mã",
+    "kpi": {
+      "totalCost": "Tổng vốn đầu tư",
+      "currentValue": "Giá trị hiện tại",
+      "totalPnl": "Lãi/lỗ",
+      "holdingCount": "Số mã"
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "quantity": "SL",
+      "buyPrice": "Giá mua",
+      "buyDate": "Ngày mua",
+      "currentPrice": "Giá hiện tại",
+      "costBasis": "Tổng vốn",
+      "marketValue": "Giá trị hiện tại",
+      "pnl": "Lãi/lỗ",
+      "pnlPct": "Lãi/lỗ %",
+      "notes": "Ghi chú",
+      "action": "Thao tác"
+    },
+    "action": {
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "modal": {
+      "add": {
+        "title": "Thêm mã vào danh mục"
+      },
+      "edit": {
+        "title": "Sửa thông tin mã"
+      },
+      "field": {
+        "ticker": "Mã (chọn từ danh sách)",
+        "quantity": "Số lượng",
+        "buyPrice": "Giá mua (ngàn đồng)",
+        "priceUnit": "k đ",
+        "buyDate": "Ngày mua",
+        "notes": "Ghi chú",
+        "notesPlaceholder": "Tùy chọn — VD: cắt lỗ nếu thủng 19"
+      },
+      "error": {
+        "tickerRequired": "Vui lòng nhập mã.",
+        "tickerNotInList": "Mã không có trong danh sách.",
+        "quantityInvalid": "Số lượng phải là số nguyên dương.",
+        "priceInvalid": "Giá mua phải là số dương.",
+        "dateRequired": "Vui lòng chọn ngày mua.",
+        "dateFuture": "Ngày mua không được sau hôm nay.",
+        "serverError": "Lỗi máy chủ. Vui lòng thử lại."
+      },
+      "add": "Thêm",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "submitting": "Đang lưu…",
+      "close": "Đóng"
+    },
+    "delete": {
+      "title": "Xóa mã khỏi danh mục",
+      "confirm": "Xóa {ticker} khỏi danh mục? Thao tác này không thể hoàn tác trong prototype.",
+      "delete": "Xóa",
+      "deleting": "Đang xóa…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "serverError": "Lỗi máy chủ khi xóa."
+    },
+    "empty": {
+      "title": "Chưa có mã nào trong danh mục",
+      "hint": "Thêm mã đầu tiên để bắt đầu theo dõi lãi/lỗ. Giá hiện tại lấy tự động từ bảng giá.",
+      "action": "Thêm mã đầu tiên"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Đã thêm mã",
+        "body": "{ticker} đã vào danh mục."
+      },
+      "editSuccess": {
+        "title": "Đã cập nhật",
+        "body": "{ticker} đã được cập nhật."
+      },
+      "deleteSuccess": {
+        "title": "Đã xóa",
+        "body": "{ticker} đã bị loại khỏi danh mục."
+      }
+    }
+  },
+  "runHistory": {
+    "loading": "Đang tải lịch sử…",
+    "errorLoad": "Không tải được lịch sử. Vui lòng thử lại.",
+    "subtitle": "10 run gần nhất — bao gồm seed historical + run mới chạy.",
+    "backtestDisabledNoRun": "Cần ít nhất 1 run hoàn thành để chạy backtest.",
+    "kpi": {
+      "totalRuns": "Tổng số runs",
+      "lastRun": "Run gần nhất",
+      "avgAccuracy": "Accuracy backtest gần nhất",
+      "avgAccuracyHint": "Chạy backtest để xem tỷ lệ đúng."
+    },
+    "column": {
+      "runId": "Run ID",
+      "runAt": "Thời gian",
+      "status": "Trạng thái",
+      "modelVersion": "Model",
+      "settingsVersion": "Settings",
+      "scoredCount": "Scored",
+      "breakdown": "MUA / GIỮ / BÁN",
+      "totalCapital": "Tổng vốn",
+      "duration": "Thời lượng",
+      "warnings": "Cảnh báo",
+      "action": "Thao tác"
+    },
+    "action": {
+      "view": "Xem run này (mở Dashboard)",
+      "compare": "Chọn so sánh",
+      "delete": "Xóa run"
+    },
+    "compare": {
+      "panelTitle": "So sánh 2 runs",
+      "panelSubtitle": "{a} vs {b}",
+      "hintNeedAB": "Bấm icon so sánh trên 2 run để xem diff.",
+      "hintNeedB": "Đã chọn run A. Bấm icon so sánh trên 1 run khác để chọn run B.",
+      "loading": "Đang tính diff…",
+      "error": "Không tính được diff giữa 2 runs.",
+      "clear": "Xóa lựa chọn",
+      "summary": "1) Tổng quan thay đổi",
+      "changes": "2) Đổi khuyến nghị",
+      "changesEmpty": "Không mã nào đổi khuyến nghị giữa 2 runs.",
+      "newRemoved": "3) Mã mới / mã bị loại",
+      "distribution": "4) Phân bổ AI Score",
+      "distributionSubtitle": "So sánh 6 buckets điểm số · A vs B",
+      "legend": "Nền xanh = nâng hạng (BÁN→GIỮ, GIỮ→MUA, BÁN→MUA) · Nền đỏ = hạ hạng",
+      "metric": {
+        "totalScored": "Tổng scored",
+        "buyCount": "Số mã MUA",
+        "holdCount": "Số mã GIỮ",
+        "sellCount": "Số mã BÁN",
+        "avgScore": "AI Score TB",
+        "duration": "Thời lượng"
+      },
+      "header": {
+        "metric": "Chỉ số",
+        "runA": "Run A",
+        "runB": "Run B"
+      },
+      "changesColumn": {
+        "ticker": "Mã",
+        "recA": "Run A",
+        "recB": "Run B",
+        "scoreA": "Điểm A",
+        "scoreB": "Điểm B"
+      },
+      "newEntries": {
+        "title": "Mã mới ({count})",
+        "empty": "Không có mã mới."
+      },
+      "removed": {
+        "title": "Mã bị loại ({count})",
+        "empty": "Không có mã bị loại."
+      },
+      "histogram": {
+        "runA": "Run A",
+        "runB": "Run B"
+      }
+    },
+    "delete": {
+      "title": "Xóa run",
+      "confirm": "Xóa run {runId}?",
+      "warning": "Mọi dữ liệu của run (kết quả, dashboard) sẽ bị xóa. Không thể hoàn tác trong prototype.",
+      "delete": "Xóa",
+      "deleting": "Đang xóa…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "serverError": "Lỗi máy chủ khi xóa."
+    },
+    "empty": {
+      "title": "Chưa có run nào",
+      "hint": "Bấm Chạy ở header để bắt đầu run đầu tiên."
+    },
+    "toast": {
+      "deleteSuccess": {
+        "title": "Đã xóa run",
+        "body": "Run {runId} đã bị xóa khỏi lịch sử."
+      }
+    }
+  },
+  "backtest": {
+    "modal": {
+      "title": "Chạy backtest",
+      "description": "Chọn khoảng thời gian để chạy backtest. Hệ thống sẽ so điểm dự đoán với lợi nhuận thực tế 3 tháng.",
+      "periodFrom": "Từ ngày",
+      "periodTo": "Đến ngày",
+      "submit": "Chạy backtest",
+      "submitting": "Đang gửi…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "error": {
+        "range": "Ngày bắt đầu phải trước ngày kết thúc.",
+        "serverError": "Lỗi máy chủ khi chạy backtest."
+      }
+    },
+    "button": {
+      "start": "Chạy Backtest",
+      "running": "Đang backtest…"
+    },
+    "section": {
+      "title": "Kết quả Backtest"
+    },
+    "metric": {
+      "accuracy": "Accuracy khuyến nghị",
+      "priceError": "Sai số giá TB",
+      "portfolioRoi": "Portfolio ROI",
+      "vnindexRoi": "VN-Index ROI",
+      "alpha": "Alpha (Portfolio − VN-Index)"
+    },
+    "card": {
+      "title": "Backtest #{id}",
+      "range": "Từ {from} đến {to} · {correct}/{total} dự đoán đúng",
+      "accuracyHint": "Ngưỡng tối thiểu {threshold}%",
+      "alphaHint": "Phần outperform/underperform so với chỉ số",
+      "chartTitle": "Cumulative ROI",
+      "chartSubtitle": "Portfolio vs VN-Index theo tuần",
+      "showDetail": "Xem chi tiết {count} mã",
+      "hideDetail": "Ẩn chi tiết"
+    },
+    "chart": {
+      "portfolio": "Portfolio (MUA)",
+      "vnindex": "VN-Index"
+    },
+    "detail": {
+      "column": {
+        "ticker": "Mã",
+        "predicted": "Dự đoán",
+        "actualReturn": "Return 3T thực",
+        "predictedPrice": "Giá dự đoán",
+        "actualPrice": "Giá thực",
+        "error": "Sai số",
+        "correct": "Đúng?"
+      }
+    },
+    "failed": "Backtest thất bại. Vui lòng thử lại.",
+    "toast": {
+      "startTitle": "Đã bắt đầu backtest",
+      "startBody": "Khoảng {from} → {to}. Sẽ hiển thị kết quả khi xong."
+    }
+  },
   "settings": {
     "title": "Cài đặt",
     "theme": {

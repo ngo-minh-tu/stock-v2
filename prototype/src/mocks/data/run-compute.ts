@@ -330,6 +330,11 @@ export function computeRun(args: {
     },
   };
 
+  const avg_score =
+    scored_count > 0
+      ? Number((results.reduce((s, r) => s + r.ai_score, 0) / scored_count).toFixed(1))
+      : 0;
+
   return {
     results,
     excluded,
@@ -342,6 +347,12 @@ export function computeRun(args: {
       sell_count,
       total_capital,
       data_from_cache: false,
+      // Defaults — runs-store overrides per-record (model_version, settings_version, duration, warnings_count).
+      model_version: 'baseline_v1',
+      settings_version: 1,
+      duration_seconds: 15,
+      warnings_count: 0,
+      avg_score,
     },
     dashboard,
     total_capital,

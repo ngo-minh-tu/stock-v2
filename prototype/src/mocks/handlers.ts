@@ -13,10 +13,20 @@ import {
 import type {
   ApiSuccess,
   ApiError,
+  BacktestMetrics,
+  BacktestResultsResponse,
+  BacktestStartRequest,
+  BacktestStartResponse,
+  BacktestStatusResponse,
+  CompareResponse,
   DashboardResponse,
   HealthResponseData,
   LoginResponseData,
   NewsListResponse,
+  PortfolioCreateRequest,
+  PortfolioHolding,
+  PortfolioListResponse,
+  PortfolioUpdateRequest,
   RunResultsResponse,
   RunStartRequest,
   RunStartResponse,
@@ -31,7 +41,10 @@ import type {
   TickerRunsResponse,
 } from '@/lib/types';
 
+import { backtestStore } from './data/backtest-store';
+import { computeCompare } from './data/compare-compute';
 import { filterArticles, FIXTURE_NOW_MS, NEWS_CORPUS } from './data/news-fixture';
+import { portfolioStore } from './data/portfolio-store';
 import { buildPriceBoardItems } from './data/price-board-fixture';
 import { getPrices, type PricePeriod } from './data/prices-fixture';
 import { getSettings, patchSettings } from './data/settings';
@@ -46,6 +59,44 @@ function ok<T>(data: T): ApiSuccess<T> {
 
 function err(code: string, message: string, detail?: string): ApiError {
   return { success: false, error: { code, message, ...(detail ? { detail } : {}) } };
+}
+
+// Cluster 5 portfolio validation (SRS f11 ACs 11-02..11-04 + buy_date sanity).
+function validateHolding(input: Partial<PortfolioCreateRequest>): string | null {
+  if (!input.ticker || typeof input.ticker !== 'string') return 'Thiếu mã (ticker).';
+  const upper = input.ticker.toUpperCase();
+  if (!STOCK_FIXTURE.some((s) => s.ticker === upper)) {
+    return `Mã ${upper} không có trong whitelist.`;
+  }
+  if (typeof input.quantity !== 'number' || !Number.isFinite(input.quantity) || input.quantity <= 0) {
+    return 'Số lượng phải là số dương.';
+  }
+  if (!Number.isInteger(input.quantity)) {
+    return 'Số lượng phải là số nguyên.';
+  }
+  if (typeof input.buy_price !== 'number' || !Number.isFinite(input.buy_price) || input.buy_price <= 0) {
+    return 'Giá mua phải là số dương.';
+  }
+  if (typeof input.buy_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.buy_date)) {
+    return 'Ngày mua phải có dạng YYYY-MM-DD.';
+  }
+  // Anchor "today" to the fixture (2026-05-07) — see news-fixture / portfolio-store rationale.
+  const today = '2026-05-07';
+  if (input.buy_date > today) return 'Ngày mua không được sau hôm nay.';
+  return null;
+}
+
+function validateBacktest(input: Partial<BacktestStartRequest>): string | null {
+  if (typeof input.period_from !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.period_from)) {
+    return 'period_from phải có dạng YYYY-MM-DD.';
+  }
+  if (typeof input.period_to !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.period_to)) {
+    return 'period_to phải có dạng YYYY-MM-DD.';
+  }
+  if (input.period_from >= input.period_to) {
+    return 'period_from phải trước period_to.';
+  }
+  return null;
 }
 
 export const handlers = [
@@ -410,6 +461,199 @@ export const handlers = [
       score: avg,
       breakdown: SENTIMENT_LABELS.map((l) => ({ label: l, count: breakdownMap[l] })),
       source_breakdown: NEWS_SOURCES.map((s) => ({ source: s, count: sourceMap[s] })),
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // ---------- Cluster 5: Portfolio CRUD ----------
+
+  http.get('/api/portfolio', () => {
+    const data: PortfolioListResponse = { items: portfolioStore.list() };
+    return HttpResponse.json(ok(data));
+  }),
+
+  http.post('/api/portfolio', async ({ request }) => {
+    let body: Partial<PortfolioCreateRequest>;
+    try {
+      body = (await request.json()) as Partial<PortfolioCreateRequest>;
+    } catch {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Body JSON không hợp lệ.'), { status: 400 });
+    }
+    const errors = validateHolding(body);
+    if (errors) {
+      return HttpResponse.json(err('VALIDATION_ERROR', errors), { status: 400 });
+    }
+    const row = portfolioStore.add({
+      ticker: body.ticker as string,
+      quantity: body.quantity as number,
+      buy_price: body.buy_price as number,
+      buy_date: body.buy_date as string,
+      notes: body.notes ?? null,
+    });
+    return HttpResponse.json(ok<PortfolioHolding>(row), { status: 201 });
+  }),
+
+  http.put('/api/portfolio/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    if (!Number.isFinite(id)) {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'ID không hợp lệ.'), { status: 400 });
+    }
+    let body: Partial<PortfolioUpdateRequest>;
+    try {
+      body = (await request.json()) as Partial<PortfolioUpdateRequest>;
+    } catch {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Body JSON không hợp lệ.'), { status: 400 });
+    }
+    // Pull current row to merge before validating (PUT here doubles as upsert/PATCH).
+    const current = portfolioStore.get(id);
+    if (!current) {
+      return HttpResponse.json(err('NOT_FOUND', `Holding ${id} không tồn tại.`), { status: 404 });
+    }
+    const merged: Partial<PortfolioCreateRequest> = {
+      ticker: body.ticker ?? current.ticker,
+      quantity: body.quantity ?? current.quantity,
+      buy_price: body.buy_price ?? current.buy_price,
+      buy_date: body.buy_date ?? current.buy_date,
+      notes: body.notes !== undefined ? body.notes : current.notes,
+    };
+    const errors = validateHolding(merged);
+    if (errors) {
+      return HttpResponse.json(err('VALIDATION_ERROR', errors), { status: 400 });
+    }
+    const updated = portfolioStore.update(id, {
+      ticker: merged.ticker,
+      quantity: merged.quantity,
+      buy_price: merged.buy_price,
+      buy_date: merged.buy_date,
+      notes: merged.notes ?? null,
+    });
+    return HttpResponse.json(ok<PortfolioHolding>(updated as PortfolioHolding));
+  }),
+
+  http.delete('/api/portfolio/:id', ({ params }) => {
+    const id = Number(params.id);
+    if (!Number.isFinite(id)) {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'ID không hợp lệ.'), { status: 400 });
+    }
+    const removed = portfolioStore.remove(id);
+    if (!removed) {
+      return HttpResponse.json(err('NOT_FOUND', `Holding ${id} không tồn tại.`), { status: 404 });
+    }
+    // 200 + envelope (apiFetch parses body) — semantically equivalent to spec's 204.
+    return HttpResponse.json(ok({ deleted: true }));
+  }),
+
+  // ---------- Cluster 5: Compare 2 runs ----------
+
+  http.get('/api/runs/:run_a/compare/:run_b', ({ params }) => {
+    const aId = params.run_a as string;
+    const bId = params.run_b as string;
+    if (aId === bId) {
+      return HttpResponse.json(
+        err('VALIDATION_ERROR', 'Hai run trong compare phải khác nhau.'),
+        { status: 400 },
+      );
+    }
+    const a = runsStore.get(aId);
+    const b = runsStore.get(bId);
+    if (!a || !b) {
+      return HttpResponse.json(
+        err('NOT_FOUND', `Run ${!a ? aId : bId} không tồn tại.`),
+        { status: 404 },
+      );
+    }
+    if (!a.computed || !b.computed) {
+      return HttpResponse.json(err('NOT_READY', 'Một trong hai run chưa hoàn thành.'), {
+        status: 409,
+      });
+    }
+    const aSummary = runsStore.summary(aId);
+    const bSummary = runsStore.summary(bId);
+    if (!aSummary || !bSummary) {
+      return HttpResponse.json(err('NOT_FOUND', 'Không lấy được summary.'), { status: 404 });
+    }
+    const diff: CompareResponse = computeCompare({
+      run_a: { run_id: aId, run_at: a.run_at, summary: aSummary, computed: a.computed },
+      run_b: { run_id: bId, run_at: b.run_at, summary: bSummary, computed: b.computed },
+    });
+    return HttpResponse.json(ok(diff));
+  }),
+
+  // ---------- Cluster 5: Run delete ----------
+
+  http.delete('/api/runs/:run_id', ({ params }) => {
+    const run_id = params.run_id as string;
+    const removed = runsStore.delete(run_id);
+    if (!removed) {
+      return HttpResponse.json(err('NOT_FOUND', `Run ${run_id} không tồn tại.`), { status: 404 });
+    }
+    return HttpResponse.json(ok({ deleted: true }));
+  }),
+
+  // ---------- Cluster 5: Backtest ----------
+
+  http.post('/api/backtest', async ({ request }) => {
+    let body: Partial<BacktestStartRequest>;
+    try {
+      body = (await request.json()) as Partial<BacktestStartRequest>;
+    } catch {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Body JSON không hợp lệ.'), { status: 400 });
+    }
+    const error = validateBacktest(body);
+    if (error) {
+      return HttpResponse.json(err('VALIDATION_ERROR', error), { status: 400 });
+    }
+    const record = backtestStore.start({
+      period_from: body.period_from as string,
+      period_to: body.period_to as string,
+    });
+    const data: BacktestStartResponse = {
+      backtest_id: record.backtest_id,
+      status: record.status,
+    };
+    return HttpResponse.json(ok(data), { status: 202 });
+  }),
+
+  http.get('/api/backtest/:id/status', ({ params }) => {
+    const id = Number(params.id);
+    const r = backtestStore.get(id);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', `Backtest ${id} không tồn tại.`), { status: 404 });
+    }
+    const data: BacktestStatusResponse = {
+      backtest_id: r.backtest_id,
+      status: r.status,
+      progress_percent: r.progress_percent,
+      current_step: r.current_step,
+      error: r.error,
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  http.get('/api/backtest/:id', ({ params }) => {
+    const id = Number(params.id);
+    const r = backtestStore.get(id);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', `Backtest ${id} không tồn tại.`), { status: 404 });
+    }
+    if (!r.metrics) {
+      return HttpResponse.json(err('NOT_READY', 'Backtest chưa hoàn thành.'), { status: 409 });
+    }
+    return HttpResponse.json(ok<BacktestMetrics>(r.metrics));
+  }),
+
+  http.get('/api/backtest/:id/results', ({ params }) => {
+    const id = Number(params.id);
+    const r = backtestStore.get(id);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', `Backtest ${id} không tồn tại.`), { status: 404 });
+    }
+    if (!r.results) {
+      return HttpResponse.json(err('NOT_READY', 'Backtest chưa hoàn thành.'), { status: 409 });
+    }
+    const data: BacktestResultsResponse = {
+      backtest_id: r.backtest_id,
+      results: r.results,
     };
     return HttpResponse.json(ok(data));
   }),

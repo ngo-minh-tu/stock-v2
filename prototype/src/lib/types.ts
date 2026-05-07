@@ -161,6 +161,12 @@ export interface RunSummary {
   sell_count: number;
   total_capital: number;
   data_from_cache: boolean;
+  // Cluster 5 additions for Run History table.
+  model_version: string;       // 'baseline_v1' | 'baseline_v2' | …
+  settings_version: number;
+  duration_seconds: number;    // wall-clock duration for the run
+  warnings_count: number;      // length of warnings_json (header field for the column)
+  avg_score: number;           // average ai_score across results (used by compare summary)
 }
 
 // GET /api/runs?limit=10
@@ -329,6 +335,120 @@ export interface SentimentSummaryResponse {
   score: number;                    // avg across articles, -1..+1
   breakdown: { label: SentimentLabel; count: number }[];
   source_breakdown: { source: NewsSource; count: number }[];
+}
+
+// =====================================================================
+// Cluster 5: Portfolio + Run History compare + Backtest
+// =====================================================================
+
+// GET /api/portfolio — list (TAD g03 Table 10)
+export interface PortfolioHolding {
+  id: number;
+  ticker: string;
+  quantity: number;
+  buy_price: number;        // ngàn đồng (matches price-board convention)
+  buy_date: string;         // YYYY-MM-DD
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export interface PortfolioListResponse {
+  items: PortfolioHolding[];
+}
+export interface PortfolioCreateRequest {
+  ticker: string;
+  quantity: number;
+  buy_price: number;
+  buy_date: string;
+  notes?: string | null;
+}
+export type PortfolioUpdateRequest = Partial<PortfolioCreateRequest>;
+
+// GET /api/runs/{a}/compare/{b} — diff payload (cluster prompt §4.3 + §6.3).
+export interface CompareSummaryDiff {
+  total_scored: { a: number; b: number };
+  buy_count: { a: number; b: number };
+  hold_count: { a: number; b: number };
+  sell_count: { a: number; b: number };
+  avg_score: { a: number; b: number };
+  duration_seconds: { a: number; b: number };
+}
+export interface CompareRecommendationChange {
+  ticker: string;
+  name: string;
+  rec_a: Recommendation;
+  rec_b: Recommendation;
+  score_a: number;
+  score_b: number;
+  delta: number;            // score_b - score_a
+  direction: 'upgrade' | 'downgrade' | 'same';
+}
+export interface CompareEntry {
+  ticker: string;
+  name: string;
+  recommendation: Recommendation;
+  score: number;
+}
+export interface CompareDistributionBucket {
+  label: string;            // e.g. "<30", "30-45"
+  a_count: number;
+  b_count: number;
+}
+export interface CompareResponse {
+  run_a: { run_id: string; run_at: string; model_version: string };
+  run_b: { run_id: string; run_at: string; model_version: string };
+  summary_diff: CompareSummaryDiff;
+  recommendation_changes: CompareRecommendationChange[];
+  new_entries: CompareEntry[];
+  removed: CompareEntry[];
+  score_distribution: CompareDistributionBucket[];
+}
+
+// Backtest (TAD g03 Tables 13+14)
+export type BacktestStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+
+export interface BacktestStartRequest {
+  period_from: string; // YYYY-MM-DD
+  period_to: string;
+}
+export interface BacktestStartResponse {
+  backtest_id: number;
+  status: BacktestStatus;
+}
+export interface BacktestStatusResponse {
+  backtest_id: number;
+  status: BacktestStatus;
+  progress_percent: number;
+  current_step: string;
+  error?: string | null;
+}
+export interface BacktestMetrics {
+  backtest_id: number;
+  status: BacktestStatus;
+  period_from: string;
+  period_to: string;
+  recommendation_accuracy: number; // 0-1
+  price_error_mean: number;        // % e.g. 12.4
+  portfolio_roi: number;           // % e.g. 14.2
+  vnindex_roi: number;             // %
+  alpha: number;                   // portfolio_roi - vnindex_roi
+  roi_curve: { date: string; portfolio: number; vnindex: number }[];
+  total_count: number;             // tickers backtested
+  correct_count: number;
+}
+export interface BacktestResultRow {
+  ticker: string;
+  name: string;
+  predicted_recommendation: Recommendation;
+  actual_return_3m_pct: number;
+  predicted_price: number;
+  actual_price: number;
+  price_error_pct: number;
+  recommendation_correct: boolean;
+}
+export interface BacktestResultsResponse {
+  backtest_id: number;
+  results: BacktestResultRow[];
 }
 
 // Which runs scored this ticker — populated by /api/stocks/{ticker}/runs (cluster 3 helper).

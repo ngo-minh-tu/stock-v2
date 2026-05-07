@@ -392,6 +392,253 @@
       "justNow": "just now"
     }
   },
+  "portfolio": {
+    "loading": "Loading portfolio…",
+    "errorLoad": "Could not load portfolio. Please retry.",
+    "subtitle": "Track holdings + unrealized P&L. Current price comes from the latest session.",
+    "addButton": "Add holding",
+    "kpi": {
+      "totalCost": "Total cost",
+      "currentValue": "Current value",
+      "totalPnl": "P&L",
+      "holdingCount": "Holdings"
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "quantity": "Qty",
+      "buyPrice": "Buy",
+      "buyDate": "Bought",
+      "currentPrice": "Current",
+      "costBasis": "Cost basis",
+      "marketValue": "Market value",
+      "pnl": "P&L",
+      "pnlPct": "P&L %",
+      "notes": "Notes",
+      "action": "Actions"
+    },
+    "action": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "modal": {
+      "add": {
+        "title": "Add a holding"
+      },
+      "edit": {
+        "title": "Edit holding"
+      },
+      "field": {
+        "ticker": "Ticker (whitelist only)",
+        "quantity": "Quantity",
+        "buyPrice": "Buy price (thousand VND)",
+        "priceUnit": "k đ",
+        "buyDate": "Buy date",
+        "notes": "Notes",
+        "notesPlaceholder": "Optional — e.g. cut loss below 19"
+      },
+      "error": {
+        "tickerRequired": "Ticker is required.",
+        "tickerNotInList": "Ticker not in the whitelist.",
+        "quantityInvalid": "Quantity must be a positive integer.",
+        "priceInvalid": "Buy price must be a positive number.",
+        "dateRequired": "Pick a buy date.",
+        "dateFuture": "Buy date cannot be in the future.",
+        "serverError": "Server error. Please retry."
+      },
+      "add": "Add",
+      "save": "Save",
+      "cancel": "Cancel",
+      "submitting": "Saving…",
+      "close": "Close"
+    },
+    "delete": {
+      "title": "Remove from portfolio",
+      "confirm": "Remove {ticker} from your portfolio? This cannot be undone in the prototype.",
+      "delete": "Remove",
+      "deleting": "Removing…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "serverError": "Server error during delete."
+    },
+    "empty": {
+      "title": "No holdings yet",
+      "hint": "Add your first holding to start tracking P&L. Current price is fetched automatically.",
+      "action": "Add first holding"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Holding added",
+        "body": "{ticker} is now in your portfolio."
+      },
+      "editSuccess": {
+        "title": "Holding updated",
+        "body": "{ticker} has been updated."
+      },
+      "deleteSuccess": {
+        "title": "Holding removed",
+        "body": "{ticker} was removed from your portfolio."
+      }
+    }
+  },
+  "runHistory": {
+    "loading": "Loading history…",
+    "errorLoad": "Could not load run history. Please retry.",
+    "subtitle": "Last 10 runs — historical seeds + new runs.",
+    "backtestDisabledNoRun": "At least one completed run is required to backtest.",
+    "kpi": {
+      "totalRuns": "Total runs",
+      "lastRun": "Last run",
+      "avgAccuracy": "Latest backtest accuracy",
+      "avgAccuracyHint": "Run a backtest to see accuracy."
+    },
+    "column": {
+      "runId": "Run ID",
+      "runAt": "When",
+      "status": "Status",
+      "modelVersion": "Model",
+      "settingsVersion": "Settings",
+      "scoredCount": "Scored",
+      "breakdown": "BUY / HOLD / SELL",
+      "totalCapital": "Capital",
+      "duration": "Duration",
+      "warnings": "Warn.",
+      "action": "Actions"
+    },
+    "action": {
+      "view": "Open this run on the Dashboard",
+      "compare": "Toggle compare selection",
+      "delete": "Delete this run"
+    },
+    "compare": {
+      "panelTitle": "Compare 2 runs",
+      "panelSubtitle": "{a} vs {b}",
+      "hintNeedAB": "Pick the compare icon on 2 rows to see the diff.",
+      "hintNeedB": "Run A picked. Pick the compare icon on a second run to set Run B.",
+      "loading": "Diffing runs…",
+      "error": "Could not compute diff between the runs.",
+      "clear": "Clear selection",
+      "summary": "1) Summary diff",
+      "changes": "2) Recommendation changes",
+      "changesEmpty": "No tickers changed recommendation between the runs.",
+      "newRemoved": "3) New / removed entries",
+      "distribution": "4) AI Score distribution",
+      "distributionSubtitle": "6 score buckets · A vs B",
+      "legend": "Green row = upgrade (SELL→HOLD, HOLD→BUY, SELL→BUY) · Red row = downgrade",
+      "metric": {
+        "totalScored": "Total scored",
+        "buyCount": "BUY count",
+        "holdCount": "HOLD count",
+        "sellCount": "SELL count",
+        "avgScore": "Avg AI Score",
+        "duration": "Duration"
+      },
+      "header": {
+        "metric": "Metric",
+        "runA": "Run A",
+        "runB": "Run B"
+      },
+      "changesColumn": {
+        "ticker": "Ticker",
+        "recA": "Run A",
+        "recB": "Run B",
+        "scoreA": "Score A",
+        "scoreB": "Score B"
+      },
+      "newEntries": {
+        "title": "New entries ({count})",
+        "empty": "No new entries."
+      },
+      "removed": {
+        "title": "Removed ({count})",
+        "empty": "No removed entries."
+      },
+      "histogram": {
+        "runA": "Run A",
+        "runB": "Run B"
+      }
+    },
+    "delete": {
+      "title": "Delete run",
+      "confirm": "Delete run {runId}?",
+      "warning": "All data for this run (results, dashboard) will be wiped. Cannot be undone in the prototype.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "serverError": "Server error during delete."
+    },
+    "empty": {
+      "title": "No runs yet",
+      "hint": "Press Run in the header to start your first run."
+    },
+    "toast": {
+      "deleteSuccess": {
+        "title": "Run deleted",
+        "body": "Run {runId} was removed from history."
+      }
+    }
+  },
+  "backtest": {
+    "modal": {
+      "title": "Run a backtest",
+      "description": "Pick a window. The system compares predictions with actual 3-month returns.",
+      "periodFrom": "From",
+      "periodTo": "To",
+      "submit": "Run backtest",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "error": {
+        "range": "Start date must be before end date.",
+        "serverError": "Server error during backtest."
+      }
+    },
+    "button": {
+      "start": "Run Backtest",
+      "running": "Backtesting…"
+    },
+    "section": {
+      "title": "Backtest result"
+    },
+    "metric": {
+      "accuracy": "Recommendation accuracy",
+      "priceError": "Avg price error",
+      "portfolioRoi": "Portfolio ROI",
+      "vnindexRoi": "VN-Index ROI",
+      "alpha": "Alpha (Portfolio − VN-Index)"
+    },
+    "card": {
+      "title": "Backtest #{id}",
+      "range": "From {from} to {to} · {correct}/{total} predictions correct",
+      "accuracyHint": "Minimum threshold {threshold}%",
+      "alphaHint": "Outperformance vs the index",
+      "chartTitle": "Cumulative ROI",
+      "chartSubtitle": "Portfolio vs VN-Index, weekly",
+      "showDetail": "Show detail ({count} tickers)",
+      "hideDetail": "Hide detail"
+    },
+    "chart": {
+      "portfolio": "Portfolio (BUY)",
+      "vnindex": "VN-Index"
+    },
+    "detail": {
+      "column": {
+        "ticker": "Ticker",
+        "predicted": "Predicted",
+        "actualReturn": "Actual 3M return",
+        "predictedPrice": "Predicted price",
+        "actualPrice": "Actual price",
+        "error": "Error",
+        "correct": "Correct?"
+      }
+    },
+    "failed": "Backtest failed. Please retry.",
+    "toast": {
+      "startTitle": "Backtest started",
+      "startBody": "Window {from} → {to}. Results will appear when ready."
+    }
+  },
   "settings": {
     "title": "Settings",
     "theme": {
