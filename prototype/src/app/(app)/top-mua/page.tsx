@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { ExportPdfButton } from '@/components/export/ExportPdfButton';
+import { ShareButton } from '@/components/share/ShareButton';
 import { TopMuaTable } from '@/components/tables/TopMuaTable';
 import { useRun } from '@/contexts/RunContext';
 import { useApiResource } from '@/lib/hooks/useApiResource';
@@ -36,15 +38,21 @@ export default function TopMuaPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-xl font-medium" style={{ color: 'var(--color-theme-text-tertiary)' }}>
-          {tNav('topMua')}
-        </h1>
-        {runId && (
-          <p className="text-2xs" style={{ color: 'var(--color-theme-text-secondary)' }}>
-            Run: {runId}
-          </p>
-        )}
+      <header className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl font-medium" style={{ color: 'var(--color-theme-text-tertiary)' }}>
+            {tNav('topMua')}
+          </h1>
+          {runId && (
+            <p className="text-2xs" style={{ color: 'var(--color-theme-text-secondary)' }}>
+              Run: {runId}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <ExportPdfButton runId={runId} label={t('exportPdfTopMua')} />
+          <ShareButton runId={runId} />
+        </div>
       </header>
 
       {!runId && !runsRes.loading && (

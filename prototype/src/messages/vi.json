@@ -135,6 +135,7 @@
     "noRun": "Chưa có run nào — Bấm Chạy để bắt đầu.",
     "searchPlaceholder": "Tìm theo mã hoặc tên…",
     "noMatch": "Không có mã nào khớp bộ lọc.",
+    "exportPdfTopMua": "Xuất PDF Top MUA",
     "empty": {
       "title": "Không có mã MUA trong run này",
       "hint": "Thử hạ ngưỡng MUA trong Cài đặt khi Cluster 6 ra mắt."
@@ -508,6 +509,7 @@
     "action": {
       "view": "Xem run này (mở Dashboard)",
       "compare": "Chọn so sánh",
+      "exportPdf": "Tải PDF run này",
       "delete": "Xóa run"
     },
     "compare": {
@@ -641,6 +643,16 @@
   },
   "settings": {
     "title": "Cài đặt",
+    "loading": "Đang tải cài đặt…",
+    "errorLoad": "Không tải được cài đặt. Vui lòng thử lại.",
+    "section": {
+      "appearance": "Giao diện",
+      "threshold": "Ngưỡng khuyến nghị",
+      "sources": "Nguồn tin",
+      "telegram": "Telegram",
+      "security": "Bảo mật",
+      "share": "Quản lý chia sẻ"
+    },
     "theme": {
       "label": "Giao diện",
       "description": "Chọn 1 trong 4 trạng thái giao diện. Áp dụng ngay.",
@@ -670,9 +682,151 @@
         "conflict": "409 CONFLICT"
       }
     },
+    "threshold": {
+      "description": "Tùy chỉnh điểm số tối thiểu để xếp khuyến nghị MUA/GIỮ/BÁN. Tự lưu sau 0,5 giây.",
+      "buy": "MUA tối thiểu (50–95)",
+      "hold": "GIỮ tối thiểu (20–70)",
+      "preview": "Hiện tại: ≥{buy} = MUA · {holdLow}–{holdHigh} = GIỮ · <{holdLow} = BÁN",
+      "error": {
+        "invalid": "Ngưỡng MUA phải lớn hơn ngưỡng GIỮ."
+      },
+      "save": {
+        "success": "Đã lưu ngưỡng"
+      },
+      "saving": "Đang lưu…"
+    },
+    "sources": {
+      "description": "Bật/tắt nguồn tin sử dụng cho phân tích sentiment. Tự lưu mỗi lần thay đổi.",
+      "save": {
+        "success": "Đã cập nhật nguồn tin"
+      }
+    },
+    "telegram": {
+      "description": "Gửi tóm tắt run qua Telegram sau mỗi lần Chạy thành công."
+    },
+    "password": {
+      "description": "Đổi mật khẩu tài khoản. Sau khi đổi, phiên đăng nhập sẽ được làm mới.",
+      "current": "Mật khẩu hiện tại",
+      "new": "Mật khẩu mới",
+      "confirm": "Xác nhận mật khẩu mới",
+      "hint": "Tối thiểu 8 ký tự.",
+      "submit": "Lưu mật khẩu mới",
+      "success": "Đã đổi mật khẩu",
+      "reLoginNote": "Phiên đăng nhập đã được làm mới.",
+      "error": {
+        "currentRequired": "Vui lòng nhập mật khẩu hiện tại.",
+        "tooShort": "Mật khẩu mới phải có ít nhất 8 ký tự.",
+        "mismatch": "Mật khẩu xác nhận không khớp.",
+        "serverError": "Lỗi máy chủ. Vui lòng thử lại."
+      }
+    },
+    "share": {
+      "description": "Danh sách các link chia sẻ đang hoạt động. Có thể thu hồi bất kỳ lúc nào.",
+      "management": {
+        "loading": "Đang tải danh sách…",
+        "empty": "Chưa có link chia sẻ nào đang hoạt động.",
+        "column": {
+          "token": "Token",
+          "runId": "Run ID",
+          "createdAt": "Tạo lúc",
+          "expiresAt": "Hết hạn",
+          "action": "Thao tác"
+        },
+        "revoke": {
+          "button": "Thu hồi",
+          "confirm": "Thu hồi link {token}? Người nhận sẽ thấy 404 khi mở.",
+          "success": "Đã thu hồi link",
+          "error": "Không thu hồi được."
+        }
+      }
+    },
     "comingSoon": {
       "title": "Các mục khác",
       "body": "Ngưỡng MUA/GIỮ/BÁN, nguồn tin, Telegram, đổi mật khẩu — sẽ có trong Cluster 6."
+    }
+  },
+  "export": {
+    "button": "Xuất PDF",
+    "loading": "Đang tạo PDF…",
+    "success": "Đã tải PDF",
+    "close": "Đóng",
+    "preview": {
+      "title": "Xem trước PDF",
+      "download": "Tải xuống"
+    },
+    "error": {
+      "title": "Lỗi xuất PDF"
+    }
+  },
+  "share": {
+    "button": "Chia sẻ",
+    "modal": {
+      "title": "Tạo link chia sẻ",
+      "creating": "Đang tạo link…",
+      "close": "Đóng"
+    },
+    "url": {
+      "label": "Đường dẫn chia sẻ"
+    },
+    "copy": {
+      "button": "Sao chép",
+      "aria": "Sao chép link",
+      "success": "Đã sao chép link",
+      "fail": "Không sao chép được"
+    },
+    "expires": "Hết hạn sau: {remaining}",
+    "regenerate": "Tạo link mới",
+    "note": {
+      "basicAuth": "Link cần Basic Auth (mật khẩu hệ thống) để xem trong môi trường thật. Prototype mock chỉ kiểm tra token."
+    },
+    "view": {
+      "header": "VN RE AI Screener — Read-only",
+      "watermark": "Read-only shared view",
+      "sharedBy": "Chia sẻ bởi {name} ngày {date}",
+      "expiresIn": "Hết hạn: {remaining}",
+      "loading": "Đang tải shared view…",
+      "section": {
+        "dashboard": "Tổng quan run",
+        "topMua": "Top MUA"
+      },
+      "invalid": {
+        "title": "Link không hợp lệ",
+        "body": "Link này không tồn tại hoặc đã bị thu hồi."
+      },
+      "expired": {
+        "title": "Link đã hết hạn",
+        "body": "Link chia sẻ này đã quá thời hạn 7 ngày."
+      }
+    }
+  },
+  "telegram": {
+    "toggle": "Bật gửi tin Telegram",
+    "botToken": "Bot Token",
+    "showToken": "Hiện token",
+    "hideToken": "Ẩn token",
+    "chatId": "Chat ID",
+    "topN": {
+      "label": "Top N mã MUA gửi đi",
+      "3": "Top 3 mã",
+      "5": "Top 5 mã"
+    },
+    "testButton": "Gửi tin thử",
+    "test": {
+      "success": "Đã gửi tin thử",
+      "error": "Gửi tin thử thất bại"
+    },
+    "save": {
+      "button": "Lưu cấu hình Telegram",
+      "success": "Đã lưu cấu hình Telegram",
+      "error": "Lưu cấu hình Telegram thất bại"
+    },
+    "info": {
+      "runComplete": "Tin sẽ được gửi sau mỗi lần Chạy thành công.",
+      "format": "Định dạng: counts MUA/GIỮ/BÁN + Top {n} mã MUA. {n} = giá trị ở mục Top N bên trên."
+    },
+    "error": {
+      "chatIdRequired": "Bật Telegram cần điền chat_id.",
+      "tokenRequired": "Bật Telegram cần điền bot token."
     }
   },
   "common": {

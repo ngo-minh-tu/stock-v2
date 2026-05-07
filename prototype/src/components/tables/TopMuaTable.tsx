@@ -24,6 +24,8 @@ import type { ScreeningResult } from '@/lib/types';
 interface Props {
   results: ScreeningResult[];
   runId: string;
+  /** Cluster 6 §4.3 — public Shared View hides the expander + "Xem chi tiết" link. */
+  readOnly?: boolean;
 }
 
 function formatVnd(amount: number | undefined): string {
@@ -125,7 +127,7 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
   );
 }
 
-export function TopMuaTable({ results, runId }: Props) {
+export function TopMuaTable({ results, runId, readOnly = false }: Props) {
   const t = useTranslations('topMua');
   const tCol = useTranslations('topMua.column');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'ai_score', desc: true }]);
@@ -139,37 +141,44 @@ export function TopMuaTable({ results, runId }: Props) {
 
   const columns = useMemo<ColumnDef<ScreeningResult>[]>(
     () => [
-      {
-        id: 'expander',
-        header: () => null,
-        cell: ({ row }) => (
-          <button
-            type="button"
-            onClick={() => row.toggleExpanded()}
-            aria-label={row.getIsExpanded() ? 'Thu gọn' : 'Mở rộng'}
-            className="opacity-70 hover:opacity-100"
-          >
-            {row.getIsExpanded() ? (
-              <ChevronDown size={14} aria-hidden="true" />
-            ) : (
-              <ChevronRight size={14} aria-hidden="true" />
-            )}
-          </button>
-        ),
-        size: 32,
-      },
+      ...(readOnly
+        ? []
+        : [
+            {
+              id: 'expander',
+              header: () => null,
+              cell: ({ row }: { row: { getIsExpanded: () => boolean; toggleExpanded: () => void } }) => (
+                <button
+                  type="button"
+                  onClick={() => row.toggleExpanded()}
+                  aria-label={row.getIsExpanded() ? 'Thu gọn' : 'Mở rộng'}
+                  className="opacity-70 hover:opacity-100"
+                >
+                  {row.getIsExpanded() ? (
+                    <ChevronDown size={14} aria-hidden="true" />
+                  ) : (
+                    <ChevronRight size={14} aria-hidden="true" />
+                  )}
+                </button>
+              ),
+              size: 32,
+            } as ColumnDef<ScreeningResult>,
+          ]),
       {
         accessorKey: 'ticker',
         header: () => tCol('ticker'),
-        cell: ({ row }) => (
-          <button
-            type="button"
-            className="font-bold underline-offset-2 hover:underline"
-            onClick={() => row.toggleExpanded()}
-          >
-            {row.original.ticker}
-          </button>
-        ),
+        cell: ({ row }) =>
+          readOnly ? (
+            <span className="font-bold">{row.original.ticker}</span>
+          ) : (
+            <button
+              type="button"
+              className="font-bold underline-offset-2 hover:underline"
+              onClick={() => row.toggleExpanded()}
+            >
+              {row.original.ticker}
+            </button>
+          ),
       },
       {
         accessorKey: 'name',
@@ -224,7 +233,7 @@ export function TopMuaTable({ results, runId }: Props) {
           ),
       },
     ],
-    [tCol],
+    [tCol, readOnly],
   );
 
   const table = useReactTable({

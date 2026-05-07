@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid';
+import { ExportPdfButton } from '@/components/export/ExportPdfButton';
 import { RunButton } from '@/components/run/RunButton';
 import { RunSelector } from '@/components/run/RunSelector';
+import { ShareButton } from '@/components/share/ShareButton';
 import { useRun } from '@/contexts/RunContext';
 import { useApiResource } from '@/lib/hooks/useApiResource';
 import type { DashboardResponse, RunsListResponse } from '@/lib/types';
@@ -78,13 +80,17 @@ export default function DashboardPage() {
             </p>
           )}
         </div>
-        {runsRes.data && selectedRunId && (
-          <RunSelector
-            runs={runsRes.data.items}
-            selectedRunId={selectedRunId}
-            onSelect={handleSelect}
-          />
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <ExportPdfButton runId={selectedRunId} />
+          <ShareButton runId={selectedRunId} />
+          {runsRes.data && selectedRunId && (
+            <RunSelector
+              runs={runsRes.data.items}
+              selectedRunId={selectedRunId}
+              onSelect={handleSelect}
+            />
+          )}
+        </div>
       </header>
 
       {dashboardRes.loading && (

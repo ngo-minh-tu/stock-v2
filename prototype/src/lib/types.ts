@@ -451,6 +451,58 @@ export interface BacktestResultsResponse {
   results: BacktestResultRow[];
 }
 
+// =====================================================================
+// Cluster 6: Export & Integrations (PDF, Share Links, Telegram, Auth password)
+// =====================================================================
+
+// POST /api/share — create a share link.
+export interface ShareCreateRequest {
+  run_id: string;
+  expires_in_days?: number; // default 7
+}
+export interface ShareLink {
+  token: string;
+  run_id: string;
+  url: string;             // e.g. https://app.example/share/{token}
+  created_at: string;      // ISO
+  expires_at: string;      // ISO
+}
+export type ShareCreateResponse = ShareLink;
+
+// GET /api/share — list active links (settings management).
+export interface ShareListResponse {
+  items: ShareLink[];
+}
+
+// GET /api/share/{token} — public read-only payload (Dashboard + Top MUA snapshot).
+export interface SharedViewResponse {
+  link: ShareLink;
+  shared_by: string;       // mock owner display name
+  run: {
+    run_id: string;
+    run_at: string;
+    summary: RunSummary;
+    dashboard: DashboardResponse;
+    results: ScreeningResult[];
+  };
+}
+
+// POST /api/telegram/test — manual probe.
+export interface TelegramTestResponse {
+  sent: boolean;
+  error: string | null;
+}
+
+// PUT /api/auth/password — change password.
+export interface PasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+}
+export interface PasswordChangeResponse {
+  changed: true;
+  token: string;           // fresh JWT to mimic re-login
+}
+
 // Which runs scored this ticker — populated by /api/stocks/{ticker}/runs (cluster 3 helper).
 export interface TickerRunSummary {
   run_id: string;

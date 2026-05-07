@@ -135,6 +135,7 @@
     "noRun": "No runs yet — press Run to start.",
     "searchPlaceholder": "Search ticker or name…",
     "noMatch": "No tickers match the filter.",
+    "exportPdfTopMua": "Export Top BUY PDF",
     "empty": {
       "title": "No BUY recommendations in this run",
       "hint": "Try lowering the BUY threshold in Settings (Cluster 6)."
@@ -508,6 +509,7 @@
     "action": {
       "view": "Open this run on the Dashboard",
       "compare": "Toggle compare selection",
+      "exportPdf": "Download PDF for this run",
       "delete": "Delete this run"
     },
     "compare": {
@@ -641,6 +643,16 @@
   },
   "settings": {
     "title": "Settings",
+    "loading": "Loading settings…",
+    "errorLoad": "Couldn't load settings. Please try again.",
+    "section": {
+      "appearance": "Appearance",
+      "threshold": "Recommendation thresholds",
+      "sources": "News sources",
+      "telegram": "Telegram",
+      "security": "Security",
+      "share": "Share management"
+    },
     "theme": {
       "label": "Theme",
       "description": "Choose one of four theme states. Applied instantly.",
@@ -670,9 +682,151 @@
         "conflict": "409 CONFLICT"
       }
     },
+    "threshold": {
+      "description": "Customize the minimum scores that classify BUY/HOLD/SELL. Auto-saves after 0.5s.",
+      "buy": "BUY minimum (50–95)",
+      "hold": "HOLD minimum (20–70)",
+      "preview": "Now: ≥{buy} = BUY · {holdLow}–{holdHigh} = HOLD · <{holdLow} = SELL",
+      "error": {
+        "invalid": "BUY threshold must be greater than HOLD threshold."
+      },
+      "save": {
+        "success": "Thresholds saved"
+      },
+      "saving": "Saving…"
+    },
+    "sources": {
+      "description": "Toggle which news sources contribute to sentiment analysis. Auto-saves on change.",
+      "save": {
+        "success": "News sources updated"
+      }
+    },
+    "telegram": {
+      "description": "Send the run summary to Telegram after each successful Run."
+    },
+    "password": {
+      "description": "Change account password. The session token is refreshed after a successful change.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "hint": "Min 8 characters.",
+      "submit": "Save new password",
+      "success": "Password changed",
+      "reLoginNote": "Session token refreshed.",
+      "error": {
+        "currentRequired": "Please enter your current password.",
+        "tooShort": "New password must be at least 8 characters.",
+        "mismatch": "Passwords do not match.",
+        "serverError": "Server error. Please try again."
+      }
+    },
+    "share": {
+      "description": "Active share links you can revoke at any time.",
+      "management": {
+        "loading": "Loading links…",
+        "empty": "No active share links yet.",
+        "column": {
+          "token": "Token",
+          "runId": "Run ID",
+          "createdAt": "Created at",
+          "expiresAt": "Expires",
+          "action": "Actions"
+        },
+        "revoke": {
+          "button": "Revoke",
+          "confirm": "Revoke link {token}? Recipients will see a 404 page.",
+          "success": "Link revoked",
+          "error": "Couldn't revoke link."
+        }
+      }
+    },
     "comingSoon": {
       "title": "Other sections",
       "body": "BUY/HOLD/SELL thresholds, news sources, Telegram, password — coming in Cluster 6."
+    }
+  },
+  "export": {
+    "button": "Export PDF",
+    "loading": "Generating PDF…",
+    "success": "PDF downloaded",
+    "close": "Close",
+    "preview": {
+      "title": "PDF preview",
+      "download": "Download"
+    },
+    "error": {
+      "title": "Export failed"
+    }
+  },
+  "share": {
+    "button": "Share",
+    "modal": {
+      "title": "Create share link",
+      "creating": "Creating link…",
+      "close": "Close"
+    },
+    "url": {
+      "label": "Share URL"
+    },
+    "copy": {
+      "button": "Copy",
+      "aria": "Copy share URL",
+      "success": "Link copied",
+      "fail": "Couldn't copy link"
+    },
+    "expires": "Expires in: {remaining}",
+    "regenerate": "Regenerate",
+    "note": {
+      "basicAuth": "In production this link is protected by Basic Auth (system password). The prototype only checks the token."
+    },
+    "view": {
+      "header": "VN RE AI Screener — Read-only",
+      "watermark": "Read-only shared view",
+      "sharedBy": "Shared by {name} on {date}",
+      "expiresIn": "Expires: {remaining}",
+      "loading": "Loading shared view…",
+      "section": {
+        "dashboard": "Run overview",
+        "topMua": "Top BUY"
+      },
+      "invalid": {
+        "title": "Invalid link",
+        "body": "This link does not exist or has been revoked."
+      },
+      "expired": {
+        "title": "Link expired",
+        "body": "This share link is past its 7-day window."
+      }
+    }
+  },
+  "telegram": {
+    "toggle": "Enable Telegram notifications",
+    "botToken": "Bot Token",
+    "showToken": "Show token",
+    "hideToken": "Hide token",
+    "chatId": "Chat ID",
+    "topN": {
+      "label": "Top N BUY tickers to send",
+      "3": "Top 3",
+      "5": "Top 5"
+    },
+    "testButton": "Send test message",
+    "test": {
+      "success": "Test message sent",
+      "error": "Test message failed"
+    },
+    "save": {
+      "button": "Save Telegram config",
+      "success": "Telegram config saved",
+      "error": "Couldn't save Telegram config"
+    },
+    "info": {
+      "runComplete": "Sent after each successful Run.",
+      "format": "Format: BUY/HOLD/SELL counts + Top {n} BUY tickers. {n} = the Top N value above."
+    },
+    "error": {
+      "chatIdRequired": "Telegram chat_id is required when enabled.",
+      "tokenRequired": "Telegram bot token is required when enabled."
     }
   },
   "common": {

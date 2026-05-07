@@ -9,6 +9,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { ExternalLink, GitCompareArrows, Trash2 } from 'lucide-react';
+
+import { ExportPdfButton } from '@/components/export/ExportPdfButton';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 
@@ -252,6 +254,7 @@ export function RunHistoryTable({
               >
                 <GitCompareArrows size={14} aria-hidden="true" />
               </button>
+              <ExportPdfButton runId={id} variant="icon" label={tAction('exportPdf')} preview={false} />
               <button
                 type="button"
                 className="p-1 opacity-70 hover:opacity-100"

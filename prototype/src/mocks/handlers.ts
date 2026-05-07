@@ -23,6 +23,8 @@ import type {
   HealthResponseData,
   LoginResponseData,
   NewsListResponse,
+  PasswordChangeRequest,
+  PasswordChangeResponse,
   PortfolioCreateRequest,
   PortfolioHolding,
   PortfolioListResponse,
@@ -34,21 +36,28 @@ import type {
   RunSummary,
   RunsListResponse,
   SentimentSummaryResponse,
+  ShareCreateRequest,
+  ShareCreateResponse,
+  ShareListResponse,
+  SharedViewResponse,
   StockDetailResponse,
   StockPricesResponse,
   StocksListResponse,
   StockStaticInfo,
+  TelegramTestResponse,
   TickerRunsResponse,
 } from '@/lib/types';
 
 import { backtestStore } from './data/backtest-store';
 import { computeCompare } from './data/compare-compute';
 import { filterArticles, FIXTURE_NOW_MS, NEWS_CORPUS } from './data/news-fixture';
+import { buildPdfHtml } from './data/pdf-template';
 import { portfolioStore } from './data/portfolio-store';
 import { buildPriceBoardItems } from './data/price-board-fixture';
 import { getPrices, type PricePeriod } from './data/prices-fixture';
-import { getSettings, patchSettings } from './data/settings';
+import { getSettings, patchSettings, validateSettingsPatch } from './data/settings';
 import { runsStore, type RunOutcomeMode } from './data/runs-store';
+import { shareStore } from './data/share-store';
 import { buildStockDetail } from './data/stock-detail-compute';
 import { STOCK_FIXTURE } from './data/stocks-fixture';
 import { versionPayload } from './data/version';
@@ -109,8 +118,28 @@ export const handlers = [
     return HttpResponse.json(ok(data));
   }),
 
-  http.put('/api/auth/password', async () => {
-    return HttpResponse.json(ok({ changed: true }));
+  http.put('/api/auth/password', async ({ request }) => {
+    let body: Partial<PasswordChangeRequest>;
+    try {
+      body = (await request.json()) as Partial<PasswordChangeRequest>;
+    } catch {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Body JSON không hợp lệ.'), { status: 400 });
+    }
+    if (!body.current_password || typeof body.current_password !== 'string') {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Thiếu mật khẩu hiện tại.'), { status: 400 });
+    }
+    if (!body.new_password || typeof body.new_password !== 'string' || body.new_password.length < 8) {
+      return HttpResponse.json(
+        err('VALIDATION_ERROR', 'Mật khẩu mới phải có ít nhất 8 ký tự.'),
+        { status: 400 },
+      );
+    }
+    // Single-user MVP: any current_password passes. Issue a fresh token to mimic re-login.
+    const data: PasswordChangeResponse = {
+      changed: true,
+      token: `${MOCK_JWT_PREFIX}${Date.now()}`,
+    };
+    return HttpResponse.json(ok(data));
   }),
 
   http.get('/api/version', () => HttpResponse.json(ok(versionPayload))),
@@ -131,6 +160,10 @@ export const handlers = [
       patch = (await request.json()) as Record<string, unknown>;
     } catch {
       return HttpResponse.json(err('VALIDATION_ERROR', 'Invalid JSON body'), { status: 400 });
+    }
+    const error = validateSettingsPatch(patch);
+    if (error) {
+      return HttpResponse.json(err('VALIDATION_ERROR', error), { status: 400 });
     }
     return HttpResponse.json(ok(patchSettings(patch)));
   }),
@@ -655,6 +688,126 @@ export const handlers = [
       backtest_id: r.backtest_id,
       results: r.results,
     };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // ---------- Cluster 6: Export PDF ----------
+
+  // GET /api/export/pdf/:run_id — returns HTML body served as application/pdf so the
+  // browser triggers a download. PDF MVP is text/table only (TAD c06 §1).
+  http.get('/api/export/pdf/:run_id', ({ params }) => {
+    const run_id = params.run_id as string;
+    const r = runsStore.get(run_id);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', `Run ${run_id} không tồn tại.`), { status: 404 });
+    }
+    if (!r.computed) {
+      return HttpResponse.json(err('NOT_READY', 'Run chưa hoàn thành.'), { status: 409 });
+    }
+    const summary = runsStore.summary(run_id);
+    const dashboard = runsStore.dashboard(run_id);
+    if (!summary || !dashboard) {
+      return HttpResponse.json(err('NOT_READY', 'Không đủ dữ liệu để xuất.'), { status: 409 });
+    }
+    const html = buildPdfHtml({
+      summary,
+      dashboard,
+      results: r.computed.results,
+      excluded: r.computed.excluded,
+      brand: 'Ngô Minh Tú — VN RE AI Screener',
+      tagline: 'Dữ liệu dẫn đường, quyết định thuộc về bạn',
+    });
+    return new HttpResponse(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="run-${run_id}.pdf"`,
+      },
+    });
+  }),
+
+  // ---------- Cluster 6: Share Links ----------
+
+  http.get('/api/share', () => {
+    // Drop expired so settings management never lists stale tokens.
+    const live = shareStore.list().filter((l) => !shareStore.isExpired(l));
+    const data: ShareListResponse = { items: live };
+    return HttpResponse.json(ok(data));
+  }),
+
+  http.post('/api/share', async ({ request }) => {
+    let body: Partial<ShareCreateRequest>;
+    try {
+      body = (await request.json()) as Partial<ShareCreateRequest>;
+    } catch {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Body JSON không hợp lệ.'), { status: 400 });
+    }
+    if (!body.run_id || typeof body.run_id !== 'string') {
+      return HttpResponse.json(err('VALIDATION_ERROR', 'Thiếu run_id.'), { status: 400 });
+    }
+    const r = runsStore.get(body.run_id);
+    if (!r) {
+      return HttpResponse.json(err('NOT_FOUND', `Run ${body.run_id} không tồn tại.`), { status: 404 });
+    }
+    if (!r.computed) {
+      return HttpResponse.json(err('NOT_READY', 'Run chưa hoàn thành.'), { status: 409 });
+    }
+    const days =
+      typeof body.expires_in_days === 'number' && body.expires_in_days > 0
+        ? Math.min(30, Math.floor(body.expires_in_days))
+        : 7;
+    const link = shareStore.create(body.run_id, days);
+    return HttpResponse.json(ok<ShareCreateResponse>(link), { status: 201 });
+  }),
+
+  http.get('/api/share/:token', ({ params }) => {
+    const token = params.token as string;
+    const link = shareStore.get(token);
+    if (!link) {
+      return HttpResponse.json(err('NOT_FOUND', 'Link không tồn tại hoặc đã bị thu hồi.'), {
+        status: 404,
+      });
+    }
+    if (shareStore.isExpired(link)) {
+      return HttpResponse.json(err('EXPIRED', 'Link đã hết hạn.'), { status: 410 });
+    }
+    const r = runsStore.get(link.run_id);
+    const summary = runsStore.summary(link.run_id);
+    const dashboard = runsStore.dashboard(link.run_id);
+    if (!r || !r.computed || !summary || !dashboard) {
+      return HttpResponse.json(err('NOT_FOUND', 'Run gốc đã bị xóa.'), { status: 404 });
+    }
+    const data: SharedViewResponse = {
+      link,
+      shared_by: 'Ngô Minh Tú',
+      run: {
+        run_id: link.run_id,
+        run_at: r.run_at,
+        summary,
+        dashboard,
+        results: r.computed.results,
+      },
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  http.delete('/api/share/:token', ({ params }) => {
+    const token = params.token as string;
+    const removed = shareStore.remove(token);
+    if (!removed) {
+      return HttpResponse.json(err('NOT_FOUND', 'Token không tồn tại.'), { status: 404 });
+    }
+    return HttpResponse.json(ok({ deleted: true }));
+  }),
+
+  // ---------- Cluster 6: Telegram test ----------
+
+  // POST /api/telegram/test — random 70% success / 30% error (cluster prompt §5.2).
+  http.post('/api/telegram/test', () => {
+    const success = Math.random() < 0.7;
+    const data: TelegramTestResponse = success
+      ? { sent: true, error: null }
+      : { sent: false, error: 'Bot token không hợp lệ hoặc chat_id sai. Vui lòng kiểm tra lại.' };
     return HttpResponse.json(ok(data));
   }),
 
