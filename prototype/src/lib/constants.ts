@@ -119,6 +119,43 @@ export type MockRunOutcome = (typeof MOCK_RUN_OUTCOMES)[number];
 
 export const MOCK_RUN_OUTCOME_KEY = 'mock_run_outcome';
 
+// SRS g03 — Exchange enum (used for Price Board filter chips).
+export const EXCHANGES = ['HOSE', 'HNX', 'UPCOM'] as const;
+export type Exchange = (typeof EXCHANGES)[number];
+
+// SRS f10 / TAD c04 — News source enum (5 fixed sources).
+export const NEWS_SOURCES = [
+  'CAFEF',
+  'VNEXPRESS',
+  'VIETSTOCK',
+  'BATDONGSAN',
+  'THANHNIEN',
+] as const;
+export type NewsSourceKey = (typeof NEWS_SOURCES)[number];
+
+// SRS f10 / GUARD-08 — Sentiment label enum (only these 3 values allowed).
+export const SENTIMENT_LABELS = ['POSITIVE', 'NEUTRAL', 'NEGATIVE'] as const;
+export type SentimentLabelKey = (typeof SENTIMENT_LABELS)[number];
+
+// News page date-range shortcuts (radio).
+export const NEWS_DATE_RANGES = ['7d', '30d', '90d', 'all'] as const;
+export type NewsDateRange = (typeof NEWS_DATE_RANGES)[number];
+
+// TTCK price color rule (cluster 4 prompt §3.3) — order matters: ceil/floor checked BEFORE up/down/ref.
+export type TtckColor = 'ceil' | 'up' | 'ref' | 'down' | 'floor';
+export function priceColor(
+  price: number,
+  ceiling: number,
+  floor: number,
+  reference: number,
+): TtckColor {
+  if (price >= ceiling) return 'ceil';
+  if (price <= floor) return 'floor';
+  if (price > reference) return 'up';
+  if (price < reference) return 'down';
+  return 'ref';
+}
+
 // LocalStorage keys
 export const STORAGE_KEYS = {
   token: 'token',

@@ -3,25 +3,36 @@
 
 import { http, HttpResponse } from 'msw';
 
-import { MOCK_JWT_PREFIX } from '@/lib/constants';
+import {
+  MOCK_JWT_PREFIX,
+  NEWS_SOURCES,
+  SENTIMENT_LABELS,
+  type NewsSourceKey,
+  type SentimentLabelKey,
+} from '@/lib/constants';
 import type {
   ApiSuccess,
   ApiError,
   DashboardResponse,
   HealthResponseData,
   LoginResponseData,
+  NewsListResponse,
   RunResultsResponse,
   RunStartRequest,
   RunStartResponse,
   RunStatusResponse,
   RunSummary,
   RunsListResponse,
+  SentimentSummaryResponse,
   StockDetailResponse,
   StockPricesResponse,
+  StocksListResponse,
   StockStaticInfo,
   TickerRunsResponse,
 } from '@/lib/types';
 
+import { filterArticles, FIXTURE_NOW_MS, NEWS_CORPUS } from './data/news-fixture';
+import { buildPriceBoardItems } from './data/price-board-fixture';
 import { getPrices, type PricePeriod } from './data/prices-fixture';
 import { getSettings, patchSettings } from './data/settings';
 import { runsStore, type RunOutcomeMode } from './data/runs-store';
@@ -275,6 +286,131 @@ export const handlers = [
       .filter((x): x is NonNullable<typeof x> => x !== null)
       .slice(0, 10);
     const data: TickerRunsResponse = { ticker, items };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // ---------- Cluster 4: Price Board ----------
+
+  // GET /api/stocks?limit=100&offset=0 — paginated whitelist with latest prices.
+  http.get('/api/stocks', ({ request }) => {
+    const url = new URL(request.url);
+    const limit = Math.max(1, Math.min(500, Number(url.searchParams.get('limit') ?? 100)));
+    const offset = Math.max(0, Number(url.searchParams.get('offset') ?? 0));
+    const all = buildPriceBoardItems();
+    const items = all.slice(offset, offset + limit);
+    const data: StocksListResponse = { items, total: all.length, limit, offset };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // ---------- Cluster 4: News & Sentiment ----------
+
+  // GET /api/news — paginated, multi-source / multi-sentiment / ticker / date filters.
+  // Mock failure: ?mock_news_failure=cafef → drop CAFEF rows + report it in `source_errors`.
+  http.get('/api/news', ({ request }) => {
+    const url = new URL(request.url);
+    const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') ?? 20)));
+    const offset = Math.max(0, Number(url.searchParams.get('offset') ?? 0));
+
+    const sourceParams = url.searchParams.getAll('source');
+    const sentimentParams = url.searchParams.getAll('sentiment');
+    const ticker = url.searchParams.get('ticker') ?? undefined;
+    const fromIso = url.searchParams.get('from') ?? undefined;
+    const toIso = url.searchParams.get('to') ?? undefined;
+    const failureParam = (url.searchParams.get('mock_news_failure') ?? '').toUpperCase();
+
+    const sources = sourceParams
+      .map((s) => s.toUpperCase() as NewsSourceKey)
+      .filter((s): s is NewsSourceKey => NEWS_SOURCES.includes(s));
+    const sentiments = sentimentParams
+      .map((s) => s.toUpperCase() as SentimentLabelKey)
+      .filter((s): s is SentimentLabelKey => SENTIMENT_LABELS.includes(s));
+
+    let filtered = filterArticles({
+      source: sources.length ? sources : undefined,
+      sentiment: sentiments.length ? sentiments : undefined,
+      ticker,
+      fromIso,
+      toIso,
+    });
+
+    const source_errors: NewsSourceKey[] = [];
+    if (failureParam && (NEWS_SOURCES as readonly string[]).includes(failureParam)) {
+      const broken = failureParam as NewsSourceKey;
+      filtered = filtered.filter((a) => a.source !== broken);
+      source_errors.push(broken);
+    }
+
+    const items = filtered.slice(offset, offset + limit);
+    const data: NewsListResponse = {
+      items,
+      total: filtered.length,
+      limit,
+      offset,
+      source_errors,
+    };
+    return HttpResponse.json(ok(data));
+  }),
+
+  // GET /api/news/sentiment/:ticker — 30-day rollup. GUARD-08: count=0 → NEUTRAL/0.0.
+  http.get('/api/news/sentiment/:ticker', ({ params, request }) => {
+    const ticker = (params.ticker as string).toUpperCase();
+    const url = new URL(request.url);
+    const windowDays = Math.max(1, Math.min(365, Number(url.searchParams.get('days') ?? 30)));
+
+    // Anchor to the news fixture's "now" (2026-05-07), NOT wall-clock — otherwise users running
+    // the app on a different date would always see count=0 (false GUARD-08 fallback).
+    const sinceMs = FIXTURE_NOW_MS - windowDays * 24 * 60 * 60 * 1000;
+    // `published_at` is ISO so string compare with sinceIso is safe.
+    const sinceIso = new Date(sinceMs).toISOString();
+    const articles = NEWS_CORPUS.filter(
+      (a) => a.related_tickers.includes(ticker) && a.published_at >= sinceIso,
+    );
+
+    if (articles.length === 0) {
+      // GUARD-08: no articles in window → NEUTRAL/0.0.
+      const data: SentimentSummaryResponse = {
+        ticker,
+        window_days: windowDays,
+        count: 0,
+        label: 'NEUTRAL',
+        score: 0.0,
+        breakdown: SENTIMENT_LABELS.map((l) => ({ label: l, count: 0 })),
+        source_breakdown: NEWS_SOURCES.map((s) => ({ source: s, count: 0 })),
+      };
+      return HttpResponse.json(ok(data));
+    }
+
+    const breakdownMap: Record<SentimentLabelKey, number> = {
+      POSITIVE: 0,
+      NEUTRAL: 0,
+      NEGATIVE: 0,
+    };
+    const sourceMap: Record<NewsSourceKey, number> = {
+      CAFEF: 0,
+      VNEXPRESS: 0,
+      VIETSTOCK: 0,
+      BATDONGSAN: 0,
+      THANHNIEN: 0,
+    };
+    let scoreSum = 0;
+    for (const a of articles) {
+      breakdownMap[a.sentiment_label] += 1;
+      sourceMap[a.source] += 1;
+      scoreSum += a.sentiment_score;
+    }
+    const avg = Number((scoreSum / articles.length).toFixed(2));
+    // Map avg back to label using ±0.20 thresholds (matches scoreFromLabel ranges).
+    const label: SentimentLabelKey = avg >= 0.20 ? 'POSITIVE' : avg <= -0.20 ? 'NEGATIVE' : 'NEUTRAL';
+
+    const data: SentimentSummaryResponse = {
+      ticker,
+      window_days: windowDays,
+      count: articles.length,
+      label,
+      score: avg,
+      breakdown: SENTIMENT_LABELS.map((l) => ({ label: l, count: breakdownMap[l] })),
+      source_breakdown: NEWS_SOURCES.map((s) => ({ source: s, count: sourceMap[s] })),
+    };
     return HttpResponse.json(ok(data));
   }),
 

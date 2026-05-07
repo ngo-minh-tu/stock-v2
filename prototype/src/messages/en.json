@@ -289,6 +289,109 @@
       }
     }
   },
+  "priceBoard": {
+    "loading": "Loading price board…",
+    "errorLoad": "Could not load the price board. Please retry.",
+    "subtitle": "{count} tickers · mock refreshes per page reload",
+    "search": {
+      "placeholder": "Search ticker (VHM, KDH…)"
+    },
+    "filter": {
+      "title": "Filters",
+      "exchange": "Exchange",
+      "sector": "Sector",
+      "sectorAll": "All sectors",
+      "newlyListedOnly": "Newly listed only",
+      "reset": "Clear filters"
+    },
+    "newlyBadge": "New",
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "sector": "Sector",
+      "exchange": "Exch.",
+      "reference": "Ref",
+      "ceiling": "Ceil",
+      "floor": "Floor",
+      "open": "Open",
+      "high": "High",
+      "low": "Low",
+      "close": "Close",
+      "change": "+/-",
+      "changePct": "%",
+      "volume": "Vol",
+      "newly": "Listing"
+    },
+    "empty": {
+      "title": "No matching tickers",
+      "hint": "Try clearing some filters or the search box."
+    },
+    "perfNote": "{count} tickers · client-side sort / filter"
+  },
+  "news": {
+    "loading": "Loading news…",
+    "errorLoad": "Could not load news. Please retry.",
+    "filter": {
+      "title": "News filters",
+      "open": "Open filters",
+      "close": "Close filters",
+      "source": "Source",
+      "sentiment": "Sentiment",
+      "ticker": "Related ticker",
+      "tickerPlaceholder": "Pick a ticker (VHM…)",
+      "tickerClear": "Clear",
+      "dateRange": "Time range",
+      "reset": "Clear filters",
+      "mockFailure": "Simulate source error (dev)"
+    },
+    "source": {
+      "CAFEF": "CafeF",
+      "VNEXPRESS": "VnExpress",
+      "VIETSTOCK": "Vietstock",
+      "BATDONGSAN": "Batdongsan",
+      "THANHNIEN": "Thanh Niên"
+    },
+    "sentiment": {
+      "all": "All",
+      "POSITIVE": "Positive",
+      "NEUTRAL": "Neutral",
+      "NEGATIVE": "Negative"
+    },
+    "dateRange": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "all": "All"
+    },
+    "card": {
+      "openExternal": "Open article (new tab)",
+      "tickers": "Related tickers",
+      "scoreTooltip": "Score: {score} ({label})"
+    },
+    "empty": {
+      "30days": "No news in the last 30 days matching your filters.",
+      "filtered": "No news matches the current filters."
+    },
+    "sourceError": "Source {source} is temporarily unavailable. Showing remaining sources.",
+    "summary": {
+      "title": "Sentiment for {ticker} (30 days)",
+      "count": "{n} articles",
+      "scoreAvg": "Avg score",
+      "noData": "No articles in 30 days — sentiment = NEUTRAL (GUARD-08).",
+      "sourceBreakdown": "By source"
+    },
+    "load": {
+      "more": "Load more",
+      "loading": "Loading more…",
+      "end": "End of feed."
+    },
+    "time": {
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago",
+      "justNow": "just now"
+    }
+  },
   "settings": {
     "title": "Settings",
     "theme": {

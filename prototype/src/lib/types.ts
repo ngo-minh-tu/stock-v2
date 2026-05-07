@@ -264,6 +264,73 @@ export interface StockPricesResponse {
   bars: OhlcvBar[];
 }
 
+// =====================================================================
+// Cluster 4: Price Board (/api/stocks list) + News & Sentiment
+// =====================================================================
+
+// One row of the price board — combines static info with the latest pricing snapshot.
+// `current_price` keeps the cluster 1-3 convention (ngàn đồng).
+export interface LatestPrice {
+  reference: number; // TC — phiên trước
+  ceiling: number;   // Trần
+  floor: number;     // Sàn
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;    // share count (raw; format K/M in UI)
+}
+
+export interface StockListItem extends StockStaticInfo {
+  latest_price: LatestPrice;
+  newly_listed: boolean;
+}
+
+// GET /api/stocks?limit=100&offset=0 — paginated envelope per g02 §2.
+export interface StocksListResponse {
+  items: StockListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// SRS f10 + GUARD-08 — see constants.ts for enums.
+export type NewsSource = 'CAFEF' | 'VNEXPRESS' | 'VIETSTOCK' | 'BATDONGSAN' | 'THANHNIEN';
+export type SentimentLabel = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+
+export interface NewsArticle {
+  article_id: string;
+  source: NewsSource;
+  title: string;
+  url: string;
+  published_at: string;             // ISO8601
+  related_tickers: string[];        // 0-3 tickers from STOCK_FIXTURE
+  content_snippet: string;          // ~150 chars
+  sentiment_label: SentimentLabel;
+  sentiment_score: number;          // -1..+1, 2 decimals
+  sentiment_reason: string;         // citation or "unavailable" (GUARD-08)
+}
+
+// GET /api/news — paginated. `source_errors` exposes GUARD-08 fallback.
+export interface NewsListResponse {
+  items: NewsArticle[];
+  total: number;
+  limit: number;
+  offset: number;
+  source_errors: NewsSource[];      // sources that failed this request (banner trigger)
+}
+
+// GET /api/news/sentiment/{ticker} — 30-day rollup.
+export interface SentimentSummaryResponse {
+  ticker: string;
+  window_days: number;              // typically 30 — surfaced so UI can label correctly
+  count: number;                    // 0 → label=NEUTRAL, score=0 (GUARD-08)
+  label: SentimentLabel;
+  score: number;                    // avg across articles, -1..+1
+  breakdown: { label: SentimentLabel; count: number }[];
+  source_breakdown: { source: NewsSource; count: number }[];
+}
+
 // Which runs scored this ticker — populated by /api/stocks/{ticker}/runs (cluster 3 helper).
 export interface TickerRunSummary {
   run_id: string;

@@ -289,6 +289,109 @@
       }
     }
   },
+  "priceBoard": {
+    "loading": "Đang tải bảng giá…",
+    "errorLoad": "Không tải được bảng giá. Vui lòng thử lại.",
+    "subtitle": "{count} mã · cập nhật mock cho mỗi reload",
+    "search": {
+      "placeholder": "Tìm theo mã (VHM, KDH…)"
+    },
+    "filter": {
+      "title": "Bộ lọc",
+      "exchange": "Sàn",
+      "sector": "Ngành",
+      "sectorAll": "Tất cả ngành",
+      "newlyListedOnly": "Chỉ mã mới niêm yết",
+      "reset": "Xóa bộ lọc"
+    },
+    "newlyBadge": "Mới",
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "sector": "Ngành",
+      "exchange": "Sàn",
+      "reference": "TC",
+      "ceiling": "Trần",
+      "floor": "Sàn",
+      "open": "Mở",
+      "high": "Cao",
+      "low": "Thấp",
+      "close": "Đóng",
+      "change": "+/-",
+      "changePct": "%",
+      "volume": "KL",
+      "newly": "Niêm yết"
+    },
+    "empty": {
+      "title": "Không có mã phù hợp",
+      "hint": "Thử bỏ bớt bộ lọc hoặc xóa từ khóa tìm kiếm."
+    },
+    "perfNote": "{count} mã trên 1 trang · sort/lọc client-side"
+  },
+  "news": {
+    "loading": "Đang tải tin…",
+    "errorLoad": "Không tải được tin. Vui lòng thử lại.",
+    "filter": {
+      "title": "Bộ lọc tin",
+      "open": "Mở bộ lọc",
+      "close": "Đóng bộ lọc",
+      "source": "Nguồn",
+      "sentiment": "Sentiment",
+      "ticker": "Mã liên quan",
+      "tickerPlaceholder": "Chọn mã (VHM…)",
+      "tickerClear": "Bỏ chọn",
+      "dateRange": "Thời gian",
+      "reset": "Xóa bộ lọc",
+      "mockFailure": "Mô phỏng lỗi nguồn (dev)"
+    },
+    "source": {
+      "CAFEF": "CafeF",
+      "VNEXPRESS": "VnExpress",
+      "VIETSTOCK": "Vietstock",
+      "BATDONGSAN": "Batdongsan",
+      "THANHNIEN": "Thanh Niên"
+    },
+    "sentiment": {
+      "all": "Tất cả",
+      "POSITIVE": "Tích cực",
+      "NEUTRAL": "Trung tính",
+      "NEGATIVE": "Tiêu cực"
+    },
+    "dateRange": {
+      "7d": "7 ngày",
+      "30d": "30 ngày",
+      "90d": "90 ngày",
+      "all": "Tất cả"
+    },
+    "card": {
+      "openExternal": "Mở tin (tab mới)",
+      "tickers": "Mã liên quan",
+      "scoreTooltip": "Score: {score} ({label})"
+    },
+    "empty": {
+      "30days": "Không có tin trong 30 ngày qua phù hợp với bộ lọc.",
+      "filtered": "Không có tin phù hợp bộ lọc hiện tại."
+    },
+    "sourceError": "Nguồn {source} tạm thời không khả dụng. Đã hiển thị tin từ các nguồn còn lại.",
+    "summary": {
+      "title": "Sentiment cho {ticker} (30 ngày)",
+      "count": "{n} tin",
+      "scoreAvg": "Score TB",
+      "noData": "Không có tin trong 30 ngày — sentiment = NEUTRAL (GUARD-08).",
+      "sourceBreakdown": "Phân bổ theo nguồn"
+    },
+    "load": {
+      "more": "Tải thêm",
+      "loading": "Đang tải thêm…",
+      "end": "Đã hết tin."
+    },
+    "time": {
+      "minutesAgo": "{n}p trước",
+      "hoursAgo": "{n}h trước",
+      "daysAgo": "{n} ngày trước",
+      "justNow": "vừa xong"
+    }
+  },
   "settings": {
     "title": "Cài đặt",
     "theme": {
