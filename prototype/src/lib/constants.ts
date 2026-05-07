@@ -76,6 +76,21 @@ export const ENTRY_SIGNALS = [
 ] as const;
 export type EntrySignal = (typeof ENTRY_SIGNALS)[number];
 
+// Per-signal display meta (cluster 3 §6 — colors keyed to design.md §3.2 stock semantics).
+// `tone`: drives chip / large badge color. `priority`: SRS-03 priority order (lower = checked first).
+export const ENTRY_SIGNAL_META: Record<
+  EntrySignal,
+  { tone: 'green-strong' | 'green' | 'yellow' | 'gray' | 'light-gray'; priority: number }
+> = {
+  INSUFFICIENT_DATA: { tone: 'light-gray', priority: 1 },
+  NO_ENTRY: { tone: 'gray', priority: 2 },
+  BUY_STRONG: { tone: 'green-strong', priority: 3 },
+  BUY_NOW: { tone: 'green', priority: 4 },
+  WAIT_FOR_BREAKOUT: { tone: 'yellow', priority: 5 },
+  WAIT_FOR_PULLBACK: { tone: 'yellow', priority: 6 },
+  WAIT_FOR_CONFIRMATION: { tone: 'yellow', priority: 7 },
+};
+
 // SRS f07 — Warning badge enum (4 risk flags, contribute to confidence penalty).
 export const WARNING_BADGES = [
   'HIGH_DEBT',

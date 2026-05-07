@@ -59,8 +59,33 @@ function recommendationFromScore(score: number): Recommendation {
   return 'BAN';
 }
 
-function entrySignalFromScore(score: number, badges: WarningBadge[]): EntrySignal {
+// Anchor overrides — satisfies cluster-3 AC #6 (all 7 entry signals must be testable).
+// Each override sets the entry signal for a known fixture; score is bumped to make rec=MUA
+// where the chosen signal demands it (SRS-03 priority Step 2: rec≠MUA → NO_ENTRY).
+const ANCHOR_ENTRY_OVERRIDES: Record<string, EntrySignal> = {
+  VHM: 'BUY_STRONG',
+  KDH: 'BUY_NOW',
+  NLG: 'WAIT_FOR_BREAKOUT',
+  DXG: 'WAIT_FOR_PULLBACK',
+  PDR: 'WAIT_FOR_CONFIRMATION',
+  // MOCK_BUY_STRONG/WARN already covered by score-derivation; MOCK_HOLD/SELL fall through
+  // to NO_ENTRY via the recommendation gate; MOCK_INSUFFICIENT is excluded entirely.
+};
+
+function decideEntrySignal(
+  ticker: string,
+  score: number,
+  recommendation: Recommendation,
+  badges: WarningBadge[],
+): EntrySignal {
+  // Anchor overrides win — these are demo fixtures.
+  if (ANCHOR_ENTRY_OVERRIDES[ticker]) return ANCHOR_ENTRY_OVERRIDES[ticker];
+
+  // SRS-03 Step 2 — rec≠MUA → NO_ENTRY (this fixed a cluster-2 gap where GIU/BAN were
+  // returning WAIT_FOR_* signals, contradicting AC-03-02).
+  if (recommendation !== 'MUA') return 'NO_ENTRY';
   if (badges.length >= 3) return 'NO_ENTRY';
+
   if (score >= 90) return 'BUY_STRONG';
   if (score >= 78) return 'BUY_NOW';
   if (score >= 65) return 'WAIT_FOR_PULLBACK';
@@ -75,6 +100,8 @@ function badgesForSeed(seed: StockSeed, rnd: () => number): WarningBadge[] {
   if (seed.ticker === 'MOCK_HOLD') return ['NEGATIVE_OCF'];
   if (seed.ticker === 'MOCK_SELL') return ['HIGH_DEBT', 'LEGAL_RISK'];
   if (seed.ticker === 'MOCK_BUY_STRONG' || seed.ticker === 'MOCK_INSUFFICIENT') return [];
+  // KDH carries 1 badge to demo the -5pp confidence penalty per TAD g02 §4 example.
+  if (seed.ticker === 'KDH') return ['HIGH_INVENTORY'];
 
   const badges: WarningBadge[] = [];
   // ~20% chance of any badge, then 50/30/15/5% within
@@ -102,6 +129,13 @@ function scoreForSeed(seed: StockSeed, rnd: () => number): number {
   if (seed.ticker === 'MOCK_BUY_WARN') return 78;
   if (seed.ticker === 'MOCK_HOLD') return 55;
   if (seed.ticker === 'MOCK_SELL') return 30;
+  // Anchor scores for the 5 real-ticker entry-signal fixtures (cluster-3 AC #6).
+  // All ≥75 to keep recommendation = MUA; spread by signal type so the breakdown looks varied.
+  if (seed.ticker === 'VHM') return 91;
+  if (seed.ticker === 'KDH') return 82;
+  if (seed.ticker === 'NLG') return 78;
+  if (seed.ticker === 'DXG') return 76;
+  if (seed.ticker === 'PDR') return 75;
   // Bell curve centered ~58 so we get a realistic mix of MUA/GIU/BAN.
   return clamp(Math.round(bellish(rnd, 58, 28)), 8, 95);
 }
@@ -195,7 +229,7 @@ export function computeRun(args: {
       confidence,
       target_price_3m,
       upside_pct,
-      entry_signal: entrySignalFromScore(score, badges),
+      entry_signal: decideEntrySignal(seed.ticker, score, recommendation, badges),
       buy_price: recommendation === 'MUA' ? current_price : undefined,
       stop_loss_price:
         recommendation === 'MUA' ? Number((current_price * 0.9).toFixed(2)) : undefined,

@@ -196,6 +196,99 @@
       }
     }
   },
+  "stockDetail": {
+    "loading": "Loading stock detail…",
+    "errorTitle": "Failed to load stock detail",
+    "errorBody": "Ticker not in this run or was excluded.",
+    "missingTicker": "URL is missing a ticker. Open Top MUA and click \"View detail\" to land here with the right context.",
+    "header": {
+      "aiScore": "AI Score",
+      "runSelector": "Runs that scored this ticker"
+    },
+    "candlestick": {
+      "title": "Candlestick chart",
+      "subtitle": "Per-session OHLCV · Overlay S/R + Stop loss + Target",
+      "loading": "Loading prices…",
+      "reset": "Reset zoom",
+      "period": {
+        "1M": "1M",
+        "3M": "3M",
+        "6M": "6M",
+        "1Y": "1Y"
+      },
+      "overlay": {
+        "support": "Support",
+        "resistance": "Resistance",
+        "stopLoss": "Stop loss",
+        "target": "Target 3M"
+      }
+    },
+    "breakdown": {
+      "title": "Score breakdown",
+      "subtitle": "5-axis radar · {availability}/38 features available",
+      "showFeatures": "Show 38 features",
+      "hideFeatures": "Hide 38 features",
+      "legend": {
+        "ticker": "{ticker}",
+        "industry": "Industry avg"
+      }
+    },
+    "feature": {
+      "features": "features",
+      "imputedTooltip": "Imputed value, lowers confidence",
+      "column": {
+        "id": "ID",
+        "name": "Feature",
+        "value": "Value",
+        "direction": "Good direction"
+      },
+      "group": {
+        "fundamental": "Fundamental",
+        "technical": "Technical",
+        "macro": "Macro",
+        "realestate": "Real estate",
+        "sentiment": "Sentiment"
+      }
+    },
+    "entry": {
+      "title": "Entry signal",
+      "subtitle": "Per SRS-03 priority order · Priority {priority}",
+      "reasonCodeLabel": "Reason code",
+      "srBar": {
+        "title": "Current price between support and resistance"
+      },
+      "indicators": "Raw indicators used",
+      "insufficientNote": "This ticker is missing the required raw technical indicators (≥2). The system will not guess an entry signal — wait for full data."
+    },
+    "risk": {
+      "title": "Risk management",
+      "subtitle": "Stop loss · Allocation · Confidence",
+      "insufficientNote": "Not enough data to compute reliable allocation and stop loss.",
+      "stopLoss": {
+        "title": "Stop loss",
+        "calc": {
+          "buyPrice": "= Buy price × 0.90",
+          "currentPrice": "= Current price × 0.90 (no buy price yet)"
+        },
+        "distance": "{pct}% away from current price"
+      },
+      "allocation": {
+        "title": "Capital allocation",
+        "skipped": "Allocation skipped — no total capital entered for this run.",
+        "weight": "{pct}% weight across MUA tickers",
+        "basedOn": "Based on total capital {total} VND entered when running"
+      },
+      "confidence": {
+        "title": "Confidence",
+        "raw": "Raw",
+        "penalty": "Penalty",
+        "final": "Final",
+        "warningsLabel": "Penalty-driving warnings",
+        "noWarnings": "No warnings.",
+        "penaltyTooltip": "Penalty −{points}pp from warning badges (PRD §7.7)"
+      }
+    }
+  },
   "settings": {
     "title": "Settings",
     "theme": {

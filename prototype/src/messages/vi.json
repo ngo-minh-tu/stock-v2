@@ -196,6 +196,99 @@
       }
     }
   },
+  "stockDetail": {
+    "loading": "Đang tải chi tiết mã…",
+    "errorTitle": "Không tải được chi tiết mã",
+    "errorBody": "Mã không tồn tại trong run này hoặc đã bị loại.",
+    "missingTicker": "URL thiếu tham số ticker. Vào Top MUA và bấm \"Xem chi tiết\" để mở trang này.",
+    "header": {
+      "aiScore": "AI Score",
+      "runSelector": "Run đã chấm mã này"
+    },
+    "candlestick": {
+      "title": "Biểu đồ nến",
+      "subtitle": "OHLCV theo phiên · Overlay vùng S/R + Stop loss + Target",
+      "loading": "Đang tải dữ liệu giá…",
+      "reset": "Reset zoom",
+      "period": {
+        "1M": "1T",
+        "3M": "3T",
+        "6M": "6T",
+        "1Y": "1N"
+      },
+      "overlay": {
+        "support": "Hỗ trợ",
+        "resistance": "Kháng cự",
+        "stopLoss": "Stop loss",
+        "target": "Target 3T"
+      }
+    },
+    "breakdown": {
+      "title": "Phân tích điểm số",
+      "subtitle": "Radar 5 nhóm · {availability}/38 features có sẵn",
+      "showFeatures": "Hiển thị 38 features",
+      "hideFeatures": "Ẩn 38 features",
+      "legend": {
+        "ticker": "{ticker}",
+        "industry": "TB ngành"
+      }
+    },
+    "feature": {
+      "features": "feature",
+      "imputedTooltip": "Đã impute, giảm confidence",
+      "column": {
+        "id": "ID",
+        "name": "Feature",
+        "value": "Giá trị",
+        "direction": "Hướng tốt"
+      },
+      "group": {
+        "fundamental": "Cơ bản",
+        "technical": "Kỹ thuật",
+        "macro": "Vĩ mô",
+        "realestate": "Đặc thù BĐS",
+        "sentiment": "Sentiment"
+      }
+    },
+    "entry": {
+      "title": "Tín hiệu vào lệnh",
+      "subtitle": "Theo SRS-03 priority order · Priority {priority}",
+      "reasonCodeLabel": "Reason code",
+      "srBar": {
+        "title": "Vị trí giá hiện tại giữa hỗ trợ và kháng cự"
+      },
+      "indicators": "Chỉ báo đã dùng",
+      "insufficientNote": "Mã này thiếu chỉ báo kỹ thuật cần thiết (≥2 raw indicators). Hệ thống không đoán entry signal — vui lòng đợi data đầy đủ."
+    },
+    "risk": {
+      "title": "Quản trị rủi ro",
+      "subtitle": "Stop loss · Phân bổ vốn · Tin cậy",
+      "insufficientNote": "Không đủ data để tính phân bổ và stop loss tin cậy.",
+      "stopLoss": {
+        "title": "Stop loss",
+        "calc": {
+          "buyPrice": "= Giá tham chiếu mua × 0,90",
+          "currentPrice": "= Giá hiện tại × 0,90 (chưa có buy price)"
+        },
+        "distance": "Cách giá hiện tại {pct}%"
+      },
+      "allocation": {
+        "title": "Phân bổ vốn",
+        "skipped": "Bỏ qua phân bổ — run không nhập tổng vốn.",
+        "weight": "Tỷ trọng {pct}% trên các mã MUA",
+        "basedOn": "Dựa trên tổng vốn {total} VND đã nhập khi chạy"
+      },
+      "confidence": {
+        "title": "Tin cậy",
+        "raw": "Raw",
+        "penalty": "Penalty",
+        "final": "Final",
+        "warningsLabel": "Cảnh báo gây penalty",
+        "noWarnings": "Không có cảnh báo nào.",
+        "penaltyTooltip": "Penalty −{points}pp do warning badges (PRD §7.7)"
+      }
+    }
+  },
   "settings": {
     "title": "Cài đặt",
     "theme": {

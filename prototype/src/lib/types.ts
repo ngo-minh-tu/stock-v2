@@ -171,6 +171,111 @@ export interface RunsListResponse {
   offset: number;
 }
 
+// =====================================================================
+// Cluster 3: Stock Detail (TAD g02 §4) + price history
+// =====================================================================
+
+// Static info — also used by /api/stocks/{ticker}.
+export interface StockStaticInfo {
+  ticker: string;
+  name: string;
+  exchange: 'HOSE' | 'HNX' | 'UPCOM';
+  sector: string;
+  current_price: number; // ngàn đồng (32.5 = 32,500 VND), matches ScreeningResult convention
+  reference_price?: number; // for %change display
+}
+
+// Full per-run stock analysis. Mirrors TAD g02 §4 example (KDH-like).
+export interface StockDetailResponse {
+  ticker: string;
+  name: string;
+  run_id: string;
+  static: StockStaticInfo;
+  scoring: {
+    ai_score: number;
+    recommendation: Recommendation;
+    confidence_raw: number;
+    confidence_penalty: number;
+    confidence: number;
+    target_price_3m: number;
+    upside_pct: number;
+  };
+  entry: {
+    signal: EntrySignal;
+    reason_code: string; // "VALUATION_ATTRACTIVE+BULLISH_TREND"
+    support_zone: number;
+    resistance_zone: number;
+    raw_indicators_used: string[];
+  };
+  // Raw indicators (SRS f03) — used for the entry visualization, NOT scoring features.
+  raw_indicators: {
+    ma20: number;
+    ma50: number;
+    ma200: number;
+    ema12: number;
+    ema26: number;
+    rsi: number;
+    macd_histogram: number;
+    macd_signal_cross: boolean;
+    bollinger_upper: number;
+    bollinger_lower: number;
+  };
+  risk: {
+    stop_loss_price: number;
+    allocation_amount: number;
+    allocation_weight: number;
+    warning_badges: WarningBadge[];
+    has_buy_price: boolean;
+  };
+  reasons: ScreeningReason[];
+  features: Record<string, number>; // 32-38 of the 38-feature dict (some imputed)
+  imputed_features: string[]; // feature IDs marked as imputed
+  feature_availability: number; // 32..38
+  radar: {
+    fundamental: number;
+    technical: number;
+    macro: number;
+    realestate: number;
+    sentiment: number;
+  };
+  // Industry average for radar overlay (faded). Sourced from the run dashboard.
+  radar_industry_avg?: {
+    fundamental: number;
+    technical: number;
+    macro: number;
+    realestate: number;
+    sentiment: number;
+  };
+}
+
+// One OHLCV bar (TAD g02 §1 — /stocks/{ticker}/prices).
+export interface OhlcvBar {
+  date: string; // YYYY-MM-DD
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface StockPricesResponse {
+  ticker: string;
+  period: '1M' | '3M' | '6M' | '1Y';
+  bars: OhlcvBar[];
+}
+
+// Which runs scored this ticker — populated by /api/stocks/{ticker}/runs (cluster 3 helper).
+export interface TickerRunSummary {
+  run_id: string;
+  run_at: string;
+  ai_score: number;
+  recommendation: Recommendation;
+}
+export interface TickerRunsResponse {
+  ticker: string;
+  items: TickerRunSummary[];
+}
+
 // GET /api/runs/{run_id}/dashboard (TAD c05 §1) — single payload, 6 visuals + KPIs.
 export interface DashboardResponse {
   run_id: string;
