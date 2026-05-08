@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
-import { CandlestickChart, type CandlePeriod } from '@/components/stock-detail/CandlestickChart';
+import { CandlestickChart } from '@/components/stock-detail/CandlestickChart';
 import { EntrySignalPanel } from '@/components/stock-detail/EntrySignalPanel';
 import { RiskPanel } from '@/components/stock-detail/RiskPanel';
 import { ScoreBreakdown } from '@/components/stock-detail/ScoreBreakdown';
@@ -20,7 +20,7 @@ import {
   useStockPrices,
   useTickerRuns,
 } from '@/lib/hooks/useStockDetail';
-import type { RunSummary } from '@/lib/types';
+import type { CandleInterval, CandleLookback, RunSummary } from '@/lib/types';
 
 export default function StockDetailPage() {
   const t = useTranslations('stockDetail');
@@ -48,8 +48,9 @@ export default function StockDetailPage() {
     reloadKey,
   );
 
-  const [period, setPeriod] = useState<CandlePeriod>('6M');
-  const pricesRes = useStockPrices(ticker, period, reloadKey);
+  const [candleInterval, setCandleInterval] = useState<CandleInterval>('D');
+  const [lookback, setLookback] = useState<CandleLookback>('6T');
+  const pricesRes = useStockPrices(ticker, candleInterval, lookback, reloadKey);
 
   const handleSelectRun = (newRunId: string) => {
     const params = new URLSearchParams(searchParams);
@@ -114,9 +115,12 @@ export default function StockDetailPage() {
       {overlays && pricesRes.data && (
         <CandlestickChart
           bars={pricesRes.data.bars}
+          indicators={pricesRes.data.indicators}
           overlays={overlays}
-          period={period}
-          onPeriodChange={setPeriod}
+          interval={candleInterval}
+          lookback={lookback}
+          onIntervalChange={setCandleInterval}
+          onLookbackChange={setLookback}
           loading={pricesRes.loading}
         />
       )}

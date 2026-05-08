@@ -211,11 +211,31 @@
       "subtitle": "Per-session OHLCV · Overlay S/R + Stop loss + Target",
       "loading": "Loading prices…",
       "reset": "Reset zoom",
-      "period": {
-        "1M": "1M",
-        "3M": "3M",
-        "6M": "6M",
-        "1Y": "1Y"
+      "intervalGroup": "Candle interval",
+      "lookbackGroup": "Lookback range",
+      "lookbackUnavailable": "Range too short for this interval",
+      "interval": {
+        "D": "D",
+        "W": "W",
+        "M": "M"
+      },
+      "lookback": {
+        "1T": "1M",
+        "3T": "3M",
+        "6T": "6M",
+        "1N": "1Y",
+        "3N": "3Y",
+        "YTD": "YTD",
+        "All": "All"
+      },
+      "maGroup": "Moving averages",
+      "maToggleShow": "Show this line",
+      "maToggleHide": "Hide this line",
+      "ma": {
+        "ma20": "MA20",
+        "ma50": "MA50",
+        "ma200": "MA200",
+        "ma_volume_20": "Vol MA20"
       },
       "overlay": {
         "support": "Support",

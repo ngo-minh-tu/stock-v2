@@ -211,11 +211,31 @@
       "subtitle": "OHLCV theo phiên · Overlay vùng S/R + Stop loss + Target",
       "loading": "Đang tải dữ liệu giá…",
       "reset": "Reset zoom",
-      "period": {
-        "1M": "1T",
-        "3M": "3T",
-        "6M": "6T",
-        "1Y": "1N"
+      "intervalGroup": "Khung nến",
+      "lookbackGroup": "Khoảng hiển thị",
+      "lookbackUnavailable": "Khoảng quá ngắn cho khung nến này",
+      "interval": {
+        "D": "D",
+        "W": "W",
+        "M": "M"
+      },
+      "lookback": {
+        "1T": "1T",
+        "3T": "3T",
+        "6T": "6T",
+        "1N": "1N",
+        "3N": "3N",
+        "YTD": "YTD",
+        "All": "Tất cả"
+      },
+      "maGroup": "Đường trung bình",
+      "maToggleShow": "Hiện đường này",
+      "maToggleHide": "Ẩn đường này",
+      "ma": {
+        "ma20": "MA20",
+        "ma50": "MA50",
+        "ma200": "MA200",
+        "ma_volume_20": "Vol MA20"
       },
       "overlay": {
         "support": "Hỗ trợ",

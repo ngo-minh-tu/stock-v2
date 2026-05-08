@@ -1,18 +1,32 @@
 // OHLCV history mock — deterministic per ticker via mulberry32.
-// Generates up to 250 trading days (1Y) on demand; a shorter `period` slices the tail.
+// Generates 1500 trading days (≈6 năm) up-front so:
+//   - 5-year "All" lookback fits within the cached set
+//   - MA200 has 200 padding bars even when lookback is 1T (22 bars)
 // Used by GET /api/stocks/{ticker}/prices.
 
-import type { OhlcvBar, StockPricesResponse } from '@/lib/types';
+import type {
+  CandleInterval,
+  CandleLookback,
+  OhlcvBar,
+  PriceIndicators,
+  StockPricesResponse,
+} from '@/lib/types';
 
 import { STOCK_FIXTURE } from './stocks-fixture';
 
-export type PricePeriod = '1M' | '3M' | '6M' | '1Y';
+// Total daily bars generated per ticker. 1500 ≈ 6 năm trading days, giving
+// 1250 (5y "All") + 200+ headroom for MA200 padding the chart hooks may request.
+const BASE_DAYS = 1500;
 
-const PERIOD_DAYS: Record<PricePeriod, number> = {
-  '1M': 22,
-  '3M': 66,
-  '6M': 125,
-  '1Y': 250,
+// Trading-day count per lookback for the daily interval.
+// W and M aggregations slice from these counts via aggregation, so we only
+// need this single source of truth.
+const LOOKBACK_DAILY_BARS: Record<Exclude<CandleLookback, 'YTD' | 'All'>, number> = {
+  '1T': 22,
+  '3T': 66,
+  '6T': 125,
+  '1N': 250,
+  '3N': 750,
 };
 
 function mulberry32(seed: number): () => number {
@@ -36,65 +50,66 @@ function findTickerSeed(ticker: string): number | null {
   return s ? s.seed : null;
 }
 
+// Build a list of `count` trading-day Date objects ending today (UTC midnight),
+// skipping weekends. Returns ascending order (oldest at index 0).
+function tradingDaysEndingToday(count: number): Date[] {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  // If today is weekend, walk back to last Friday.
+  while (today.getUTCDay() === 0 || today.getUTCDay() === 6) {
+    today.setUTCDate(today.getUTCDate() - 1);
+  }
+  const dates: Date[] = [];
+  const cur = new Date(today);
+  while (dates.length < count) {
+    const dow = cur.getUTCDay();
+    if (dow !== 0 && dow !== 6) {
+      dates.push(new Date(cur));
+    }
+    cur.setUTCDate(cur.getUTCDate() - 1);
+  }
+  return dates.reverse();
+}
+
 // Walk forward from a starting price using a small daily drift + gaussian shock.
-// We anchor the *last* day at `currentPrice` by computing the walk forward from a back-calculated
-// start, so the chart's right edge always matches the displayed current price.
-function generateBars(args: {
+// Anchors the *last* day's close to `currentPrice` so the chart's right edge
+// matches the displayed current price.
+function generateDailyBars(args: {
   seed: number;
-  days: number;
   currentPrice: number;
 }): OhlcvBar[] {
-  const { seed, days, currentPrice } = args;
+  const { seed, currentPrice } = args;
   const rnd = mulberry32(seed);
 
-  // Daily volatility ~1.6% with slight drift; final price will be close to currentPrice
-  // because we overwrite the last close. Intermediate prices reflect the random walk.
   const dailyVol = 0.018;
-  const drift = 0.0008;
+  const drift = 0.0005;
 
-  // Start price ~10–25% away from current (shows realistic 6-month movement).
-  const startPrice = currentPrice * (0.85 + rnd() * 0.25);
+  // Start price ~30–60% away from current — wider band for 6-year span.
+  const startPrice = currentPrice * (0.4 + rnd() * 0.3);
 
   const closes: number[] = [];
   let p = startPrice;
-  for (let i = 0; i < days; i += 1) {
+  for (let i = 0; i < BASE_DAYS; i += 1) {
     const shock = gaussish(rnd) * dailyVol * p;
-    p = Math.max(p + drift * p + shock, currentPrice * 0.5);
+    p = Math.max(p + drift * p + shock, currentPrice * 0.25);
     closes.push(p);
   }
-  // Anchor last close to currentPrice so the chart's right edge matches.
   closes[closes.length - 1] = currentPrice;
 
-  // Compose OHLCV per day.
-  const bars: OhlcvBar[] = [];
-  // End date = today (UTC midnight to avoid TZ shifts in the chart).
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const dates = tradingDaysEndingToday(BASE_DAYS);
 
-  for (let i = 0; i < days; i += 1) {
+  const bars: OhlcvBar[] = [];
+  for (let i = 0; i < BASE_DAYS; i += 1) {
     const close = closes[i];
     const open = i === 0 ? startPrice : closes[i - 1];
-    // Intraday spread ±1.5% from min(open, close) / max(open, close)
     const lo = Math.min(open, close) * (1 - rnd() * 0.012);
     const hi = Math.max(open, close) * (1 + rnd() * 0.012);
-    // Volume: log-uniform 200K..2M with occasional spike.
     const baseVol = 200_000 + rnd() * 1_800_000;
     const spike = rnd() < 0.05 ? 2 + rnd() * 3 : 1;
     const volume = Math.round(baseVol * spike);
 
-    // Date = today - (days - 1 - i) calendar days. Skip weekends.
-    const offset = days - 1 - i;
-    const d = new Date(today);
-    let weekend_skip = 0;
-    d.setUTCDate(d.getUTCDate() - offset);
-    while (d.getUTCDay() === 0 || d.getUTCDay() === 6) {
-      d.setUTCDate(d.getUTCDate() - 1);
-      weekend_skip += 1;
-      if (weekend_skip > 4) break; // safety
-    }
-
     bars.push({
-      date: d.toISOString().slice(0, 10),
+      date: dates[i].toISOString().slice(0, 10),
       open: Number(open.toFixed(2)),
       high: Number(hi.toFixed(2)),
       low: Number(lo.toFixed(2)),
@@ -102,30 +117,148 @@ function generateBars(args: {
       volume,
     });
   }
+  return bars;
+}
 
-  // Ensure dates are ascending unique (weekend skips can collide on rare boundary).
-  const seen = new Set<string>();
-  return bars.filter((b) => {
-    if (seen.has(b.date)) return false;
-    seen.add(b.date);
-    return true;
-  });
+// Cache the full daily series per (ticker, currentPrice) so toggling interval
+// D ↔ W ↔ M serves consistent aggregations of the same underlying data.
+const dailyCache = new Map<string, OhlcvBar[]>();
+function getOrBuildDaily(ticker: string, seed: number, currentPrice: number): OhlcvBar[] {
+  const key = `${ticker}:${currentPrice.toFixed(2)}`;
+  const hit = dailyCache.get(key);
+  if (hit) return hit;
+  const bars = generateDailyBars({ seed: seed + 31, currentPrice });
+  dailyCache.set(key, bars);
+  return bars;
+}
+
+// ISO week key 'YYYY-Www' from a YYYY-MM-DD string.
+function isoWeekKey(yyyymmdd: string): string {
+  const dt = new Date(`${yyyymmdd}T00:00:00Z`);
+  // Move to Thursday of the same ISO week — ISO 8601 anchor.
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((dt.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return `${dt.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+function monthKey(yyyymmdd: string): string {
+  return yyyymmdd.slice(0, 7); // YYYY-MM
+}
+
+// Aggregate consecutive daily bars into W or M buckets.
+// Bar date = the LAST daily bar's date inside that bucket (chart-friendly).
+function aggregate(bars: OhlcvBar[], interval: CandleInterval): OhlcvBar[] {
+  if (interval === 'D') return bars;
+  const keyOf = interval === 'W' ? isoWeekKey : monthKey;
+  const out: OhlcvBar[] = [];
+  let bucket: OhlcvBar[] = [];
+  let bucketKey: string | null = null;
+  const flush = () => {
+    if (bucket.length === 0) return;
+    const open = bucket[0].open;
+    const close = bucket[bucket.length - 1].close;
+    let high = -Infinity;
+    let low = Infinity;
+    let volume = 0;
+    for (const b of bucket) {
+      if (b.high > high) high = b.high;
+      if (b.low < low) low = b.low;
+      volume += b.volume;
+    }
+    out.push({
+      date: bucket[bucket.length - 1].date,
+      open,
+      high,
+      low,
+      close,
+      volume,
+    });
+  };
+  for (const b of bars) {
+    const k = keyOf(b.date);
+    if (k !== bucketKey) {
+      flush();
+      bucket = [];
+      bucketKey = k;
+    }
+    bucket.push(b);
+  }
+  flush();
+  return out;
+}
+
+// How many trailing bars to keep for `lookback` at a given interval.
+// YTD/All are computed dynamically, others map via LOOKBACK_DAILY_BARS scaled.
+function tailCount(
+  bars: OhlcvBar[],
+  interval: CandleInterval,
+  lookback: CandleLookback,
+): number {
+  if (lookback === 'All') return bars.length;
+  if (lookback === 'YTD') {
+    if (bars.length === 0) return 0;
+    const lastYear = bars[bars.length - 1].date.slice(0, 4);
+    let i = bars.length - 1;
+    while (i >= 0 && bars[i].date.slice(0, 4) === lastYear) i -= 1;
+    return bars.length - 1 - i;
+  }
+  const dailyBars = LOOKBACK_DAILY_BARS[lookback];
+  if (interval === 'D') return dailyBars;
+  if (interval === 'W') return Math.max(1, Math.round(dailyBars / 5));
+  // Monthly: ~22 trading days/month; minimum 1 bar.
+  return Math.max(1, Math.round(dailyBars / 22));
+}
+
+// Simple SMA — emits null for the first (period-1) entries (insufficient history).
+// Computed on the FULL aggregated series before lookback slicing so the visible
+// window inherits "warm" MA values from the padding bars to its left.
+function computeSMA(values: number[], period: number): (number | null)[] {
+  const out: (number | null)[] = new Array(values.length).fill(null);
+  if (values.length < period) return out;
+  let sum = 0;
+  for (let i = 0; i < period; i += 1) sum += values[i];
+  out[period - 1] = Number((sum / period).toFixed(2));
+  for (let i = period; i < values.length; i += 1) {
+    sum += values[i] - values[i - period];
+    out[i] = Number((sum / period).toFixed(2));
+  }
+  return out;
 }
 
 export function getPrices(args: {
   ticker: string;
-  period: PricePeriod;
+  interval: CandleInterval;
+  lookback: CandleLookback;
   currentPrice: number;
 }): StockPricesResponse | null {
   const seed = findTickerSeed(args.ticker);
   if (seed === null) return null;
-  const days = PERIOD_DAYS[args.period];
-  // Mix period into the seed so 1M/3M/6M/1Y don't collapse to identical sub-ranges
-  // (otherwise the 1Y tail would just be the same data zoomed out).
-  const bars = generateBars({
-    seed: seed + days * 31,
-    days,
-    currentPrice: args.currentPrice,
-  });
-  return { ticker: args.ticker, period: args.period, bars };
+  const daily = getOrBuildDaily(args.ticker, seed, args.currentPrice);
+  const aggregated = aggregate(daily, args.interval);
+  // Compute MAs on the full series so a visible bar at index 0 of the window
+  // can still inherit a warm MA from earlier (hidden) bars.
+  const closes = aggregated.map((b) => b.close);
+  const volumes = aggregated.map((b) => b.volume);
+  const ma20Full = computeSMA(closes, 20);
+  const ma50Full = computeSMA(closes, 50);
+  const ma200Full = computeSMA(closes, 200);
+  const maVol20Full = computeSMA(volumes, 20);
+
+  const n = tailCount(aggregated, args.interval, args.lookback);
+  const bars = aggregated.slice(-n);
+  const indicators: PriceIndicators = {
+    ma20: ma20Full.slice(-n),
+    ma50: ma50Full.slice(-n),
+    ma200: ma200Full.slice(-n),
+    ma_volume_20: maVol20Full.slice(-n),
+  };
+  return {
+    ticker: args.ticker,
+    interval: args.interval,
+    lookback: args.lookback,
+    bars,
+    indicators,
+  };
 }

@@ -14,6 +14,8 @@ import type {
   ApiSuccess,
   ApiError,
   BacktestMetrics,
+  CandleInterval,
+  CandleLookback,
   BacktestResultsResponse,
   BacktestStartRequest,
   BacktestStartResponse,
@@ -54,7 +56,7 @@ import { filterArticles, FIXTURE_NOW_MS, NEWS_CORPUS } from './data/news-fixture
 import { buildPdfHtml } from './data/pdf-template';
 import { portfolioStore } from './data/portfolio-store';
 import { buildPriceBoardItems } from './data/price-board-fixture';
-import { getPrices, type PricePeriod } from './data/prices-fixture';
+import { getPrices } from './data/prices-fixture';
 import { getSettings, patchSettings, validateSettingsPatch } from './data/settings';
 import { runsStore, type RunOutcomeMode } from './data/runs-store';
 import { shareStore } from './data/share-store';
@@ -325,14 +327,19 @@ export const handlers = [
     return HttpResponse.json(ok(data));
   }),
 
-  // GET /api/stocks/:ticker/prices?period=6M — synthetic OHLCV history.
+  // GET /api/stocks/:ticker/prices?interval=D&lookback=6T — synthetic OHLCV history.
+  // interval ∈ {D, W, M}; lookback ∈ {1T, 3T, 6T, 1N, 3N, YTD, All}. Defaults: D + 6T.
   http.get('/api/stocks/:ticker/prices', ({ request, params }) => {
     const url = new URL(request.url);
     const ticker = (params.ticker as string).toUpperCase();
-    const periodRaw = url.searchParams.get('period') ?? '6M';
-    const period = (['1M', '3M', '6M', '1Y'].includes(periodRaw)
-      ? periodRaw
-      : '6M') as PricePeriod;
+    const intervalRaw = url.searchParams.get('interval') ?? 'D';
+    const lookbackRaw = url.searchParams.get('lookback') ?? '6T';
+    const interval = (['D', 'W', 'M'].includes(intervalRaw)
+      ? intervalRaw
+      : 'D') as CandleInterval;
+    const lookback = (['1T', '3T', '6T', '1N', '3N', 'YTD', 'All'].includes(lookbackRaw)
+      ? lookbackRaw
+      : '6T') as CandleLookback;
 
     // Anchor current_price from latest run when available so the chart's right edge
     // matches the header's displayed price.
@@ -343,7 +350,7 @@ export const handlers = [
       return HttpResponse.json(err('NOT_FOUND', `Mã ${ticker} không tồn tại`), { status: 404 });
     }
     const currentPrice = fromRun?.current_price ?? 20 + (seed.seed % 50);
-    const data = getPrices({ ticker, period, currentPrice });
+    const data = getPrices({ ticker, interval, lookback, currentPrice });
     if (!data) {
       return HttpResponse.json(err('NOT_FOUND', `Mã ${ticker} không tồn tại`), { status: 404 });
     }

@@ -264,10 +264,30 @@ export interface OhlcvBar {
   volume: number;
 }
 
+// Candle aggregation interval — D=daily, W=weekly, M=monthly.
+// VN market is single-session/day so sub-daily intervals are not modelled.
+export type CandleInterval = 'D' | 'W' | 'M';
+
+// Lookback window — how far back from today the chart spans.
+// 1T/3T/6T = 1/3/6 tháng, 1N/3N = 1/3 năm, YTD = year-to-date, All = full history (capped 5 năm).
+export type CandleLookback = '1T' | '3T' | '6T' | '1N' | '3N' | 'YTD' | 'All';
+
+// Pre-computed overlay indicators aligned 1-to-1 with `bars` (same length, same index).
+// `null` for bars without enough history — e.g. ma200[i] is null until i ≥ 199 within
+// the underlying full series. Computed server-side so the chart renders "ready to draw".
+export interface PriceIndicators {
+  ma20: (number | null)[];
+  ma50: (number | null)[];
+  ma200: (number | null)[];
+  ma_volume_20: (number | null)[];
+}
+
 export interface StockPricesResponse {
   ticker: string;
-  period: '1M' | '3M' | '6M' | '1Y';
+  interval: CandleInterval;
+  lookback: CandleLookback;
   bars: OhlcvBar[];
+  indicators: PriceIndicators;
 }
 
 // =====================================================================

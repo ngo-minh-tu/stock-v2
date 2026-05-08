@@ -6,6 +6,8 @@
 import { useApiResource } from './useApiResource';
 
 import type {
+  CandleInterval,
+  CandleLookback,
   StockDetailResponse,
   StockPricesResponse,
   TickerRunsResponse,
@@ -18,10 +20,13 @@ export function useStockDetail(runId: string | null, ticker: string | null, relo
 
 export function useStockPrices(
   ticker: string | null,
-  period: '1M' | '3M' | '6M' | '1Y',
+  interval: CandleInterval,
+  lookback: CandleLookback,
   reloadKey = 0,
 ) {
-  const path = ticker ? `/api/stocks/${ticker}/prices?period=${period}` : null;
+  const path = ticker
+    ? `/api/stocks/${ticker}/prices?interval=${interval}&lookback=${lookback}`
+    : null;
   return useApiResource<StockPricesResponse>(path, reloadKey);
 }
 

@@ -106,7 +106,7 @@
   - **Theme switch không repaint volume tints + overlay line colors**: volume bar `${upColor}55` và overlay `readVar('--ssi-up')` được capture tại data-paint time. Khi theme đổi, MutationObserver chỉ apply layout + candle colors, KHÔNG đụng tới 2 thứ này → bị stuck màu cũ. Đã refactor `repaintData/repaintOverlays` thành single path, theme apply() gọi lại cả 2 với refs `barsRef`/`overlaysRef`.
 - **Cụm 3 đang ở working dir** chờ commit cuối session này. (Cụm 2 đã được commit ở `a0bebf2` `feat(prototype): cluster 2 — screening flow + retroactive reports`.)
 - **MOCK_INSUFFICIENT chưa test được trong UI**: ticker này bị excluded ở vòng 4 → handler `/runs/{id}/stocks/MOCK_INSUFFICIENT` trả 404 → page render error block thay vì panel "INSUFFICIENT_DATA UX đặc biệt" (acceptance #8). Fix gợi ý: thêm 1 anchor `MOCK_INSUFFICIENT_SCORED` (scored thay vì excluded) với `entry_signal=INSUFFICIENT_DATA + feature_availability=30`. Hoặc cho handler stock-detail check excluded → render shape khác thay vì 404. Chọn cụm sau.
-- **MA20/50/200 + Bollinger Bands overlay trên candlestick**: SRS-08 layout có nhưng cluster-3 prompt §3.2 chỉ nêu 4 line S/R/SL/Target → tôi theo prompt. `raw_indicators` payload đã có sẵn 5 chỉ báo này → cụm 6 nếu refactor candlestick có thể bật overlay tương ứng.
+- **MA20/50/200 + Bollinger Bands overlay trên candlestick**: SRS-08 layout có nhưng cluster-3 prompt §3.2 chỉ nêu 4 line S/R/SL/Target → tôi theo prompt. `raw_indicators` payload đã có sẵn 5 chỉ báo này → cụm 6 nếu refactor candlestick có thể bật overlay tương ứng. **(MA20/50/200 đã được bật ở Fix #2 — xem §12. Bollinger Bands vẫn chưa.)**
 - **Theme switch trên candlestick canvas chưa user-verify thực tế**: lý thuyết `MutationObserver([data-theme]) → applyOptions` đúng, nhưng chưa test browser. Cụm 4 (Price Board) sẽ stress-test theme switching nhiều — theo dõi.
 - **`reference_price` trong header sinh ngẫu nhiên ±1%** thay vì lấy từ pricing engine thật → delta % cosmetic. Cụm 4 bảng giá sẽ cần `reference_price` thật từ phiên trước → revisit shape `StockStaticInfo`.
 - **Run selector trong header chỉ list run mà ticker được scored**: ticker MOCK_INSUFFICIENT → mọi run đều excluded → list rỗng → header không show selector. Acceptable nhưng có thể confusing — cụm sau hiển thị empty state với hint "Mã này không xuất hiện trong run nào".
@@ -172,3 +172,78 @@ Wrapper div radar đổi sang `className="relative"` để absolute tooltip posi
 **Verify:** `tsc --noEmit` pass clean.
 
 **File touched:** `prototype/src/components/stock-detail/ScoreBreakdown.tsx`. Helper mới được tạo trong cluster 2 charts/ folder và dùng chung — log chính ở `cluster-2-summary.md §12 Fix #4`.
+
+### Fix #2 — Candlestick chart upgrade theo phong cách platform tài chính (2026-05-08)
+
+**Bối cảnh:** Bên thứ 3 góp ý 5 điểm cho chart hiện tại để "giống TradingView/TCBS hơn": (A) tách timeframe selector thành 2 tầng (interval D/W/M + lookback 1T/3T/6T/1N/3N/YTD/All); (B1) MA20/50/200 overlay + toggle + legend; (B2) crosshair tooltip floating; (B3) grid mờ + highlight giá hiện tại; (B4) volume panel đẹp hơn + MA volume; (B5) di chuyển legend S/R lên trực tiếp đường line. User yêu cầu đánh giá từng điểm trước khi làm.
+
+**Đánh giá:** Một số điểm đã có sẵn từ cluster 3 (crosshair `CrosshairMode.Magnet`; volume bar xanh/đỏ theo close vs open; volume panel đã 25%; S/R đã có `axisLabelVisible: true` + `title` → label đã tự gắn vào line; chỉ còn block text duplicate dưới chart). Quyết định: bỏ duplicate, làm A + B1 + B3 + B4 (MA volume) + B5 (xóa duplicate); skip B2 vì legend top-left đã cover thông tin OHLC + MA + %change theo crosshair.
+
+**4 bước triển khai:**
+
+**Bước 1 — B5 + B3 (quick wins).** [`CandlestickChart.tsx`]
+- Helper mới `withAlpha(hex, alpha)` convert hex → rgba; gridline opacity 100% → 12% (giống TradingView, chart "thoáng" hơn).
+- Bật explicit `priceLineVisible: true, priceLineStyle: 2 (dashed), priceLineWidth: 1, lastValueVisible: true` cho candle series → giá close cuối có dashed line ngang + bubble label nổi bật trên trục Y.
+- Xóa hẳn block 6 dòng text legend duplicate dưới chart (axis label đã hiện sẵn tên + giá trị trên price line bên phải).
+
+**Bước 2 — Phần A: tách 2 tầng selector + mở rộng fixture + đổi API contract.**
+- **Type contract** ([`types.ts`]): thêm `CandleInterval = 'D' | 'W' | 'M'`, `CandleLookback = '1T' | '3T' | '6T' | '1N' | '3N' | 'YTD' | 'All'`. `StockPricesResponse` bỏ `period`, thêm `interval` + `lookback`.
+- **Cảnh báo về ký hiệu "T"**: tầng 1 đề xuất `T = Tuần` xung đột tầng 2 `1T = 1 Tháng`. Đổi tầng 1 dùng `D | W | M` (English ngắn, gọn, giống TradingView). Tầng 2 giữ vi `1T/3T/6T/1N/3N/YTD/Tất cả`, en `1M/3M/6M/1Y/3Y/YTD/All`.
+- **Fixture mở rộng** ([`prices-fixture.ts`]): `BASE_DAYS` 250 → 1500 (~6 năm trading days, dư padding cho MA200 ngay cả ở lookback ngắn). Cache theo `${ticker}:${currentPrice.toFixed(2)}` để toggle D ↔ W ↔ M serve aggregation nhất quán.
+- **Aggregation D → W/M** ([`prices-fixture.ts`] hàm `aggregate()`): group theo ISO week (W) hoặc YYYY-MM (M). Mỗi bucket: open=first.open, high=max, low=min, close=last.close, volume=sum. Date của bucket = ngày bar cuối trong bucket (chart-friendly).
+- **Lookback → tail count** ([`prices-fixture.ts`] hàm `tailCount()`): D = bar count thẳng (1T=22, 3T=66, ..., 3N=750); W = chia 5; M = chia 22; YTD = scan ngược tới Jan 1 năm cuối; All = full (~1250 daily / ~260 weekly / ~60 monthly).
+- **MSW handler** ([`handlers.ts`]): parse `?interval=D|W|M&lookback=1T|...|All`. Default `D + 6T`. Validate whitelist → invalid fallback default.
+- **Hook** ([`useStockDetail.ts`]): `useStockPrices(ticker, interval, lookback, reloadKey)` → path `?interval=...&lookback=...`.
+- **Component** ([`CandlestickChart.tsx`]): props mới `interval`, `lookback`, `onIntervalChange`, `onLookbackChange`. UI: tier 1 segmented pill `D | W | M`, tier 2 row text button 7 lookback.
+- **Page** ([`stock-detail/page.tsx`]): 2 useState — đặt tên `candleInterval` thay vì `interval` để tránh shadow `globalThis.setInterval`.
+- **i18n**: bỏ namespace `period`, thêm `interval`, `lookback`, `intervalGroup`, `lookbackGroup`.
+
+**Bước 3 — Threshold-5 disable + auto-bump (UX cleanup).**
+- **Vấn đề**: M + 1T = 1 bar, vô nghĩa. User nói chỉ là nice-to-have nhưng worth doing vì cost thấp.
+- **Constants** ([`CandlestickChart.tsx`]): `MIN_LOOKBACK_BY_INTERVAL = { D: '1T', W: '3T', M: '6T' }` (đảm bảo ≥5 bars). `LOOKBACK_RANK` để compare; YTD/All gán rank 99 ("luôn đủ") vì YTD calendar-dependent và All luôn nhiều bars nhất.
+- **Disable**: lookback button có rank < min cho interval hiện tại → `disabled`, opacity 0.35, cursor not-allowed, `title` tooltip "Khoảng quá ngắn cho khung nến này".
+- **Auto-bump**: `handleIntervalClick(next)` — nếu lookback hiện < min của interval mới → `onLookbackChange(min)` TRƯỚC `onIntervalChange(next)` để tránh 1 frame render với combo invalid. Vd D + 1T → click M → state update: lookback=6T, interval=M.
+
+**Bước 4 — B1 (MA20/50/200) + B4 (MA volume 20) + crosshair-driven legend.**
+- **Type** ([`types.ts`]): thêm `PriceIndicators = { ma20, ma50, ma200, ma_volume_20 }`, mỗi field `(number | null)[]` aligned 1-1 với `bars`. `StockPricesResponse.indicators` field mới.
+- **Fixture** ([`prices-fixture.ts`]): hàm `computeSMA(values, period)` chuẩn SMA, null cho `period-1` entry đầu. Tính trên FULL aggregated series TRƯỚC slice tail → window hiển thị thừa hưởng MA "warm" từ padding bars trái nó. Hệ quả: D + 1T (22 bars) vẫn có MA200 từ bar đầu thay vì rỗng 199 bars (nhờ 1500 daily padding).
+- **Chart** ([`CandlestickChart.tsx`]):
+  - 4 line series mới qua `addLineSeries`: 3 trên price scale (MA20 amber `#f7c948`, MA50 sky blue `#4d96ff`, MA200 pink-red `#ec6090`), 1 trên `priceScaleId='volume'` (MA Vol gray `#9aa4b2`). `priceLineVisible: false`, `lastValueVisible: false`, `crosshairMarkerVisible: false` — không clutter axis/highlight.
+  - `repaintIndicators()` setData từng series, skip null entries → lightweight-charts vẽ gap đúng chỗ MA chưa đủ history.
+  - Theme repaint cũng re-paint indicators (MA color hard-coded theme-agnostic, nhưng data phải re-set khi candle series re-mount).
+- **Toggle state** + **localStorage persist**:
+  - State `toggles: { ma20, ma50, ma200, ma_volume_20 }`. Default: MA20+MA50+MA Vol on, **MA200 off** (thường rỗng trên monthly + clutter ở lookback ngắn).
+  - Persist key `stock-v2:candlestick-ma-toggles`. Read trên init via lazy `useState(readToggles)`. Write trên mọi toggle change.
+  - Apply visibility qua `series.applyOptions({ visible: bool })` (không setData trống — giữ data).
+- **Crosshair legend** (top-left chart, floating overlay):
+  - `subscribeCrosshairMove(handler)` — đọc `param.time`, tìm bar index, build `LegendSnapshot { date, OHLCV, pctChange, ma20, ma50, ma200 }`.
+  - Mouse rời chart → fallback last bar.
+  - Bars effect cũng seed legend = last bar ngay từ render đầu (không cần hover).
+  - JSX: `position: absolute; top-2 left-2`, 2 hàng:
+    - Hàng 1: Date + OHLCV + %change (xanh/đỏ tone). Background semi-transparent (`withAlpha(card-bg, 0.85) + backdrop-filter: blur(2px)`).
+    - Hàng 2: 4 chip toggle MA. Active = chấm tròn đầy + opacity 1; inactive = chấm rỗng + opacity 0.45. Click toggle visibility. Hover title: "Hiện đường này" / "Ẩn đường này".
+  - `pointer-events-none` outer + `pointer-events-auto` inner → chart vẫn nhận hover mọi nơi trừ chính buttons.
+- **B2 skip**: legend top-left đã cover OHLC + MA + %change theo crosshair → thêm floating tooltip cạnh cursor sẽ duplicate + bí chart. User chọn skip.
+
+**Decision points:**
+- **MA padding strategy = "backend tính sẵn"** (không phải client compute): cleanest cho real backend sau này. Frontend không phải biết "padding bars". `null` cho bar không đủ history.
+- **MA hard-coded hex (không dùng CSS var)**: 4 màu chosen distinct với up/down/S/R, hoạt động tốt trên cả light/dark theme. Nếu sau cần theme-specific MA colors → wrap qua CSS var sau (acceptable trade-off cho hiện tại).
+- **Threshold = 5 bars**: M+6T (6 bars) vẫn cho thấy xu hướng nửa năm gần đây, đủ ý nghĩa. Nâng lên 10-12 sẽ chặn quá nhiều combo.
+- **Default toggles MA200 off**: monthly aggregate chỉ ~70 bars total → MA200 rỗng hoàn toàn; ở D + lookback ngắn thì MA200 chiếm visual space mà không thêm thông tin → off mặc định, user opt-in khi cần.
+- **Cache daily by `${ticker}:${currentPrice.toFixed(2)}`**: cùng ticker + cùng anchor price → cùng daily series → toggle interval cho aggregation nhất quán. Nếu currentPrice đổi (run mới chấm khác) → cache miss → regenerate.
+
+**Verify:** `tsc --noEmit` + `eslint` pass clean. User-side verify (golden path): mặc định D+6T → đổi interval → đổi lookback → toggle MA → reload page (toggle persist) → đổi theme.
+
+**Files touched:**
+- `prototype/src/lib/types.ts` (thêm 3 type mới)
+- `prototype/src/mocks/data/prices-fixture.ts` (rewrite: BASE_DAYS, aggregate, computeSMA, getOrBuildDaily cache)
+- `prototype/src/mocks/handlers.ts` (parse interval+lookback)
+- `prototype/src/lib/hooks/useStockDetail.ts` (signature change)
+- `prototype/src/components/stock-detail/CandlestickChart.tsx` (rewrite: 2-tier selector, MA series, toggles, crosshair legend)
+- `prototype/src/app/(app)/stock-detail/page.tsx` (state + props)
+- `prototype/src/messages/{vi,en}.json` (interval, lookback, ma namespace)
+
+**Tác động đến cụm sau (cập nhật §10):**
+- Cụm 4 nếu reuse `useStockPrices` cho Price Board mini chart → **bắt buộc đổi signature** sang `(ticker, interval, lookback, reloadKey)`. Đề xuất: mini chart nên fix `interval='D', lookback='1T'` (1 tháng daily) — không cần controls.
+- `StockPricesResponse.indicators` shape ổn định, có thể reuse cho bất kỳ nơi nào cần MA pre-computed.
+- `MIN_LOOKBACK_BY_INTERVAL` + threshold 5 bars là quy ước UX — nếu cụm sau có chart khác cũng có 2-tier selector thì nên áp dụng cùng logic.
