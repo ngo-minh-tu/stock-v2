@@ -247,3 +247,18 @@ Wrapper div radar đổi sang `className="relative"` để absolute tooltip posi
 - Cụm 4 nếu reuse `useStockPrices` cho Price Board mini chart → **bắt buộc đổi signature** sang `(ticker, interval, lookback, reloadKey)`. Đề xuất: mini chart nên fix `interval='D', lookback='1T'` (1 tháng daily) — không cần controls.
 - `StockPricesResponse.indicators` shape ổn định, có thể reuse cho bất kỳ nơi nào cần MA pre-computed.
 - `MIN_LOOKBACK_BY_INTERVAL` + threshold 5 bars là quy ước UX — nếu cụm sau có chart khác cũng có 2-tier selector thì nên áp dụng cùng logic.
+
+### Fix #3 — Candlestick chart bị nén do "cliff" cuối random walk (2026-05-08)
+
+**Triệu chứng (user report):** Mở Stock Detail bất kỳ mã nào (DIG, KDH, ...) — chart nến bị dồn nhỏ ở góc trên 30% chiều cao, trục Y kéo từ ~88 đến ~200 dù giá hiện tại chỉ ~97. Hover vào chart thấy zoom đúng vùng giá thực, rồi snap lại trạng thái nén.
+
+**Root cause:** Trong `prototype/src/mocks/data/prices-fixture.ts` hàm `generateDailyBars`, random walk 1500 ngày với `drift = 0.0005/day` → giá tự nhiên drift ~2.12x. Code trước đó chỉ overwrite **bar cuối cùng** = `currentPrice` (`closes[closes.length - 1] = currentPrice`), tạo "cliff" ở mép phải — các bar trước đó vẫn ở đỉnh sóng (~150-200) trong khi bar cuối snap về 97.85. Kết hợp với 4 overlay lines (support/resistance/stop_loss/target_3m) anchor quanh `currentPrice`, lightweight-charts autoscale cố fit cả 2 vùng (bars 150-200 + overlays 88-108) → trục Y bị dãn quá rộng. Hover làm chart tạm tính lại scale theo vùng visible → zoom nhìn đẹp, rồi auto-fit lại lúc rời cursor.
+
+**Fix:** Thay cliff-overwrite bằng **multiplicative scaling toàn bộ closes** sao cho bar cuối tự nhiên = `currentPrice`. Scale factor `= currentPrice / closes[last_unmodified]`, áp dụng cho mọi entry → preserve shape (volatility, trend, % returns) chỉ đổi level. `scaledStartPrice = startPrice * scale` để bar đầu tiên (open của bar 0) cũng nhất quán.
+
+**Hệ quả:** Window 6T (125 bars) giờ oscillate trong band ~75-115 quanh `currentPrice = 97.85`, overlays 88-108 nằm trong band → autoscale fit tự nhiên, không cần workaround chart-config.
+
+**Verify:** `tsc --noEmit` pass. User cần refresh trang (cache `dailyCache` lives in module scope; HMR clear khi file đổi).
+
+**Files touched:**
+- `prototype/src/mocks/data/prices-fixture.ts` (hàm `generateDailyBars`).

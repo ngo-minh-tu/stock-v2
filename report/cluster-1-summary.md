@@ -206,3 +206,17 @@ File touched (iter 3): `prototype/src/styles/themes.css`, `docs/design.md` (§4.
 File touched (iter 4): `prototype/src/styles/themes.css`, `docs/design.md` (§4.4 saturation spec).
 
 **File touched:** `prototype/src/styles/themes.css`, `docs/design.md`.
+
+### Fix #2 — Tooltip 2 chart Tổng quan "trôi" theo cursor có độ trễ (2026-05-08)
+
+**Triệu chứng:** Trên Dashboard Tổng quan, hover vào chart "Xu hướng VN-Index & ngành BĐS" (LineChart) hoặc "Top 10 mã theo AI Score" (BarChart), tooltip không bám đúng vị trí cursor mà trượt/lag rõ rệt khi di chuyển giữa các điểm dữ liệu — gây cảm giác "thông tin đi lung tung". Recharts mặc định bật animation transition trên tooltip wrapper.
+
+**Root cause:** Recharts `<Tooltip>` mặc định `isAnimationActive=true` + có CSS `transition` trên wrapperStyle, nên mỗi lần cursor đổi điểm dữ liệu, tooltip animate position trong ~400ms thay vì snap ngay.
+
+**Fix:**
+1. `prototype/src/components/charts/LineChart.tsx` — thêm `isAnimationActive={false}`, `animationDuration={0}`, `contentStyle.transition: 'none'`, `wrapperStyle={{ transition: 'none', pointerEvents: 'none' }}`.
+2. `prototype/src/components/charts/BarChart.tsx` — apply cùng pattern.
+
+**Tác dụng phụ:** Không. RadarChart đã dùng `RadarHoverTooltip` custom (file `radar-tooltip.tsx` có comment "Replaces recharts' default Tooltip which follows the cursor and 'jumps'") → đã tự miễn nhiễm. TreemapChart dùng `content={<TooltipContent />}` custom → không bị ảnh hưởng. PieChart không có Tooltip.
+
+**File touched:** `prototype/src/components/charts/LineChart.tsx`, `prototype/src/components/charts/BarChart.tsx`.

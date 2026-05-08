@@ -72,8 +72,12 @@ function tradingDaysEndingToday(count: number): Date[] {
 }
 
 // Walk forward from a starting price using a small daily drift + gaussian shock.
-// Anchors the *last* day's close to `currentPrice` so the chart's right edge
-// matches the displayed current price.
+// We then *scale* the entire walk so the last close lands on `currentPrice`,
+// preserving the walk's shape (volatility, trend) while guaranteeing the right
+// edge matches the displayed price. A bare overwrite of the final close (which
+// the prior implementation did) leaves a cliff at the right edge — earlier bars
+// kept their drifted-up levels, blowing the y-axis when overlays anchored to
+// current_price are added to the chart.
 function generateDailyBars(args: {
   seed: number;
   currentPrice: number;
@@ -94,14 +98,18 @@ function generateDailyBars(args: {
     p = Math.max(p + drift * p + shock, currentPrice * 0.25);
     closes.push(p);
   }
-  closes[closes.length - 1] = currentPrice;
+  // Scale the whole series so the last close == currentPrice. Multiplicative scale
+  // preserves all relative moves (% returns, volatility, trend shape).
+  const scale = closes[closes.length - 1] > 0 ? currentPrice / closes[closes.length - 1] : 1;
+  for (let i = 0; i < closes.length; i += 1) closes[i] *= scale;
 
   const dates = tradingDaysEndingToday(BASE_DAYS);
 
   const bars: OhlcvBar[] = [];
+  const scaledStartPrice = startPrice * scale;
   for (let i = 0; i < BASE_DAYS; i += 1) {
     const close = closes[i];
-    const open = i === 0 ? startPrice : closes[i - 1];
+    const open = i === 0 ? scaledStartPrice : closes[i - 1];
     const lo = Math.min(open, close) * (1 - rnd() * 0.012);
     const hi = Math.max(open, close) * (1 + rnd() * 0.012);
     const baseVol = 200_000 + rnd() * 1_800_000;

@@ -201,6 +201,7 @@
     "loading": "Đang tải chi tiết mã…",
     "errorTitle": "Không tải được chi tiết mã",
     "errorBody": "Mã không tồn tại trong run này hoặc đã bị loại.",
+    "noRun": "Chưa có run nào — bấm \"Chạy\" trên thanh đầu trang để bắt đầu phân tích.",
     "missingTicker": "URL thiếu tham số ticker. Vào Top MUA và bấm \"Xem chi tiết\" để mở trang này.",
     "header": {
       "aiScore": "AI Score",

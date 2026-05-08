@@ -30,7 +30,7 @@ export default function StockDetailPage() {
   const queryRunId = searchParams.get('run_id');
   const queryTicker = searchParams.get('ticker');
 
-  const { lastCompletedRunId } = useRun();
+  const { lastCompletedRunId, runsHydrated } = useRun();
 
   // Reload run-scoped data when a new run completes (mirrors Dashboard / TopMUA).
   const [reloadKey, setReloadKey] = useState(0);
@@ -80,7 +80,22 @@ export default function StockDetailPage() {
     );
   }
 
-  if (detailRes.loading) {
+  // Hydration finished but no run exists anywhere (empty store / fresh deploy) — show a
+  // clear "no run yet" message instead of looping on loading or the misleading error body.
+  if (!runId && runsHydrated) {
+    return (
+      <div className="card p-6 text-sm">
+        <h1 className="text-base font-medium mb-2" style={{ color: 'var(--color-theme-text-tertiary)' }}>
+          {t('errorTitle')}
+        </h1>
+        <p>{t('noRun')}</p>
+      </div>
+    );
+  }
+
+  // Ticker present but no runId resolved yet — RunContext is still hydrating the latest
+  // completed run. Show loading instead of the misleading "ticker not in run" error.
+  if (!runId || detailRes.loading) {
     return (
       <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-theme-text-secondary)' }}>
         <Loader2 size={14} aria-hidden="true" className="animate-spin" />

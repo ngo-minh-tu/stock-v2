@@ -34,13 +34,17 @@ export function LineChart({ data }: { data: Point[] }) {
           domain={['dataMin - 50', 'dataMax + 50']}
         />
         <Tooltip
+          isAnimationActive={false}
+          animationDuration={0}
           contentStyle={{
             backgroundColor: 'var(--color-theme-tooltip-background)',
             border: 'none',
             borderRadius: 4,
             color: 'var(--color-theme-text-tertiary)',
             fontSize: 12,
+            transition: 'none',
           }}
+          wrapperStyle={{ transition: 'none', pointerEvents: 'none' }}
         />
         <Legend
           wrapperStyle={{ fontSize: 12, color: 'var(--color-theme-text-primary)' }}

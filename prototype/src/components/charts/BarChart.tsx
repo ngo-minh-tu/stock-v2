@@ -37,6 +37,8 @@ export function BarChart({ data }: { data: Datum[] }) {
           domain={[0, 100]}
         />
         <Tooltip
+          isAnimationActive={false}
+          animationDuration={0}
           cursor={{ fill: 'var(--color-theme-tertiary)', opacity: 0.4 }}
           contentStyle={{
             backgroundColor: 'var(--color-theme-tooltip-background)',
@@ -44,7 +46,9 @@ export function BarChart({ data }: { data: Datum[] }) {
             borderRadius: 4,
             color: 'var(--color-theme-text-tertiary)',
             fontSize: 12,
+            transition: 'none',
           }}
+          wrapperStyle={{ transition: 'none', pointerEvents: 'none' }}
         />
         <Bar dataKey="ai_score" radius={[3, 3, 0, 0]} isAnimationActive={false}>
           {data.map((d) => (

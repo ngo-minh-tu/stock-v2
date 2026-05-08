@@ -201,6 +201,7 @@
     "loading": "Loading stock detail…",
     "errorTitle": "Failed to load stock detail",
     "errorBody": "Ticker not in this run or was excluded.",
+    "noRun": "No runs yet — press \"Run\" in the header to start an analysis.",
     "missingTicker": "URL is missing a ticker. Open Top MUA and click \"View detail\" to land here with the right context.",
     "header": {
       "aiScore": "AI Score",

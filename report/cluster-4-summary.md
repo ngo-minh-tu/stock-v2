@@ -175,3 +175,9 @@
   - [src/components/badges/ExchangeBadge.tsx:12](../prototype/src/components/badges/ExchangeBadge.tsx#L12) — UPCOM map sang `--exchange-upcom`.
   - [src/components/price-board/PriceBoardFilters.tsx:24](../prototype/src/components/price-board/PriceBoardFilters.tsx#L24) — UPCOM filter button dùng `--exchange-upcom`.
   - User confirm OK cùng ngày qua localhost:3000.
+
+- **2026-05-08 — Click ticker từ Price Board hiện sai lỗi "Mã không tồn tại trong run này".** User report: bấm DIG ở Bảng giá → Stock Detail render error "Mã không tồn tại trong run này hoặc đã bị loại". Root cause: `PriceBoardTable` push `/stock-detail?ticker=DIG` không kèm `run_id`, page fallback sang `RunContext.lastCompletedRunId` — biến này khởi tạo `null` mỗi lần mount/refresh và chỉ set sau khi user nhấn "Chạy" trong session. `runsStore` đã seed 7 run lịch sử nhưng React context không biết. Bug cùng ảnh hưởng News (`NewsCard`) và Portfolio (`PortfolioTable`) — chỉ Top MUA gắn đúng `run_id`. Đây là vấn đề kiến trúc frontend, sẽ tái xuất hiện với backend thật khi user refresh / share deep link.
+  - [src/contexts/RunContext.tsx](../prototype/src/contexts/RunContext.tsx) — thêm mount-once `useEffect` fetch `/api/runs?limit=1`, set `lastCompletedRunId` nếu run terminal và state đang null (functional updater để không đè run đang chạy). Thêm flag `runsHydrated` để page phân biệt "đang hydrate" vs "đã hydrate xong nhưng store rỗng".
+  - [src/app/(app)/stock-detail/page.tsx](../prototype/src/app/(app)/stock-detail/page.tsx) — tách 3 nhánh: (1) `!runId && runsHydrated` → "noRun" message; (2) `!runId || loading` → loading spinner; (3) `error || !data` → error block. Tránh flash error misleading lúc đang hydrate.
+  - [src/messages/vi.json:204](../prototype/src/messages/vi.json#L204) + [src/messages/en.json:204](../prototype/src/messages/en.json#L204) — thêm key `stockDetail.noRun` cho case zero runs.
+  - User confirm OK cùng ngày qua localhost:3000.

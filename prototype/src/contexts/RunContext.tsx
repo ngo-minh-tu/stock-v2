@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ApiError, JobConflictError, apiFetch } from '@/lib/api';
 import { RUN_TERMINAL_STATES, type MockRunOutcome } from '@/lib/constants';
 import { usePolling } from '@/lib/hooks/usePolling';
-import type { RunStartResponse, RunStatusResponse } from '@/lib/types';
+import type { RunStartResponse, RunStatusResponse, RunsListResponse } from '@/lib/types';
 
 import { useToast } from './ToastContext';
 
@@ -21,6 +21,8 @@ interface RunContextValue {
   isRunning: boolean;
   /** Latest completed run id, set after a successful poll terminal — Dashboard listens. */
   lastCompletedRunId: string | null;
+  /** True once the mount-time "fetch latest run" has resolved (success or failure). */
+  runsHydrated: boolean;
   /** Trigger a run via mock API. */
   startRun: (args: { totalCapital: number; outcome: MockRunOutcome }) => Promise<void>;
   /** Manually clear the floating card (auto-dismiss handles the success path). */
@@ -35,6 +37,7 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
   const { push } = useToast();
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [lastCompletedRunId, setLastCompletedRunId] = useState<string | null>(null);
+  const [runsHydrated, setRunsHydrated] = useState(false);
 
   // Track which run we have already fired terminal-side-effects for. Using a ref (not state)
   // keeps the side-effect effect from re-running and clearing its own auto-dismiss timer.
@@ -44,6 +47,31 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
     activeRunId ? `/api/runs/${activeRunId}/status` : null,
     { intervalMs: 2000, isTerminal: isTerminalStatus, enabled: Boolean(activeRunId) },
   );
+
+  // Hydrate from the latest completed run on mount so deep links / shared URLs that omit
+  // run_id (Price Board, News, Portfolio → Stock Detail) can still resolve a run. Without
+  // this, the frontend forgets every prior run on refresh. Only sets when still null and
+  // no active run is in flight, so it never overrides a fresh terminal result.
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<RunsListResponse>('/api/runs?limit=1')
+      .then((data) => {
+        if (cancelled) return;
+        const latest = data.items[0];
+        if (latest && RUN_TERMINAL_STATES.has(latest.status)) {
+          setLastCompletedRunId((prev) => prev ?? latest.run_id);
+        }
+      })
+      .catch(() => {
+        // Silent — hydration is best-effort. Page-level fallbacks still show a clear error.
+      })
+      .finally(() => {
+        if (!cancelled) setRunsHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Fire toasts + auto-dismiss exactly once per run completion.
   // Note: the dismissal timer uses a functional setState comparing against the captured run id,
@@ -118,10 +146,11 @@ export function RunProvider({ children }: { children: React.ReactNode }) {
       isRunning:
         Boolean(activeRunId) && !(polling.data && RUN_TERMINAL_STATES.has(polling.data.status)),
       lastCompletedRunId,
+      runsHydrated,
       startRun,
       dismiss,
     }),
-    [activeRunId, polling.data, lastCompletedRunId, startRun, dismiss],
+    [activeRunId, polling.data, lastCompletedRunId, runsHydrated, startRun, dismiss],
   );
 
   return <RunContext.Provider value={value}>{children}</RunContext.Provider>;
