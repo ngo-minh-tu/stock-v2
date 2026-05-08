@@ -152,3 +152,23 @@
 | 13 | DevTools Network khi vào `/stock-detail?...&ticker=VHM` | 4 request: `/api/runs/run_seed_3/stocks/VHM`, `/api/stocks/VHM/runs`, `/api/runs/run_seed_3`, `/api/stocks/VHM/prices?period=6M` (period đổi → chỉ request prices được fire lại) |
 | 14 | `npm run build` + `npm run lint` | Pass strict TypeScript + ESLint clean (✓ verified) |
 | 15 | Run mới complete trong lúc đang ở Stock Detail | `lastCompletedRunId` đổi → `reloadKey++` → tất cả 4 hook re-fetch; header AI Score có thể đổi nếu run mới chấm khác |
+
+## 12. Post-cluster fixes
+
+### Fix #1 — Radar tooltip nhảy lung tung trên ScoreBreakdown (2026-05-08)
+
+**Triệu chứng:** Hover radar 5 nhóm features ở Stock Detail, tooltip bám cursor + snap nhảy giữa các điểm gần nhất → "lung tung". Cũng không có chấm tròn ở vertex để biết hover vào đâu (recharts mặc định `dot={false}`).
+
+**Root cause:** Recharts `<Tooltip>` mặc định trong RadarChart dùng polygon-area hover detection + position bám cursor. Default behavior, không phải bug code.
+
+**Fix:** Cùng giải pháp với cluster 2 (xem [cluster-2-summary.md §12 Fix #4](cluster-2-summary.md) cho chi tiết design). Tóm tắt:
+- Tạo helper mới `prototype/src/components/charts/radar-tooltip.tsx`: `radarOutwardVector(index, total)` (geometry), `createRadarHoverDot(...)` (factory), `<RadarHoverTooltip>` (popup absolute-positioned).
+- Tooltip position từ tọa độ cực của dot (90°-i*72°) + offset 30px outward → đứng yên, luôn ngoài polygon.
+
+**Áp dụng cho dual-series ScoreBreakdown:** 2 dot renderers tách biệt — `renderTickerDot` (`ssi-up`, seriesName từ `t('legend.ticker', { ticker })`) và `renderIndustryDot` (`text-secondary`, seriesName từ `t('legend.industry')`). Hover ticker dot show ticker value, hover industry dot show industry value (không show cả 2 cùng lúc — đúng spec singular).
+
+Wrapper div radar đổi sang `className="relative"` để absolute tooltip position đúng. Bỏ import `<Tooltip>` từ recharts.
+
+**Verify:** `tsc --noEmit` pass clean.
+
+**File touched:** `prototype/src/components/stock-detail/ScoreBreakdown.tsx`. Helper mới được tạo trong cluster 2 charts/ folder và dùng chung — log chính ở `cluster-2-summary.md §12 Fix #4`.

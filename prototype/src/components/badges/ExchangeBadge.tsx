@@ -9,7 +9,7 @@ interface Props {
 const COLOR: Record<Props['value'], string> = {
   HOSE: 'var(--ssi-up)',
   HNX: 'var(--ssi-floor)',
-  UPCOM: 'var(--ssi-ref)',
+  UPCOM: 'var(--exchange-upcom)',
 };
 
 export function ExchangeBadge({ value }: Props) {

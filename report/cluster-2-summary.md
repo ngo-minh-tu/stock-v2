@@ -170,3 +170,155 @@ Shape & file nguồn cho cụm sau tham khảo:
 | 13 | Mobile viewport (≤640px) | Sidebar drawer; RunButton chỉ icon (label ẩn `sm:hidden`); table horizontal-scroll; KPI 2 cols thay vì 5 |
 | 14 | DevTools Network tab | `/api/runs?limit=10`, `/api/runs/:id/dashboard`, `/api/runs/:id/results`, `/api/runs/:id/status` (mỗi 2s khi đang run) |
 | 15 | `npm run build` + `npm run lint` | Pass TypeScript strict + ESLint clean |
+
+## 12. Post-cluster fixes
+
+### Fix #1 — Tooltip Treemap không đọc được trên dark theme (2026-05-08)
+
+**Triệu chứng:** Hover vào ô Treemap ở trang Dashboard, tooltip popup hiển thị mã/điểm/vốn hóa nhưng nền trong suốt — chữ trắng "trôi" trên màu cell, gần như không nhìn được. Lỗi xuất hiện trên cả `oled` và `classic-dark`. Trên `light` / `classic-light` triệu chứng nhẹ hơn vì chữ tooltip đã là dark trên surface trắng.
+
+**Root cause:** Biến CSS `--color-theme-tooltip-background` được dùng ở 8 component (TreemapChart, BarChart, LineChart, PieChart, RadarChart, BacktestRoiChart, ScoreBreakdown, ScoreHistogram) nhưng **chưa từng được định nghĩa** trong `themes.css` ở bất kỳ theme nào → fallback về `unset` → trong suốt. Đây là gap có từ cluster 1 (themes.css gốc) nhưng chỉ lộ rõ khi cluster 2 đưa Treemap vào dashboard, và tệ hơn ở cluster 3+ với nhiều chart hơn.
+
+**Fix:**
+1. `prototype/src/styles/themes.css` — thêm `--color-theme-tooltip-background` + `--color-theme-tooltip-border` vào cả 4 theme:
+   - `classic-dark`: `rgba(20,18,32,0.96)` + border `rgba(255,255,255,0.10)`
+   - `oled`: `rgba(10,10,10,0.96)` + border `rgba(255,255,255,0.14)` (gần pure black, viền sáng hơn để pop trên nền OLED đen tuyền)
+   - `light` & `classic-light`: `rgba(255,255,255,0.98)` + border `rgba(0,0,0,0.10)`
+2. `prototype/src/components/charts/TreemapChart.tsx` — nâng styling tooltip popup theo spec:
+   - Padding `8px 12px` (thay `px-2.5 py-1.5`)
+   - `border: 1px solid var(--color-theme-tooltip-border)` (mới — thêm chiều sâu)
+   - `shadow-lg` (thay `shadow-md`)
+   - `rounded-md` + `backdrop-filter: blur(2px)`
+   - Ticker bump lên `text-sm` cho dễ scan
+
+**Tác dụng phụ tốt:** Vì sửa ở tầng CSS variable, tất cả 8 component cùng dùng biến này (BarChart, LineChart, PieChart, RadarChart, BacktestRoiChart, ScoreBreakdown trong cluster 3, ScoreHistogram trong cluster 5) đều tự động hết bệnh tooltip trong suốt — không cần touch từng file.
+
+**Verify:** `npx tsc --noEmit` pass clean. ESLint không có warning trên file đã sửa (.css parse error là noise irrelevant của eslint default parser).
+
+**File touched:** `prototype/src/styles/themes.css`, `prototype/src/components/charts/TreemapChart.tsx`.
+
+**Iteration 2 (cùng ngày, sau user feedback):** Đồng bộ màu tooltip theo recommendation — dùng pattern y hệt Pie center label (Fix #3). Set `color: recommendationColor(d.recommendation)` trên wrapper div thay vì chỉ ở dòng "BAN · 30" → cả 3 dòng (ticker / recommendation+score / vốn hóa) cùng màu xanh-MUA / vàng-GIỮ / đỏ-BÁN. Dòng cuối giữ `opacity: 0.85` cho hierarchy. File touched: `TreemapChart.tsx`.
+
+### Fix #2 — Pie chart "Tỷ lệ khuyến nghị" chữ % đen trên nền OLED/classic-dark (2026-05-08)
+
+**Triệu chứng:** Donut chart MUA/GIỮ/BÁN ở Dashboard render nhãn `%` (vd "14%", "29%") với màu mặc định của recharts → trên `oled` (#000) và `classic-dark` (#020210) chữ gần như tàng hình. Legend ở dưới dùng `--color-theme-text-primary` = `#c1c1c1`, đọc được nhưng contrast chưa cao.
+
+**Root cause:** Code cũ truyền `label={({ value }) => '...%'}` — recharts wrap string return value vào `<text>` với fill mặc định (hardcode `#666`/đen tùy version), KHÔNG inherit theme color. Đây là pattern phổ biến mọi recharts pie label đều dính nếu không tự render SVG.
+
+**Fix:** [PieChart.tsx](prototype/src/components/charts/PieChart.tsx)
+1. Thay `label` string-returning function bằng custom SVG `<text>` renderer (`renderLabel`) đặt `fill="var(--color-theme-text-tertiary)"` → trắng (#ffffff) ở dark, đen (#1e2329) ở light, tự đổi theo theme.
+2. Position label OUTSIDE donut tại `radius = outerRadius + 14` với `textAnchor` động (`start` nếu nằm phải tâm, `end` nếu trái) — đúng yêu cầu user "nhãn % bên ngoài segment phải đọc được".
+3. Hide label cho slice < 4% (tránh chồng nhãn khi 1 nhóm rất nhỏ).
+4. Giảm `innerRadius` 55%→50% và `outerRadius` 80%→72% để chừa chỗ cho label outside, tránh clip edge card.
+5. Bump Legend từ `--color-theme-text-primary` (#c1c1c1) → `--color-theme-text-tertiary` (#ffffff dark / #1e2329 light) cho contrast tối đa.
+6. Tooltip thêm `border: 1px solid var(--color-theme-tooltip-border)` + `borderRadius: 6` đồng bộ với spec tooltip mới (Fix #1).
+
+**Verify:** `tsc --noEmit` pass. Grep `fill: '#000'` / `color: 'black'` toàn `src/` → 0 hit, không còn chỗ hardcode màu chữ tối ở chart nào khác. Sentiment doughnut cluster 4 dùng CSS conic-gradient (không phải recharts) → không liên quan.
+
+**File touched:** `prototype/src/components/charts/PieChart.tsx`.
+
+### Fix #3 — Pie chart: thêm center label, bỏ tooltip popup chèn vào ring (2026-05-08)
+
+**Triệu chứng:** Sau Fix #2 user phản hồi qua screenshot OLED:
+- Donut hole ở giữa trống trơn — "thông tin bên trong đâu rồi?"
+- Recharts default Tooltip popup ("GIỮ : 55") bám theo cursor, khi hover gần tâm donut thì đè trực tiếp lên vòng màu → mất thẩm mỹ.
+
+**Quyết định UX:** Bỏ hẳn tooltip popup, thay bằng **center label trong donut hole** — pattern phổ biến cho donut charts. Lợi: thông tin luôn hiển thị ở vị trí cố định (không chạy theo cursor), không bao giờ chèn ring, vừa fill được khoảng trống ở tâm vừa cung cấp context tốt hơn (hiện cả tổng số mã + percentage).
+
+**Fix:** [PieChart.tsx](prototype/src/components/charts/PieChart.tsx)
+1. Bỏ import `Tooltip` và xóa `<Tooltip>` element. Center label thay thế chức năng hover-info.
+2. Thêm `useState<number | null>` cho `activeIndex`. Wire `<Pie onMouseEnter={(_, idx) => setActiveIndex(idx)} onMouseLeave={() => setActiveIndex(null)}>`.
+3. Wrap `<ResponsiveContainer>` trong `<div className="relative">`. Add overlay `<div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">` ở center:
+   - **Mặc định (no hover):** label "Tổng" (uppercase tracking-wider, secondary color) + tổng số (text-2xl bold, tertiary) + "mã"
+   - **Hover slice:** cả 3 dòng (tên slice + count + "X% · trên Y mã") đồng bộ cùng màu của slice (xanh MUA / vàng GIỮ / đỏ BÁN) — set color trên wrapper div, dòng cuối opacity 0.85 để có hierarchy nhẹ
+4. `pointer-events-none` trên overlay → không chặn mouse events vào pie bên dưới (quan trọng — nếu có pointer-events thì hover detection sẽ bị mất).
+5. `paddingBottom: 24` trên overlay để bù phần Legend dưới đáy, giữ center label thực sự ở giữa vòng donut (không bị legend đẩy lệch).
+6. `isAnimationActive={false}` trên Pie để tránh animation lag khi chuyển active state.
+
+**Verify:** `tsc --noEmit` pass. `text-2xs` đã tồn tại trong tailwind config (dùng ở page.tsx, settings/page.tsx).
+
+**File touched:** `prototype/src/components/charts/PieChart.tsx`.
+
+### Fix #4 — Radar tooltip nhảy lung tung theo cursor (2026-05-08)
+
+**Triệu chứng:** Hover vào biểu đồ Radar 5 nhóm features (cả ở Dashboard và Stock Detail), tooltip "tên trục: giá trị" xuất hiện ở vị trí lộn xộn theo cursor, snap nhảy giữa các điểm gần nhất → cảm giác "nhảy lung tung". Plus: tooltip không có chấm tròn ở các vertex (recharts mặc định `dot={false}`), nên user khó biết hover vào đâu để xem.
+
+**Root cause:** Cả `RadarChart.tsx` (cluster 2) và `ScoreBreakdown.tsx` (cluster 3) dùng recharts `<Tooltip>` mặc định. Recharts trong RadarChart dùng "polygon-area hover detection" + tooltip position bám cursor → mỗi mousemove là 1 reposition. Đây là default behavior, không phải bug code.
+
+**Quyết định UX:** Bỏ hẳn recharts `<Tooltip>`, custom hover-dot tự xử lý. Tooltip chỉ hiện khi hover trực tiếp vào dot, position fixed dựa trên tọa độ cực của dot, đứng yên cho đến khi mouse leave.
+
+**Fix — file mới [radar-tooltip.tsx](prototype/src/components/charts/radar-tooltip.tsx):**
+1. `radarOutwardVector(index, total)` — tính unit vector `(dx, dy)` từ tâm chart hướng ra dot thứ i. Dùng convention recharts: axis 0 ở 90° (top), clockwise. Đây là helper geometry chính.
+2. `createRadarHoverDot({ color, total, onHover, seriesName })` — factory tạo custom dot renderer cho `<Radar dot={...}>`. Mỗi dot render:
+   - Visible circle r=4 với `stroke=var(--color-theme-card-bg)` (viền theme-aware để dot không chìm vào polygon fill)
+   - Invisible hitbox circle r=14 `pointerEvents="all"` cho dễ hover (radius nhỏ thì hover khó)
+   - `onMouseEnter` set hover state với `{x, y, dx, dy, axis, value, color, seriesName}`
+   - `onMouseLeave` clear state
+3. `<RadarHoverTooltip state offset={30}>` — popup div absolute trong wrapper relative div:
+   - Position `left = x + dx*offset, top = y + dy*offset` → đẩy tooltip ra ngoài polygon theo hướng outward
+   - `transform: translate(...)` chọn anchor động dựa vào `(dx, dy)`: dx > 0.3 → start, dx < -0.3 → end, else center. Same cho dy. Threshold 0.3 cho near-axis points stay centered (đẹp hơn alignment cứng nhắc).
+   - Style giống tooltip treemap (Fix #1): bg `var(--color-theme-tooltip-background)`, border `var(--color-theme-tooltip-border)`, padding 8px 12px, shadow-lg, backdrop-blur 2px.
+   - Body: axis name (font-bold) + 1 dòng "[seriesName:] value" với màu = series color.
+
+**Fix — [RadarChart.tsx](prototype/src/components/charts/RadarChart.tsx) (single-series, dashboard):**
+- Bỏ import `Tooltip`. Wrap container trong `<div className="relative">`. Add `useState<RadarHoverState | null>`.
+- Pass `dot={renderDot}` + `activeDot={false}` cho `<Radar>` (activeDot=false defensive — không cho recharts vẽ thêm dot phụ khi tooltip "active").
+- Add `<RadarHoverTooltip state={hover} />` cuối wrapper.
+
+**Fix — [ScoreBreakdown.tsx](prototype/src/components/stock-detail/ScoreBreakdown.tsx) (dual-series, stock detail):**
+- Tương tự nhưng có 2 dot renderers: `renderTickerDot` (color = ssi-up, seriesName = "VHM") và `renderIndustryDot` (color = text-secondary, seriesName = "Trung bình ngành").
+- Mỗi `<Radar>` series có `dot` riêng → hover ticker dot show ticker value, hover industry dot show industry value (không show cả 2 cùng lúc — đúng spec "Tooltip phải hiển thị: tên trục/feature và giá trị số" singular).
+- Wrapper div cho radar đổi sang `className="relative"` để absolute tooltip position đúng.
+
+**Lợi của design:**
+- Tooltip position là **pure function** của (cx, cy, index, total) → identical mỗi lần hover cùng dot, không bao giờ "trôi".
+- Không có `mousemove` listener nào — chỉ enter/leave per dot.
+- Outward direction từ polar coordinate đảm bảo tooltip luôn nằm BÊN NGOÀI polygon (không che chart) bất kể axis ở vị trí nào (top/bottom/left/right).
+- Dual-series hover độc lập: ticker dot và industry dot ở cùng axis có thể hover riêng biệt, mỗi cái show tooltip riêng.
+
+**Verify:** `tsc --noEmit` pass clean. Test mental: 5-axis radar, axis 0 ở top (cos90=0, -sin90=-1) → dx=0, dy=-1, tooltip translate(-50%, -100%) → bottom-center của tooltip ở offset point → tooltip nằm phía trên dot ✓. Axis 1 góc 18° (upper-right) → dx≈0.95 dy≈-0.31 → translate(0%, -100%) → bottom-left ở offset → tooltip extend up-right ✓.
+
+**File touched:** `prototype/src/components/charts/radar-tooltip.tsx` (mới), `prototype/src/components/charts/RadarChart.tsx`. Cluster 3 file (`ScoreBreakdown.tsx`) cũng được update — log entry tương ứng ở `cluster-3-summary.md` §12.
+
+**Iteration 2 (cùng ngày, sau user feedback screenshot):**
+
+Sau khi anh test, phát hiện 2 issue:
+
+a) **Tooltip body thiếu axis name + series name** — chỉ hiện mỗi value. Root cause: `payload?.axis` không reliable trong recharts dot props (recharts có thể transform payload hoặc function-form dot không nhận đủ data fields như `<Dot>` element form). Fix: refactor `createRadarHoverDot` API — thay `total: number` bằng `axes: string[]` array. Lookup axis qua `axes[index]` thay vì `payload.axis` → robust, không phụ thuộc vào internal recharts behavior.
+
+b) **Tooltip placement OUTWARD đè vào PolarAngleAxis labels** ("Sentiment", "Technical"...). Root cause: PolarAngleAxis labels nằm OUTSIDE polygon (recharts đặt ở radius ≈ outerRadius + 8-10px). Tooltip với offset=30 outward rơi đúng vùng đó. Fix: chuyển sang **INWARD placement** — `tx = x - dx*offset, ty = y - dy*offset` đẩy tooltip vào tâm polygon thay vì ra ngoài.
+   - Polygon interior thường trống (nhất là khi values < 100), tooltip có nền đặc che grid lines clean.
+   - Translates đảo ngược: dx > 0.3 → translateX `-100%` (tooltip bên trái dot, edge phải anchor at offset point); dx < -0.3 → `0%`. Same logic cho dy.
+   - Offset giảm xuống 24 (từ 30) cho compact hơn vì giờ vào trong, không cần "thoát" axis labels.
+   - Kết quả: tooltip nằm giữa dot và tâm chart, không bao giờ chạm axis labels (Sentiment, Macro, ...) hay điều gì ngoài polygon.
+
+c) Conditional render axis name: `{state.axis && <div>...</div>}` — không render empty header div nữa (trước đây nếu axis rỗng vẫn có `mb-0.5` margin tạo space thừa).
+
+**File touched (iteration 2):** `prototype/src/components/charts/radar-tooltip.tsx`, `prototype/src/components/charts/RadarChart.tsx`, `prototype/src/components/stock-detail/ScoreBreakdown.tsx` (đổi API call).
+
+**Iteration 3 (cùng ngày, sau screenshot 2 của user):**
+
+Sau iteration 2, user phát hiện 2 issue mới qua screenshot:
+
+a) **Tooltip inward đè polar radius numbers (0/25/50/75/100)** — `PolarRadiusAxis angle={90}` đặt labels theo trục dọc, đúng đường inward của Fundamental dot và một phần đè vào tooltip của các dot khác. Test geometry: với 5 axis, mọi giá trị angle đều là "đối diện" với 1 axis nào đó, nhưng angle ở **gap giữa 2 axis kề nhau** thì labels nằm ở khu vực mà inward tooltip ít va vào nhất.
+
+b) **"Fundamental" label dính số "100"** — vì cả 2 đều ở top. Khi PolarRadiusAxis ở 90, "100" hiện ngay dưới "Fundamental". Khoảng cách = 5px (recharts default tick offset).
+
+**Fix:** [radar-tooltip.tsx](prototype/src/components/charts/radar-tooltip.tsx) + [RadarChart.tsx](prototype/src/components/charts/RadarChart.tsx) + [ScoreBreakdown.tsx](prototype/src/components/stock-detail/ScoreBreakdown.tsx)
+
+1. **`PolarRadiusAxis angle: 90 → 45`** — di chuyển radius labels (0/25/50/75/100) sang đường chéo upper-right, ở **gap giữa Fund (90°) và Tech (18°)**, nằm ngoài đường inward của tất cả dots. Verify geometry:
+   - Fund (top) inward → vertical down: không cross 45° diagonal ✓
+   - Tech (upper-right) inward → toward center via 198° direction: tooltip bbox với translateX `-100%`, translateY `0%` nằm trong vùng (`x ∈ [Tech_x-W, Tech_x]`, `y ∈ [Tech_y, Tech_y+H]`) — không chạm radius labels tại 45° ✓
+   - Macro/RE inward → tooltip ở các góc đối diện, không cross 45° ✓
+   - Sent (upper-left) inward → tooltip x range cao nhất là Sent_x + 23, x của radius "25" tại 45° là 26.5 — marginal nhưng safe ✓
+
+2. **`createOutwardTick(axes, 6)`** — helper mới trong `radar-tooltip.tsx`. Custom tick renderer cho `PolarAngleAxis` push labels thêm 6px ra ngoài theo polar direction:
+   - Lookup axis index từ `axes.indexOf(payload.value)` → tính `angle = 90 - i*72°` → `dx = cos(a)*6, dy = -sin(a)*6` → translate `<text>` element.
+   - Map `verticalAnchor` (recharts-specific) sang `dominantBaseline` (SVG): start→hanging, middle→central, end→auto.
+   - Áp dụng cho cả 2 radar files. Hiệu quả: "Fundamental" được đẩy lên cao thêm 6px, kết hợp với việc "100" đã chuyển sang chéo (45°) → khoảng cách giữa 2 label rất thoáng.
+
+3. **Reduce `outerRadius`: 75% → 72%** — polygon hơi nhỏ lại, có thêm 3% chart radius cho axis labels và tooltip không bị clip sát mép card.
+
+**Verify:** `tsc --noEmit` pass clean. Geometric reasoning đã list trong code comment phần `RadarHoverTooltip` (về INWARD placement) và trong analysis trên (về 45° angle choice).
+
+**File touched (iteration 3):** `prototype/src/components/charts/radar-tooltip.tsx` (thêm `createOutwardTick`), `prototype/src/components/charts/RadarChart.tsx`, `prototype/src/components/stock-detail/ScoreBreakdown.tsx`.

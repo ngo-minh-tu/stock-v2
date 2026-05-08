@@ -12,10 +12,15 @@ import {
   Radar,
   RadarChart as RRadarChart,
   ResponsiveContainer,
-  Tooltip,
   Legend,
 } from 'recharts';
 
+import {
+  createOutwardTick,
+  createRadarHoverDot,
+  RadarHoverTooltip,
+  type RadarHoverState,
+} from '@/components/charts/radar-tooltip';
 import { FeatureTable } from './FeatureTable';
 import type { StockDetailResponse } from '@/lib/types';
 
@@ -27,6 +32,7 @@ export function ScoreBreakdown({ detail }: Props) {
   const t = useTranslations('stockDetail.breakdown');
   const tGroup = useTranslations('stockDetail.feature.group');
   const [showFeatures, setShowFeatures] = useState(false);
+  const [hover, setHover] = useState<RadarHoverState | null>(null);
 
   const radar = detail.radar;
   const ind = detail.radar_industry_avg;
@@ -38,6 +44,23 @@ export function ScoreBreakdown({ detail }: Props) {
     { axis: tGroup('realestate'), ticker: radar.realestate, industry: ind?.realestate ?? 0 },
     { axis: tGroup('sentiment'), ticker: radar.sentiment, industry: ind?.sentiment ?? 0 },
   ];
+
+  const tickerSeriesName = t('legend.ticker', { ticker: detail.ticker });
+  const industrySeriesName = t('legend.industry');
+
+  const axes = points.map((p) => p.axis);
+  const renderTickerDot = createRadarHoverDot({
+    axes,
+    color: 'var(--ssi-up)',
+    onHover: setHover,
+    seriesName: tickerSeriesName,
+  });
+  const renderIndustryDot = createRadarHoverDot({
+    axes,
+    color: 'var(--color-theme-text-secondary)',
+    onHover: setHover,
+    seriesName: industrySeriesName,
+  });
 
   return (
     <section className="card p-4 flex flex-col gap-4">
@@ -59,52 +82,48 @@ export function ScoreBreakdown({ detail }: Props) {
         </button>
       </header>
 
-      <div style={{ width: '100%', maxWidth: 480, height: 400, alignSelf: 'center' }}>
+      <div
+        className="relative"
+        style={{ width: '100%', maxWidth: 480, height: 400, alignSelf: 'center' }}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <RRadarChart data={points} outerRadius="75%">
+          <RRadarChart data={points} outerRadius="72%">
             <PolarGrid stroke="var(--color-theme-charcoal)" />
-            <PolarAngleAxis
-              dataKey="axis"
-              tick={{ fill: 'var(--color-theme-text-secondary)', fontSize: 11 }}
-            />
+            <PolarAngleAxis dataKey="axis" tick={createOutwardTick(axes, 6)} />
             <PolarRadiusAxis
-              angle={90}
+              angle={45}
               domain={[0, 100]}
               tick={{ fill: 'var(--color-theme-text-secondary)', fontSize: 9 }}
               stroke="var(--color-theme-charcoal)"
             />
             {ind && (
               <Radar
-                name={t('legend.industry')}
+                name={industrySeriesName}
                 dataKey="industry"
                 stroke="var(--color-theme-text-secondary)"
                 fill="var(--color-theme-text-secondary)"
                 fillOpacity={0.12}
                 isAnimationActive={false}
+                dot={renderIndustryDot}
+                activeDot={false}
               />
             )}
             <Radar
-              name={t('legend.ticker', { ticker: detail.ticker })}
+              name={tickerSeriesName}
               dataKey="ticker"
               stroke="var(--ssi-up)"
               fill="var(--ssi-up)"
               fillOpacity={0.45}
               isAnimationActive={false}
+              dot={renderTickerDot}
+              activeDot={false}
             />
             <Legend
               wrapperStyle={{ fontSize: 11, color: 'var(--color-theme-text-secondary)' }}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--color-theme-tooltip-background)',
-                border: 'none',
-                borderRadius: 4,
-                color: 'var(--color-theme-text-tertiary)',
-                fontSize: 12,
-              }}
-            />
           </RRadarChart>
         </ResponsiveContainer>
+        <RadarHoverTooltip state={hover} />
       </div>
 
       {showFeatures && <FeatureTable detail={detail} />}

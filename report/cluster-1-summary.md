@@ -166,3 +166,43 @@ Không có run/stock/dashboard fixture ở cụm 1 — cụm 2 sẽ thêm ([mock
 | 9 | DevTools Network | `GET /api/version`, `/api/health`, `/api/settings` trả envelope `{success:true, data:...}` |
 | 10 | Gọi tay `fetch('/api/runs')` trong console | Trả 404 với envelope `NOT_IMPLEMENTED` (catch-all) |
 | 11 | `npm run build && npm run lint` | Pass cả TypeScript strict + ESLint, 13 routes |
+
+## 12. Post-cluster fixes
+
+### Fix #1 — Classic Light theme thiếu nhận diện riêng (2026-05-08)
+
+**Triệu chứng:** User code-review chỉ ra `classic-light` và `light` gần như identical về CSS variables — chỉ khác 3 biến (`--color-theme-charcoal`, `--color-theme-text-secondary`, `--color-theme-text-explain`). Tất cả surfaces, inputs, tables, cards giống hệt nhau. Khi user toggle Sáng/Tối trong Classic theme, hiệu ứng visual gần như không thấy được — defeat the purpose của 4-theme design (PRD §8.2).
+
+**Root cause:** Comment header trong `themes.css` ghi "classic-light is derived: surfaces from theme-light, accent crimson + buy/sell preserved" — nhưng Light theme **cũng đã có crimson** (`--color-theme-text-highlight: #d32f2f`), nên ý đồ giữ "accent Classic" trong light mode không có effect. Design original chưa thiết kế palette riêng cho classic-light, chỉ copy từ light.
+
+**Fix:**
+1. `prototype/src/styles/themes.css` — viết lại 21 hex values trong block `[data-theme='classic-light']`, áp tint tím nhẹ (hue ~250°, lấy từ classic-dark family invert lightness):
+   - Surfaces: `#ededed` → `#ecebef`, `#ffffff` → `#faf9fc`, `#f4f4f4` → `#f1f0f4`, ...
+   - Borders: `#cfd2d8` → `#c8c5d2`, `#dfe1e6` → `#d8d5e0`
+   - Text colors **giữ nguyên** (readability đã OK)
+   - Crimson/buy/sell **giữ nguyên** (SSI brand)
+   - SSI TTCK colors **giữ nguyên** Light variant (AC-17-03)
+2. `docs/design.md` — bổ sung §4.4 "Classic Light (Toggle Sáng cho Classic Theme)" giải thích intent + đầy đủ palette + so sánh với §4.2.
+3. Comment header trong themes.css cập nhật: "Classic identity in light mode: subtle purple tint on surfaces (hue ~250°, inherited from classic-dark family) + crimson accent preserved. Distinct from `light` (pure neutral grays)."
+
+**Tác dụng phụ:** Chỉ user dùng theme `classic-light` mới thấy đổi. 3 themes còn lại (`classic-dark`, `light`, `oled`) không bị động.
+
+**Iteration 2 (cùng ngày, sau user feedback):** Iteration 1 dùng tint quá nhẹ (ΔE 1-3, R≈B≈G gần neutral) → user thấy giống y hệt theme Light. Bump mạnh hơn theo công thức **R = B > G rõ rệt** (hue shift từ ~250° sang ~270° lavender thực sự), ΔE 5-10 cho hầu hết tokens, riêng `--color-theme-charcoal` (border) ΔE ~10 — biến thấy rõ nhất bằng mắt thường:
+- Surfaces: `#ecebef` → `#ece9f0`, `#faf9fc` → `#f7f4fb`, `#f1f0f4` → `#eeeaf4`
+- Borders: `#c8c5d2` → `#b7b2c8`, `#d8d5e0` → `#d0c7dc`
+- Onyx/highlight/invert: bump tương ứng để giữ hierarchy
+File touched (iter 2): `prototype/src/styles/themes.css`, `docs/design.md` (cập nhật §4.4 spec).
+
+**Iteration 3 (cùng ngày, sau user feedback):** User feedback "ánh tím hơi tối" → đổi hue family từ purple (~270°, R = B > G) sang cool blue (~210°, B > R = G). Cùng độ sáng (L* tương đương) nhưng cảm giác **tươi sáng hơn**, đồng thời gần với hue dominant của classic-dark hơn (B=41 > R=28 > G=26 ở `#1c1a29`). Giữ ΔE ~5-10 cho phần lớn tokens, đặc biệt borders ΔE ~10:
+- Surfaces: `#ece9f0` → `#e9ecf0`, `#f7f4fb` → `#f4f7fb`, `#eeeaf4` → `#eaeef4`
+- Borders: `#b7b2c8` → `#b2bcc8`, `#d0c7dc` → `#c7d2dc`
+- Công thức: R và G của bản purple swap với nhau → ra blue tint (kênh B vẫn cao nhất)
+File touched (iter 3): `prototype/src/styles/themes.css`, `docs/design.md` (§4.4 update sang cool-blue spec).
+
+**Iteration 4 (cùng ngày, sau user feedback):** User feedback "xanh hơi nhạt" → tăng saturation, giữ hue ~215°. Tăng B-R gap từ ~7-10 lên ~15-20 units cho hầu hết surface tokens, borders ΔE ~8 thêm. Brightness gần như giữ nguyên (chỉ giảm ~3-5 trên L*) để không thành dark tone:
+- Surfaces: `#e9ecf0` → `#e3e9f2`, `#f4f7fb` → `#eff4fc`, `#eaeef4` → `#e5ecf5`
+- Borders: `#b2bcc8` → `#a3b3c6`, `#c7d2dc` → `#b8c7da`
+- Onyx (rows): `#d9deeb` → `#cfdaeb`
+File touched (iter 4): `prototype/src/styles/themes.css`, `docs/design.md` (§4.4 saturation spec).
+
+**File touched:** `prototype/src/styles/themes.css`, `docs/design.md`.

@@ -21,7 +21,7 @@ interface Props {
 const EXCHANGE_BORDER: Record<Exchange, string> = {
   HOSE: 'var(--ssi-up)',
   HNX: 'var(--ssi-floor)',
-  UPCOM: 'var(--ssi-ref)',
+  UPCOM: 'var(--exchange-upcom)',
 };
 
 export function PriceBoardFilters({ state, sectors, onChange, onReset }: Props) {

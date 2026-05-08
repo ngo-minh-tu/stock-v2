@@ -81,17 +81,20 @@ function TooltipContent({
   if (!d) return null;
   return (
     <div
-      className="text-xs px-2.5 py-1.5 rounded shadow-md"
+      className="text-xs rounded-md shadow-lg"
       style={{
+        padding: '8px 12px',
         backgroundColor: 'var(--color-theme-tooltip-background)',
-        color: 'var(--color-theme-text-tertiary)',
+        color: recommendationColor(d.recommendation),
+        border: '1px solid var(--color-theme-tooltip-border)',
+        backdropFilter: 'blur(2px)',
       }}
     >
-      <div className="font-bold">{d.ticker}</div>
-      <div style={{ color: recommendationColor(d.recommendation) }}>
+      <div className="font-bold text-sm">{d.ticker}</div>
+      <div>
         {d.recommendation} · {d.ai_score}
       </div>
-      <div className="opacity-80">
+      <div style={{ opacity: 0.85 }}>
         Vốn hóa: {d.market_cap.toLocaleString('fr-FR')} tỷ
       </div>
     </div>

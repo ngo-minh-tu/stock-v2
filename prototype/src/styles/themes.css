@@ -51,6 +51,10 @@
   --color-theme-card-bg: #282638;
   --color-theme-panel-background: #282637;
 
+  /* Tooltip popup — opaque so chart hover labels stay readable on any cell color */
+  --color-theme-tooltip-background: rgba(20, 18, 32, 0.96);
+  --color-theme-tooltip-border: rgba(255, 255, 255, 0.10);
+
   /* Stock market — Classic variant */
   --ssi-ceil: #f23aff;
   --ssi-up: #0bdf39;
@@ -58,24 +62,29 @@
   --ssi-down: #ff0017;
   --ssi-floor: #00c9ff;
   --ssi-stable: #dfe1e3;
+
+  /* Exchange tag color — muted yellow for UPCOM (separate from --ssi-ref
+     which must stay TTCK-bright per PRD §8.2 AC-17-03). */
+  --exchange-upcom: #c9a227;
 }
 
 /* ====================================================================
-   classic-light — derived: surfaces from Light, accents kept
-   (PRD §8.2 toggle Sáng/Tối within Classic theme)
+   classic-light — Classic identity in light mode: cool blue tint
+   on surfaces (hue ~210°, B > R = G) + crimson accent preserved.
+   Distinct from `light` (pure neutral grays).
 ==================================================================== */
 [data-theme='classic-light'] {
-  --color-theme-primary: #ededed;
-  --color-theme-secondary: #ffffff;
-  --color-theme-tertiary: #f4f4f4;
-  --color-theme-midnight: #f4f4f4;
-  --color-theme-onyx: #e6e6e8;
-  --color-theme-charcoal: #cfd2d8;
-  --color-theme-neutral: #f5f6f7;
-  --color-theme-disabled: #ececee;
-  --color-theme-explain: #f4f4f4;
-  --color-theme-highlight: #f4f4f4;
-  --color-theme-invert: #e5e5e5;
+  --color-theme-primary: #e3e9f2;
+  --color-theme-secondary: #eff4fc;
+  --color-theme-tertiary: #e5ecf5;
+  --color-theme-midnight: #e3e9f2;
+  --color-theme-onyx: #cfdaeb;
+  --color-theme-charcoal: #a3b3c6;
+  --color-theme-neutral: #e8f0fa;
+  --color-theme-disabled: #d9e2ee;
+  --color-theme-explain: #e5ecf5;
+  --color-theme-highlight: #d2dee9;
+  --color-theme-invert: #becee0;
   --color-theme-overlay: #00000094;
 
   --color-theme-text-primary: #1e2329;
@@ -91,20 +100,24 @@
   --color-theme-buy: #1aa67c;
   --color-theme-sell: #c9111f;
 
-  --color-theme-input-background: #fafbfc;
-  --color-theme-input-border: #dfe1e6;
+  --color-theme-input-background: #eff4fc;
+  --color-theme-input-border: #b8c7da;
   --color-theme-input-disabled: #e3e3e3;
 
-  --color-theme-dropdown-background: #ffffff;
-  --color-theme-dropdown-active: #f4f4f4;
+  --color-theme-dropdown-background: #eff4fc;
+  --color-theme-dropdown-active: #e5ecf5;
 
-  --color-theme-table-border: #dfe1e6;
-  --color-theme-table-header: #fafafa;
-  --color-theme-table-row-even: #f4f4f4;
-  --color-theme-table-row-odd: #ffffff;
+  --color-theme-table-border: #b8c7da;
+  --color-theme-table-header: #e8eff8;
+  --color-theme-table-row-even: #e5ecf5;
+  --color-theme-table-row-odd: #eff4fc;
 
-  --color-theme-card-bg: #ffffff;
-  --color-theme-panel-background: #ffffff;
+  --color-theme-card-bg: #eff4fc;
+  --color-theme-panel-background: #eff4fc;
+
+  /* Tooltip popup — light surface with dark text */
+  --color-theme-tooltip-background: rgba(255, 255, 255, 0.98);
+  --color-theme-tooltip-border: rgba(0, 0, 0, 0.10);
 
   /* Stock market — Light variant */
   --ssi-ceil: #be00be;
@@ -113,6 +126,8 @@
   --ssi-down: #ff0017;
   --ssi-floor: #088db7;
   --ssi-stable: #1e2329;
+
+  --exchange-upcom: #e78b03;
 }
 
 /* ====================================================================
@@ -159,6 +174,10 @@
   --color-theme-card-bg: #ffffff;
   --color-theme-panel-background: #ffffff;
 
+  /* Tooltip popup — light surface with dark text */
+  --color-theme-tooltip-background: rgba(255, 255, 255, 0.98);
+  --color-theme-tooltip-border: rgba(0, 0, 0, 0.10);
+
   /* Stock market — Light variant */
   --ssi-ceil: #be00be;
   --ssi-up: #078c54;
@@ -166,6 +185,8 @@
   --ssi-down: #ff0017;
   --ssi-floor: #088db7;
   --ssi-stable: #1e2329;
+
+  --exchange-upcom: #e78b03;
 }
 
 /* ====================================================================
@@ -212,6 +233,10 @@
   --color-theme-card-bg: #0a0a0a;
   --color-theme-panel-background: #0a0a0a;
 
+  /* Tooltip popup — near-pure-black for OLED, slightly lifted by border */
+  --color-theme-tooltip-background: rgba(10, 10, 10, 0.96);
+  --color-theme-tooltip-border: rgba(255, 255, 255, 0.14);
+
   /* Stock market — OLED variant per design.md §3.2 */
   --ssi-ceil: #fd02fd;
   --ssi-up: #0bdf39;
@@ -219,4 +244,6 @@
   --ssi-down: #ff0d0d;
   --ssi-floor: #52d3f9;
   --ssi-stable: #d6d6d6;
+
+  --exchange-upcom: #c9a227;
 }

@@ -167,3 +167,11 @@
 | 21 | `npm run build` + `npm run lint` | Pass strict TypeScript + ESLint clean (✓ verified) |
 | 22 | Theme switch trên News page khi đang scroll | Sentiment chip color, source-error banner border, conic-gradient doughnut tất cả đổi tone (CSS var) |
 | 23 | Bundle size check trong build output | `/news`: 8.26kB, `/price-board`: 5.22kB; tổng First Load JS hợp lý (<130kB) |
+
+## 12. Post-cluster fixes (user feedback)
+
+- **2026-05-08 — UPCOM badge yellow quá chói trên OLED/classic-dark.** User report: badge UPCOM trong Price Board (và filter chip cùng tone) dùng `var(--ssi-ref)` = `#fdff12`, sáng đến mức không nhìn được chữ trong OLED và classic-dark. Không thể sửa trực tiếp `--ssi-ref` vì biến này là TTCK reference yellow, dùng khắp Price Board (5-color rule), GIU recommendation badge, run-history bars — và PRD §8.2 AC-17-03 yêu cầu ổn định cross-theme. Fix: tách biến mới `--exchange-upcom` chỉ cho exchange tag.
+  - [src/styles/themes.css](../prototype/src/styles/themes.css) — thêm `--exchange-upcom` ở 4 theme: `classic-dark` & `oled` = `#c9a227` (gold/amber trầm); `classic-light` & `light` = `#e78b03` (giữ tone cũ vì light theme không bị chói).
+  - [src/components/badges/ExchangeBadge.tsx:12](../prototype/src/components/badges/ExchangeBadge.tsx#L12) — UPCOM map sang `--exchange-upcom`.
+  - [src/components/price-board/PriceBoardFilters.tsx:24](../prototype/src/components/price-board/PriceBoardFilters.tsx#L24) — UPCOM filter button dùng `--exchange-upcom`.
+  - User confirm OK cùng ngày qua localhost:3000.

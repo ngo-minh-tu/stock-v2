@@ -172,7 +172,7 @@ export function TelegramSettings({ data, saving, onSave }: Props) {
           )}
           {t('save.button')}
         </button>
-        <TelegramTestButton disabled={!enabled || !chatId.trim() || !token.trim()} />
+        <TelegramTestButton disabled={!enabled} />
       </div>
     </div>
   );

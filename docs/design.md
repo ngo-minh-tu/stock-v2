@@ -340,6 +340,51 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
 }
 ```
 
+### 4.4 Classic Light (Toggle Sáng cho Classic Theme)
+
+Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ thống áp palette `classic-light`: kế thừa surfaces sáng kiểu Light theme **nhưng có tint xanh dương nhẹ** (hue ~210°, B > R = G — cool blue) để giữ nhận dạng "Classic" mà không bị tối như tint tím. Accent crimson, buy/sell và TTCK colors giống Light variant. Mục đích: user toggle Sáng trong Classic theme vẫn cảm thấy đây là "Classic" chứ không lẫn với `light` (pure neutral grays).
+
+```css
+[data-theme='classic-light'] {
+  /* === Surfaces (cool-blue-tinted, hue ~215°, saturation rõ rệt) === */
+  --color-theme-primary:             #e3e9f2;   /* Cool blue-gray base */
+  --color-theme-secondary:           #eff4fc;   /* Off-white cards/panels */
+  --color-theme-tertiary:            #e5ecf5;   /* Elevated surfaces */
+  --color-theme-midnight:            #e3e9f2;
+  --color-theme-onyx:                #cfdaeb;   /* Highlighted rows */
+  --color-theme-charcoal:            #a3b3c6;   /* Borders, dividers (most visible) */
+  --color-theme-neutral:             #e8f0fa;
+  --color-theme-disabled:            #d9e2ee;
+  --color-theme-explain:             #e5ecf5;
+  --color-theme-highlight:           #d2dee9;
+  --color-theme-invert:              #becee0;
+
+  /* === Text === */
+  --color-theme-text-primary:        #1e2329;
+  --color-theme-text-secondary:      #5a6068;
+  --color-theme-text-highlight:      #d32f2f;   /* SSI crimson preserved */
+
+  /* === Accents (Classic identity) === */
+  --color-theme-crimson:             #d32f2f;
+  --color-theme-buy:                 #1aa67c;
+  --color-theme-sell:                #c9111f;
+
+  /* === Inputs / Dropdowns / Tables / Cards === */
+  --color-theme-input-background:    #eff4fc;
+  --color-theme-input-border:        #b8c7da;
+  --color-theme-dropdown-background: #eff4fc;
+  --color-theme-table-header:        #e8eff8;
+  --color-theme-table-row-even:      #e5ecf5;
+  --color-theme-table-row-odd:       #eff4fc;
+  --color-theme-card-bg:             #eff4fc;
+  --color-theme-panel-background:    #eff4fc;
+
+  /* TTCK colors === Light variant (giống §4.2) === */
+}
+```
+
+**Khác biệt với Light theme (§4.2):** Light dùng pure neutral grays (`#ededed`, `#ffffff`, `#f4f4f4`, `#848e9c`); Classic Light shift hue sang ~215° (cool blue) với B cao hơn R/G ~15-20 units (saturation rõ rệt, không bị nhạt). Khác biệt **rõ ràng nhìn bằng mắt thường**, đặc biệt ở borders (`charcoal` `#a3b3c6` vs `#848e9c`) và surface fills (`card-bg` `#eff4fc` vs `#ffffff`). Không dùng tint tím (~270°) vì cảm giác tối hơn — cool blue tươi sáng và "Classic-tech" hơn.
+
 ---
 
 ## 5. Spacing & Layout
