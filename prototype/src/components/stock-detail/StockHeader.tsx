@@ -1,13 +1,15 @@
 'use client';
 
 // Sticky header strip — ticker + name + exchange/sector on the left, price + delta in the
-// middle, AI score badge + recommendation on the right. Run selector lives in the sub-row.
+// middle, AI score ring + recommendation pill on the right. Run selector lives in the sub-row.
 
 import { useTranslations } from 'next-intl';
 
 import { ExchangeBadge } from '@/components/badges/ExchangeBadge';
-import { RecommendationBadge } from '@/components/badges/RecommendationBadge';
+import type { Recommendation } from '@/lib/constants';
 import type { StockDetailResponse, TickerRunSummary } from '@/lib/types';
+
+import { AiScoreRing } from './AiScoreRing';
 
 interface Props {
   detail: StockDetailResponse;
@@ -24,6 +26,58 @@ function deltaColor(refPrice: number, current: number): { color: string; pct: nu
   if (pct > 0) return { color: 'var(--ssi-up)', pct };
   if (pct <= -6.9) return { color: 'var(--ssi-floor)', pct };
   return { color: 'var(--ssi-down)', pct };
+}
+
+// Recommendation pill — soft tinted bg + 1px border in the same hue + leading status dot.
+// Replaces the loud full-fill rectangle of RecommendationBadge for the header context.
+const RECO_HUE: Record<Recommendation, string> = {
+  MUA: 'var(--ssi-up)',
+  GIU: '#f49f3b',
+  BAN: 'var(--ssi-down)',
+};
+
+function RecommendationPill({ value }: { value: Recommendation }) {
+  const t = useTranslations('recommendation');
+  const hue = RECO_HUE[value];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-bold tracking-wider uppercase"
+      style={{
+        backgroundColor: 'color-mix(in srgb, ' + hue + ' 14%, transparent)',
+        borderColor: 'color-mix(in srgb, ' + hue + ' 55%, transparent)',
+        borderWidth: 1,
+        borderStyle: 'solid',
+        color: hue,
+      }}
+    >
+      <span
+        aria-hidden
+        className="inline-block rounded-full"
+        style={{
+          width: 6,
+          height: 6,
+          backgroundColor: hue,
+          boxShadow: '0 0 6px ' + hue,
+        }}
+      />
+      {t(value)}
+    </span>
+  );
+}
+
+function DeltaArrow({ up }: { up: boolean }) {
+  return (
+    <svg
+      width={10}
+      height={10}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      style={{ transform: up ? 'rotate(0deg)' : 'rotate(180deg)' }}
+    >
+      <polygon points="12,4 20,18 4,18" />
+    </svg>
+  );
 }
 
 function fmtRunOption(r: TickerRunSummary): string {
@@ -64,38 +118,46 @@ export function StockHeader({ detail, runs, selectedRunId, onSelectRun }: Props)
           </p>
         </div>
 
-        {/* Center — current price + delta */}
+        {/* Center — current price + delta with TTCK arrow */}
         <div className="flex flex-col items-end sm:items-center text-right sm:text-center">
           <span
-            className="text-3xl font-bold tabular-nums"
+            className="text-3xl font-bold tabular-nums leading-none"
             style={{ color }}
           >
             {detail.static.current_price.toFixed(2)}
-            <span className="text-sm font-medium ml-1">k</span>
+            <span
+              className="text-sm font-medium ml-1"
+              style={{ color: 'var(--color-theme-text-secondary)' }}
+            >
+              k
+            </span>
           </span>
-          <span className="text-xs tabular-nums" style={{ color }}>
+          <span
+            className="inline-flex items-center gap-1 text-xs tabular-nums mt-1"
+            style={{ color }}
+          >
+            {pct !== 0 && <DeltaArrow up={pct > 0} />}
             {pct > 0 ? '+' : ''}
             {pct.toFixed(2)}%
           </span>
         </div>
 
-        {/* Right — AI score + recommendation */}
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <span
-              className="text-2xs uppercase tracking-wider"
-              style={{ color: 'var(--color-theme-text-secondary)' }}
-            >
-              {t('aiScore')}
-            </span>
-            <span
-              className="text-3xl font-bold tabular-nums"
-              style={{ color: 'var(--color-theme-text-tertiary)' }}
-            >
-              {detail.scoring.ai_score}
-            </span>
-          </div>
-          <RecommendationBadge value={detail.scoring.recommendation} size="md" />
+        {/* Right — AI score "decision panel" (ring + pill stacked) */}
+        <div
+          className="flex flex-col items-center gap-2 px-3 py-2 rounded-lg"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-theme-charcoal) 16%, transparent)',
+            border: '1px solid var(--color-theme-charcoal)',
+          }}
+        >
+          <span
+            className="text-2xs uppercase tracking-[0.18em]"
+            style={{ color: 'var(--color-theme-text-secondary)' }}
+          >
+            {t('aiScore')}
+          </span>
+          <AiScoreRing score={detail.scoring.ai_score} size={84} strokeWidth={8} label={t('aiScore')} />
+          <RecommendationPill value={detail.scoring.recommendation} />
         </div>
       </div>
 
