@@ -5,13 +5,18 @@ type: feature
 module: SRS-03
 prd_fr: FR-01
 phase: 1
+version: v1.3 LOCKED (cluster 3 reconciliation)
 ---
 
 # F03 — Entry Point Logic
 
 > Parent: [00-system-overview.md](00-system-overview.md)
 > Related — features: [f01-core-screening-pipeline.md](f01-core-screening-pipeline.md), [f02-feature-engineering.md](f02-feature-engineering.md), [f08-stock-detail.md](f08-stock-detail.md)
-> Related — global: [g03](g03-appendix-enums-constants.md) (EntrySignal enum, Raw Indicators)
+> Related — global: [g03](g03-appendix-enums-constants.md) (EntrySignal enum, ReasonCodes, Raw Indicators)
+
+## Changelog
+
+- **v1.3 (2026-05-09, cluster 3 reconciliation):** + AC-03-09 Step 2 enforcement (rec≠MUA → NO_ENTRY) — cluster 2 mock chưa enforce, cluster 3 fix bằng `decideEntrySignal(ticker, score, rec, badges)`. + note frontend prototype anchor override pattern cho 7-enum coverage.
 
 ## UC-03-01: Determine Entry Signal for a Stock
 
@@ -121,3 +126,17 @@ STEP 9: (fallback for MUA mã không match bất kỳ rule nào)
 | TF-03-06 | MUA, gần resistance 1.5%, RSI 58 | WAIT_FOR_BREAKOUT |
 | TF-03-07 | MUA, MACD chưa cross, price ≈ MA20 | WAIT_FOR_CONFIRMATION |
 | TF-03-08 | Thiếu 3 raw indicators | INSUFFICIENT_DATA |
+
+| AC-03-09 | Bất kỳ implementation (backend hoặc frontend mock) MUST enforce Step 2 — rec≠MUA luôn → NO_ENTRY, không bao giờ trả WAIT_* hoặc BUY_* cho mã GIỮ/BÁN |
+
+### Frontend Prototype Anchor Pattern
+
+> [v1.3] Cluster 3 — `prototype/src/mocks/data/run-compute.ts`
+
+Để demo 7 enum coverage trong UI, prototype dùng `decideEntrySignal(ticker, score, rec, badges)` với 2 cơ chế:
+1. **Anchor overrides** (per ticker, hardcoded): `VHM=BUY_STRONG, KDH=BUY_NOW (+1 badge HIGH_INVENTORY), NLG=WAIT_FOR_BREAKOUT, DXG=WAIT_FOR_PULLBACK, PDR=WAIT_FOR_CONFIRMATION` — ghi đè rule logic để demo có ticker mỗi enum
+2. **Recommendation gate** (Step 2): mã không phải MUA → trả NO_ENTRY ngay, không vào logic Step 3-9
+
+MOCK_HOLD/SELL → NO_ENTRY qua gate; MOCK_INSUFFICIENT excluded round 4 → INSUFFICIENT_DATA via 404 fallback (test fixture limitation, xem cluster-3-summary §9).
+
+Backend MVP KHÔNG có anchor overrides — chỉ implement rule logic theo Step 1-9 priority order.

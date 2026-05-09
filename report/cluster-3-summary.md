@@ -262,3 +262,36 @@ Wrapper div radar đổi sang `className="relative"` để absolute tooltip posi
 
 **Files touched:**
 - `prototype/src/mocks/data/prices-fixture.ts` (hàm `generateDailyBars`).
+
+### Fix #4 — Stock Detail header refresh: AI score ring + reco pill + stop loss redesign (2026-05-08)
+
+> Logged retroactively 2026-05-09 — phát hiện gap trong cluster 3 reconciliation audit (commit `16b60b3` đã merge nhưng không logged §12).
+
+**Bối cảnh:** User feedback: header Stock Detail giai đoạn cluster 3 ban đầu cảm giác "ồn" — AI Score là number badge tĩnh, RecommendationBadge solid color đè vào header line, StopLossCard layout label/value lỏng. User muốn calmer, more spec'd visual.
+
+**3 thay đổi UI/UX trong commit `16b60b3`:**
+
+1. **AiScoreRing component mới** (`prototype/src/components/stock-detail/AiScoreRing.tsx`)
+   - SVG donut ring tier-based color: `score ≥ 70 → var(--ssi-up)`, `40-69 → amber/var(--ssi-ref)`, `< 40 → var(--ssi-down)`
+   - Number lớn ở giữa ring + "AI Score" label nhỏ dưới
+   - Replace number-badge cũ → visual hierarchy rõ hơn, color-coded recommendation tier ngay trong ring
+
+2. **RecommendationPill** (replace `RecommendationBadge` cũ trong header — chỉ ở Stock Detail header, các nơi khác giữ Badge)
+   - Soft-tinted background (alpha 0.15-0.20 của recommendation color) + 1px hue border
+   - Status dot (•) trước label MUA/GIỮ/BÁN
+   - Calmer than solid badge, fits header line không đè visual
+   - Thêm `<DeltaArrow>` nhỏ next to price delta % (▲/▼)
+
+3. **StopLossCard redesign** (`prototype/src/components/stock-detail/StopLossCard.tsx`)
+   - Centered panel-frame card layout (thay vì label/value stack lỏng)
+   - Chevron caption "Cắt lỗ tại" trên cùng
+   - Big red price ở center (tabular-nums, large font)
+   - Distance pill (`-10%` từ entry) bên dưới
+   - Gap-track visual (small line indicator) thay vì plain text "buy_price × 0.90"
+
+**Files touched:**
+- `prototype/src/components/stock-detail/AiScoreRing.tsx` (mới, 78 lines)
+- `prototype/src/components/stock-detail/StockHeader.tsx` (+108/-34 lines refactor)
+- `prototype/src/components/stock-detail/StopLossCard.tsx` (+146/-? lines redesign)
+
+**Verify:** user duyệt UI tại commit `16b60b3` ngày 2026-05-08 (current default state của prototype Stock Detail header). Reconciliation cluster 3 (2026-05-09) port 3 patterns này vào SRS f08 + design.md.

@@ -8,6 +8,7 @@
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ❌ REMOVED AG-Grid references (TAD §2 đã exclude AG-Grid; project dùng TanStack Table v8). Cập nhật §6.5 (Price Board Table styling) sang pattern TanStack Table + CSS variables. §10 Tech Stack: cập nhật Data Grid + Charts khớp với TAD §2 (TanStack + Recharts + Lightweight Charts). Line 43 type scale: "AG-Grid data" → "TanStack Table data".
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ ADDED `--color-theme-tooltip-background` + `--color-theme-tooltip-border` vào cả 4 theme blocks (gap có từ cluster 1, lộ ở cluster 2 khi 8 chart components dùng). ➕ NEW §6.7 Chart Tooltips (chuẩn padding/border/shadow/blur), §6.8 Pie Center Label (donut hole pattern), §6.9 Radar Custom Tooltip (INWARD placement, polar geometry, dual-series). ➕ ADDED Toast Warning color `#f49f3b` (hardcoded brand alert).
+- **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ NEW §6.10 Stock Detail Chart Patterns — gộp 4 patterns: Candlestick (Lightweight Charts MA colors + grid opacity + 2-tier selector + crosshair legend), AiScoreRing (tier-based color), RecommendationPill (soft-tinted vs Badge solid), StopLoss panel-frame card.
 
 ---
 
@@ -671,6 +672,73 @@ Donut hole (`innerRadius=50%, outerRadius=72%`) chứa label cố định ở t�
 - Tooltip position là **pure function** của (cx, cy, axis index, total axes) → identical mỗi lần hover cùng dot, không "trôi"
 - Không có `mousemove` listener — chỉ enter/leave per dot
 - Polygon interior thường trống (values < 100) → tooltip với background đặc che grid lines clean
+
+### 6.10 Stock Detail Chart Patterns
+
+> [v1.3] Cluster 3 — gộp 4 patterns trong Stock Detail page
+
+#### Candlestick (Lightweight Charts v4)
+
+**MA overlay colors** (hardcoded hex, theme-agnostic — chosen distinct với up/down/S/R):
+
+| MA | Color | Use |
+|---|---|---|
+| MA20 | `#f7c948` amber | Short-term trend |
+| MA50 | `#4d96ff` sky blue | Mid-term trend |
+| MA200 | `#ec6090` pink-red | Long-term trend |
+| MA Volume 20 | `#9aa4b2` gray | Volume baseline |
+
+**Grid styling:** `withAlpha(grid_color, 0.12)` — gridline opacity 12% (giống TradingView, chart "thoáng" hơn).
+
+**2-tier selector** UI:
+- Tier 1 (interval): segmented pill `D | W | M`. Active = `var(--color-theme-crimson)` border + bg
+- Tier 2 (lookback): row text button 7 values. Disabled = opacity 0.35
+
+**Crosshair legend** (top-left chart, floating overlay):
+- Background `withAlpha(card-bg, 0.85)` + `backdrop-filter: blur(2px)`
+- 2 hàng: hàng 1 OHLCV + %change (xanh/đỏ tone), hàng 2 4 chip MA toggle
+- Active chip = chấm tròn đầy + opacity 1; inactive = chấm rỗng + opacity 0.45
+
+#### AiScoreRing (Stock Detail Header)
+
+SVG donut ring với tier-based color:
+
+| Score range | Color |
+|---|---|
+| ≥ 70 | `var(--ssi-up)` xanh |
+| 40-69 | `var(--ssi-ref)` amber/vàng |
+| < 40 | `var(--ssi-down)` đỏ |
+
+Layout: number lớn ở center + "AI Score" label nhỏ dưới. Stroke-width tỷ lệ với score (visual fill).
+
+#### RecommendationPill (Header) vs RecommendationBadge (Tables)
+
+| Component | Where | Style |
+|---|---|---|
+| `<RecommendationPill>` | Stock Detail Header (calmer) | Soft-tinted bg (alpha 0.15-0.20 của recommendation color) + 1px hue border + status dot `•` + label MUA/GIỮ/BÁN |
+| `<RecommendationBadge>` | Tables (TopMUA, RedFlags, etc.) | Solid background recommendation color + white text label (chip standard) |
+
+→ KHÔNG dùng RecommendationBadge trong Stock Detail header — đè visual quá mạnh trên 1 line nhiều thông tin.
+
+#### StopLoss Panel-Frame Card (RiskPanel Section 5)
+
+Centered layout (vs label/value stacking lỏng cũ):
+
+```
+┌──────────────────────┐
+│   ⌄ Cắt lỗ tại       │  ← chevron caption
+│                       │
+│      29.250          │  ← big red price (var(--ssi-down))
+│                       │
+│      [-10%]          │  ← distance pill
+│   ─────              │  ← gap-track visual
+│  buy_price × 0.90    │  ← calc note
+└──────────────────────┘
+```
+
+Big price: `tabular-nums`, size lớn (~text-3xl), color `var(--ssi-down)`.
+Distance pill: rounded-full, bg `withAlpha(ssi-down, 0.15)`, text `var(--ssi-down)`, padding 2px 8px.
+Gap-track: `<hr>` 1px gray, opacity 0.3, margin top 8px.
 
 ---
 

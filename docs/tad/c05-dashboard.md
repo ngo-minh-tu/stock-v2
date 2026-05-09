@@ -99,7 +99,7 @@ Components: `<DashboardGrid>` wraps `<KPICards>` + 5× `<ChartCard>`. Each Chart
 | Pie (Donut) | `<PieChart>` | `innerRadius=50%, outerRadius=72%`. Center label overlay (donut hole) — default "Tổng / N / mã"; hover slice → 3 dòng cùng recommendation color. KHÔNG dùng recharts `<Tooltip>` (xem [design.md §6.8](../design.md)) |
 | Line | `<LineChart>` | Dual series: VN-Index + BĐS Index 26 tuần. `isAnimationActive=false` để theme switch không lag |
 | Bar | `<BarChart>` | Top 10 by AI Score. Fill mỗi bar qua `recommendationColor(rec)` helper → CSS variable string |
-| Radar | `<RadarChart>` | 5 axes (fundamental/technical/macro/realestate/sentiment). Custom hover-dot pattern thay recharts default `<Tooltip>` (xem [design.md §6.9](../design.md)). PolarRadiusAxis angle=45 để tránh đè axis labels |
+| Radar | `<RadarChart>` | 5 axes (fundamental/technical/macro/realestate/sentiment). Custom hover-dot pattern thay recharts default `<Tooltip>` (xem [design.md §6.9](../design.md)). PolarRadiusAxis angle=45 để tránh đè axis labels. **Reused** ở [Stock Detail ScoreBreakdown](../srs/f08-stock-detail.md) cluster 3 với dual-series overlay (ticker + industry avg lấy từ `r.computed.dashboard.radar` — same run = same peer group) |
 
 ### `recommendationColor()` helper (shared)
 

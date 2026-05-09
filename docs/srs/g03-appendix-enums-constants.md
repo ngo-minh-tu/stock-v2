@@ -15,6 +15,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §F note giải thích quan hệ giữa schema enums (`Theme` 3-value + `ClassicMode`) và CSS resolved `data-theme` attribute (4-value: classic-dark, classic-light, light, oled). Bổ sung §L Frontend Constants (STORAGE_KEYS, MOCK_JWT_PREFIX).
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung §M VND Unit Conventions — track inconsistency giữa current_price (ngàn đồng) / market_cap (tỷ đồng) / allocation_amount (đồng) / total_capital (đồng). Cluster 3 sẽ chốt thống nhất hoặc thêm format helpers.
+- **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ Bổ sung §N Reason Codes (15 enum strict whitelist GUARD-02). §M cluster 3 update: chưa thống nhất unit, defer sang cluster 4 (Price Board) khi join với portfolio.
 
 ## A. Recommendation Enum
 
@@ -165,21 +166,51 @@ MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW han
 
 Used by: prototype `lib/constants.ts`, MVP frontend mirror.
 
-## M. VND Unit Conventions (Cluster 2 - Cluster 3 TBD)
+## M. VND Unit Conventions (Cluster 2 - Cluster 4 TBD)
 
-> [v1.3] Cluster 2 phát hiện convention không nhất quán giữa các field VNĐ. Cluster 3 (Stock Detail) sẽ thống nhất hoặc thêm helper `formatPrice` / `formatVnd`.
+> [v1.3] Cluster 2 phát hiện convention không nhất quán. Cluster 3 reuse mà chưa thống nhất → defer sang cluster 4 (Price Board) khi join với portfolio buộc fix.
 
-| Field | Current convention (prototype) | Example | Rationale |
-|---|---|---|---|
-| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND | Match SSI iBoard convention (price board) |
-| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND | Same as current_price for arithmetic consistency |
-| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND | Match financial reporting convention (BCTC) |
-| `result.risk.allocation_amount` | **đồng** | `150_000_000` | Raw VND (user enters total_capital ở capital modal) |
-| `summary.total_capital` | **đồng** | `500_000_000` | Raw VND from CapitalModal input |
+| Field | Current convention | Example |
+|---|---|---|
+| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND |
+| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND |
+| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND |
+| `result.risk.allocation_amount` | **đồng** | `150_000_000` |
+| `summary.total_capital` | **đồng** | `500_000_000` |
 
-**Cluster 3 task:** quyết định thống nhất 1 trong 3 hướng:
-- (a) Tất cả về raw VNĐ (`đồng`) — đơn giản, mất compactness
-- (b) Tất cả về ngàn đồng — match price board
-- (c) Giữ multi-unit + format helpers (`formatPrice(value, 'thousand')`, `formatVnd(value)`) — flexible, cần discipline
+**Cluster 4 task:** chốt 1 trong 3 hướng — (a) all raw đồng, (b) all ngàn đồng, (c) multi-unit + helpers `formatPrice/formatVnd`.
 
-→ Khi cluster 3 chốt, update bảng này và bump version.
+## N. Reason Codes — Entry Signal Explanation (Cluster 3)
+
+> [v1.3] 15 enum strict whitelist. **GUARD-02**: token unknown bị bỏ, KHÔNG cho user/LLM tạo reason text tự do.
+
+```
+enum ReasonCode {
+  // Bullish
+  VALUATION_ATTRACTIVE       = "Định giá hấp dẫn"
+  BULLISH_TREND              = "Xu hướng tăng"
+  NAV_DISCOUNT               = "Chiết khấu NAV"
+  STRONG_FUNDAMENTAL         = "Cơ bản mạnh"
+  MACD_BULLISH_CROSS         = "MACD cắt lên"
+
+  // Wait / mixed
+  NEAR_RESISTANCE            = "Gần kháng cự"
+  NEAR_SUPPORT               = "Gần hỗ trợ"
+  OVERBOUGHT                 = "Quá mua"
+  OVERSOLD                   = "Quá bán"
+  WEAK_TREND                 = "Xu hướng yếu"
+  AWAIT_BREAKOUT             = "Chờ vượt kháng cự"
+  AWAIT_PULLBACK             = "Chờ điều chỉnh"
+  AWAIT_CONFIRMATION         = "Chờ xác nhận"
+
+  // Negative
+  NEGATIVE_RECOMMENDATION    = "Khuyến nghị GIỮ/BÁN"
+  INSUFFICIENT_INDICATORS    = "Thiếu chỉ báo kỹ thuật"
+}
+```
+
+**Format trong API:** `entry.reason_code` là string composed bằng `+`, e.g. `"VALUATION_ATTRACTIVE+BULLISH_TREND"`. Frontend split `+` → filter qua whitelist enum → render mỗi token thành chip i18n.
+
+**Default per signal** (sinh tự động khi screening result không có explicit code) — xem [`prototype/src/mocks/data/reason-codes.ts`](../../prototype/src/mocks/data/reason-codes.ts) `DEFAULT_REASON_BY_SIGNAL` map.
+
+Used by: [f03-entry-point-logic.md](f03-entry-point-logic.md) (output schema), [f08-stock-detail.md](f08-stock-detail.md) (EntrySignalPanel reason chips).

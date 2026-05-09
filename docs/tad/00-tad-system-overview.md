@@ -31,6 +31,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconcil
 | v1.0 | 04/05 | Initial TAD |
 | v1.1 | 04/05 | 8 must-fixes + 4 should-fixes from 1st review. Then 2 must-fixes + 5 should-fixes from 2nd review merged in-place: single heavy job lock, SQLite WAL, source-level cache wording, /health + /version, run_error field, repositories/ dir, timeout env vars. Final patches: architecture diagram job lock wording + in-memory refresh job status storage + SQLite busy_timeout. **LOCKED.** |
 | v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: ➕ Lucide React (icons), ➕ MSW (dev mocks). §3 Project structure: ❌ REMOVED `lib/formatters.ts` (không tồn tại trong prototype), ❌ REMOVED `i18n/` path → ✅ REPLACED bằng `messages/` (next-intl convention prototype dùng), ➕ ADDED `contexts/`, `mocks/`, app route groups, components subdirs theo cluster. c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). Patch v3 (cùng ngày): bump §1 Document Flow + footer + Change Log heading khỏi `v1.1`, c09 §2 path còn sót `i18n/`, g02 §3 health/version response trả version cũ, g03 §L position out-of-order, f17 AC-17-04 incomplete (thiếu Settings page replication), f15 schema thiếu `settings_version` + `updated_at`. **LOCKED.** |
+| v1.3 | 2026-05-09 | Cluster 2 + cluster 3 reconciliation. **Cluster 2** (Screening Flow): §2 stack lock TanStack Table v8 + Recharts; c05 expand full architecture (5 charts + 5 KPIs); g01 §4 frontend polling pattern; g05 §4 provider stack 7 layers; g06 §3-6 fixture patterns (mulberry32, 81 tickers, reason templates, MSW singleton). **Cluster 3** (Stock Detail): §2 lock `lightweight-charts@^4.2.3`; ➕ c10 NEW (Stock Detail candlestick architecture — MutationObserver theme + 2-tier selector + MA overlays + crosshair legend + 1500 daily padding + multiplicative price scaling); c03 §2 anchor override pattern; c05 reuse radar dual-series. SRS f08 rewrite 5-section layout (REMOVE ASCII), f04 5+5 KPI/charts (REMOVE 6 KPI), f06 TanStack Table (REMOVE ASCII), f07 2-section, f09 RiskPanel visual specs, f01 UC-01-02 run lifecycle UI, f15 +Mock Outcome + Coming Soon, f17 +AC-17-08..11, g03 +§L Frontend Constants +§M VND units +§N Reason Codes. **LOCKED.** |
 
 ---
 
@@ -60,6 +61,7 @@ Module-specific designs. Each component file points to its implementing SRS file
 - [c07-telegram.md](c07-telegram.md) — Telegram Integration
 - [c08-auth.md](c08-auth.md) — Auth & Session
 - [c09-theme-i18n.md](c09-theme-i18n.md) — Theme & i18n Architecture
+- [c10-stock-detail-chart.md](c10-stock-detail-chart.md) — **[v1.3]** Stock Detail Candlestick (Lightweight Charts v4 + MutationObserver theme + 2-tier selector + MA overlays)
 
 ---
 
@@ -140,7 +142,7 @@ Module-specific designs. Each component file points to its implementing SRS file
 |---|---|---|
 | Next.js 14+ | — | App Router, client-side routing (single-user MVP, không SSR session) |
 | React 18 | — | UI runtime |
-| Lightweight Charts | ~40KB | Candlestick (Stock Detail — cluster 3) |
+| Lightweight Charts (`^4.2.3`) | ~40KB lib / ~263KB First Load JS | Candlestick + volume + priceLine overlays + MA series (Stock Detail — cluster 3, xem [c10](c10-stock-detail-chart.md)) |
 | Recharts | ~60KB | Line, Bar, Treemap, Pie, Radar (Dashboard, Stock Detail — cluster 2-3) |
 | TanStack Table v8 | ~15-30KB | Price Board, sortable tables (cluster 4) |
 | next-intl | ~10KB | i18n VIE/ENG; locale persisted localStorage, không URL prefix |
