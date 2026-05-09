@@ -2,6 +2,11 @@
 
 > Extracted from [ssi.com.vn](https://www.ssi.com.vn) — Công ty Cổ phần Chứng khoán SSI
 > Version: iBoard v2.0.5.5 | Last updated: April 2026
+> Project version: v1.2 (post-prototype reconciliation 2026-05-09)
+
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** ❌ REMOVED AG-Grid references (TAD §2 đã exclude AG-Grid; project dùng TanStack Table v8). Cập nhật §6.5 (Price Board Table styling) sang pattern TanStack Table + CSS variables. §10 Tech Stack: cập nhật Data Grid + Charts khớp với TAD §2 (TanStack + Recharts + Lightweight Charts). Line 43 type scale: "AG-Grid data" → "TanStack Table data".
 
 ---
 
@@ -40,7 +45,7 @@
 | Token | Size (rem) | Size (px) | Usage |
 |-------|-----------|-----------|-------|
 | `text-3xs` | 0.625 | 10 | Micro labels, timestamps |
-| `text-2xs` | 0.688 | 11 | Price board cells, AG-Grid data |
+| `text-2xs` | 0.688 | 11 | Price board cells, TanStack Table data |
 | `text-xs` | 0.750 | 12 | Table data, small labels, footnotes |
 | `text-sm` | 0.813 | 13 | Form labels, input text, buttons |
 | `text-base` | 0.875 | 14 | Body text, descriptions |
@@ -514,32 +519,40 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
 }
 ```
 
-### 6.5 Price Board Table (AG-Grid)
+### 6.5 Price Board Table (TanStack Table v8)
 
-```css
-.ag-price-board {
-  font-family: Roboto, sans-serif;
-  font-size: 0.688rem;               /* 11px — compact data */
-  -webkit-font-smoothing: antialiased;
-}
+> [v1.2] Replaces AG-Grid styling. TanStack Table là headless library — markup do React component control trực tiếp, không có default CSS class selectors như AG-Grid. Apply theme tokens qua React `style` prop hoặc Tailwind utilities.
 
-.ag-header-cell {
-  background-color: var(--color-theme-price-table-header);
-  border-color: var(--color-theme-price-table-border);
-}
+**Theme tokens vẫn áp dụng (đã defined trong §4.1, §4.2, §4.3, §4.4):**
+- `--color-theme-price-table-header` — header row background
+- `--color-theme-price-table-border` — cell borders
+- `--color-theme-price-table-row-even` / `--color-theme-price-table-row-odd` — alternating rows
+- `--color-theme-price-table-col-highlight` — sticky/highlighted column
 
-.ag-row-even {
-  background-color: var(--color-theme-price-table-row-even);
-}
+**Component pattern (xem [PriceBoardTable.tsx](../prototype/src/components/price-board/PriceBoardTable.tsx) cluster 4):**
 
-.ag-row-odd {
-  background-color: var(--color-theme-price-table-row-odd);
-}
+```tsx
+// Header cell
+<th
+  className="text-2xs font-medium px-2 py-1"
+  style={{
+    backgroundColor: 'var(--color-theme-price-table-header)',
+    borderColor: 'var(--color-theme-price-table-border)',
+  }}
+>{header}</th>
 
-.ag-row:hover {
-  background-color: var(--ag-row-hover-color);
-}
+// Body row (alternating)
+<tr style={{
+  backgroundColor: index % 2 === 0
+    ? 'var(--color-theme-price-table-row-even)'
+    : 'var(--color-theme-price-table-row-odd)',
+}}>...</tr>
+
+// Cell
+<td className="text-2xs tabular-nums px-2 py-1">{value}</td>
 ```
+
+**Typography:** font-size `text-2xs` (11px / 0.688rem) cho data cells, `tabular-nums` cho numeric alignment, Roboto antialiased.
 
 ### 6.6 Toast Notifications
 
@@ -628,20 +641,24 @@ Giao diện: Sáng (Light) | Tối (Classic) | OLED
 
 ## 10. Tech Stack & Frameworks
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React (SPA, Vite build) |
-| **State** | React Hooks |
-| **Styling** | Tailwind CSS + CSS Custom Properties |
-| **Data Grid** | AG-Grid (ag-theme-dark) |
-| **Charts** | Highcharts |
-| **Date Picker** | react-datepicker |
-| **Select** | rc-select, react-select |
-| **Font Loading** | Google Fonts API (Roboto) |
-| **Icons** | anticon (Ant Design Icons) |
-| **Service Worker** | Firebase Messaging |
-| **CDN / Protection** | Cloudflare |
-| **Responsive** | `viewport: height=device-height, width=device-width, initial-scale=1` |
+> [v1.2] Tách 2 cột: SSI iBoard inspiration vs **VN RE AI Screener (project thực)**. Project KHÔNG dùng AG-Grid hay Highcharts — xem TAD 00 §2 để chốt cuối.
+
+| Layer | SSI iBoard (inspiration) | VN RE AI Screener (project) |
+|-------|--------------------------|------------------------------|
+| **Frontend** | React SPA (Vite) | Next.js 14 App Router (single-user MVP, client-side routing) |
+| **State** | React Hooks | React Hooks + Context (Auth/Theme/Locale) |
+| **Styling** | Tailwind + CSS Custom Properties | ✅ Tailwind + CSS Custom Properties (giữ nguyên) |
+| **Data Grid** | AG-Grid (ag-theme-dark) | **TanStack Table v8** (headless) |
+| **Charts** | Highcharts | **Recharts** (Line/Bar/Pie/Treemap/Radar) + **Lightweight Charts** (Candlestick) |
+| **Date Picker** | react-datepicker | TBD (cluster sau, default native input) |
+| **Select** | rc-select, react-select | Native `<select>` + custom `<Select>` primitive (cluster 1) |
+| **Font Loading** | Google Fonts API (Roboto) | ✅ Google Fonts (Roboto) — Next.js font optimizer |
+| **Icons** | anticon (Ant Design Icons) | **Lucide React** (tree-shake, theme-aware via `currentColor`) |
+| **Mock layer (dev)** | — | **MSW 2.x** (prototype-only, không bundle production) |
+| **i18n** | — | **next-intl** (VIE/ENG, locale persisted localStorage) |
+| **Service Worker** | Firebase Messaging | Không dùng (single-user, không push notification MVP) |
+| **CDN / Protection** | Cloudflare | TBD (deployment cluster) |
+| **Responsive** | `viewport: ...` | ✅ giữ |
 
 ---
 

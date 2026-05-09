@@ -30,7 +30,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconcil
 |---|---|---|
 | v1.0 | 04/05 | Initial TAD |
 | v1.1 | 04/05 | 8 must-fixes + 4 should-fixes from 1st review. Then 2 must-fixes + 5 should-fixes from 2nd review merged in-place: single heavy job lock, SQLite WAL, source-level cache wording, /health + /version, run_error field, repositories/ dir, timeout env vars. Final patches: architecture diagram job lock wording + in-memory refresh job status storage + SQLite busy_timeout. **LOCKED.** |
-| v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: + Lucide React (icons), + MSW (dev mocks). c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). **LOCKED.** |
+| v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: ➕ Lucide React (icons), ➕ MSW (dev mocks). §3 Project structure: ❌ REMOVED `lib/formatters.ts` (không tồn tại trong prototype), ❌ REMOVED `i18n/` path → ✅ REPLACED bằng `messages/` (next-intl convention prototype dùng), ➕ ADDED `contexts/`, `mocks/`, app route groups, components subdirs theo cluster. c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). **LOCKED.** |
 
 ---
 
@@ -238,23 +238,32 @@ vn-re-ai-screener/
 ├── frontend/
 │   ├── src/
 │   │   ├── app/                          # Next.js App Router pages
+│   │   │   ├── (app)/                    # Protected routes (wrapped by ProtectedRoute)
+│   │   │   ├── (auth)/                   # Login route group
+│   │   │   └── share/                    # Public share routes (cluster 6)
 │   │   ├── components/
-│   │   │   ├── charts/                   # 6 chart components
-│   │   │   ├── tables/                   # TanStack Table
-│   │   │   ├── cards/
-│   │   │   ├── layout/
-│   │   │   └── common/
-│   │   ├── hooks/
+│   │   │   ├── auth/                     # [v1.2] LoginForm, ProtectedRoute
+│   │   │   ├── common/                   # [v1.2] Button, Input, Select, ComingSoon, MswBootstrap
+│   │   │   ├── layout/                   # [v1.2] AppShell, Sidebar, Header, Disclaimer
+│   │   │   ├── settings/                 # [v1.2] ThemePicker, LanguagePicker (+ cluster 6 sections)
+│   │   │   └── ...                       # cluster 2-6 thêm: charts/, tables/, dashboard/, badges/, run/, stock-detail/, price-board/, news/, portfolio/, run-history/, backtest/, export/, share/, telegram/
+│   │   ├── contexts/                     # [v1.2] AuthContext, ThemeContext, LocaleContext
 │   │   ├── lib/
-│   │   │   ├── api.ts
-│   │   │   ├── constants.ts              # Mirror backend enums
-│   │   │   └── formatters.ts
-│   │   ├── i18n/
+│   │   │   ├── api.ts                    # apiFetch wrapper + JobConflictError
+│   │   │   ├── constants.ts              # Mirror backend enums + STORAGE_KEYS, MOCK_JWT_PREFIX
+│   │   │   ├── types.ts                  # [v1.2] ApiSuccess/ApiError envelope + response shapes
+│   │   │   └── hooks/                    # cluster 2+ thêm
+│   │   ├── messages/                     # [v1.2] next-intl JSON files (path là `messages/`, KHÔNG phải `i18n/`)
 │   │   │   ├── vi.json
 │   │   │   └── en.json
+│   │   ├── mocks/                        # [v1.2] MSW handlers + data fixtures (dev-only, không bundle production)
+│   │   │   ├── handlers.ts
+│   │   │   └── data/
 │   │   └── styles/
 │   │       ├── globals.css
-│   │       └── themes.css                # 4 theme states
+│   │       └── themes.css                # 4 theme blocks `[data-theme="..."]`
+│   ├── public/
+│   │   └── mockServiceWorker.js          # [v1.2] MSW worker (npx msw init public/)
 │   └── package.json
 │
 ├── data/
