@@ -11,6 +11,7 @@
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ NEW §6.10 Stock Detail Chart Patterns — gộp 4 patterns: Candlestick (Lightweight Charts MA colors + grid opacity + 2-tier selector + crosshair legend), AiScoreRing (tier-based color), RecommendationPill (soft-tinted vs Badge solid), StopLoss panel-frame card.
 - **v1.4 (2026-05-09, cluster 4 reconciliation):** ➕ NEW §3.7 Exchange Tag Colors (`--exchange-hose` ssi-up green / `--exchange-hnx` ssi-floor blue / `--exchange-upcom` riêng). ➕ ADDED `--exchange-upcom` token vào 4 theme block (classic-dark + oled = `#c9a227` amber trầm; classic-light + light = `#e78b03` giữ tone cũ). ❌ §3.2 NOTE: UPCOM exchange badge KHÔNG dùng `--ssi-ref` (#fdff12 quá chói trên OLED + classic-dark — phát hiện cluster 4 post-fix 2026-05-08); ref yellow giữ cho TTCK reference price rule. ➕ §6.5 UPDATE Price Board Table — anchor prop on dynamic PriceCell, ceiling/floor BEFORE up/down clamp `>=`/`<=`, default sort `[close DESC]`, ExchangeBadge integration. ➕ NEW §6.11 NewsCard + SentimentChip pattern. ➕ NEW §6.12 SentimentSummaryWidget (CSS conic-gradient doughnut, KHÔNG Recharts pie). ➕ NEW §6.13 Source Error Banner (persistent, không dismissible). ➕ NEW §6.14 Mobile Filter Drawer (slide-in + overlay backdrop).
 - **v1.4 (2026-05-09, cluster 5 reconciliation):** ➕ NEW §6.15 PortfolioKPI 4-card grid (PnL color signed). ➕ NEW §6.16 HoldingFormModal validation pattern (6 client-side rules + datalist max 8 + ESC + edit mode disable). ➕ NEW §6.17 RunHistoryTable MiniBars 3-bar + Compare button A/B label. ➕ NEW §6.18 ComparePanel 4-section grid (CompareSummary positiveIsGood, RecommendationChangesTable row tint, NewRemovedSection 2-col, ScoreHistogram 6-bucket). ➕ NEW §6.19 BacktestResultCard 4-metric + 2-series ROI chart. ➕ NEW §6.20 DeleteConfirmModal common pattern (used by holding + run + share).
+- **v1.5 (2026-05-09, cluster 6 reconciliation):** ➕ NEW §6.21 PdfPreviewModal (iframe sandbox="" + srcDoc + 2 button cancel/download). ➕ NEW §6.22 ShareLinkModal (auto-create + copy URL + regenerate + countdown). ➕ NEW §6.23 SharedView header (watermark + share-by + countdown + read-only badge). ➕ NEW §6.24 CollapsibleSection (chevron rotate + localStorage state). ➕ NEW §6.25 ThresholdSliders (2 range + debounce 500ms + cross-validation buy>hold + preview line). ➕ NEW §6.26 TelegramSettings (toggle + 3 fields + explicit save + inline error pattern).
 
 ---
 
@@ -1260,6 +1261,270 @@ Gap giữa 2 line ≈ alpha (visualization).
 **ESC + Cancel handler:** cùng `onCancel` callback.
 
 **Confirm button:** ssi-down red (visual hint destructive action).
+
+### 6.21 PdfPreviewModal (Cluster 6)
+
+> [v1.5] Pattern cho PDF export preview trước khi download.
+
+**Layout:**
+
+```
+┌────────────────────────────────────────┐
+│ "Xem trước PDF — run-{id}.pdf"     [X] │
+├────────────────────────────────────────┤
+│                                          │
+│        [iframe sandbox srcDoc]          │  ← preview HTML
+│                                          │
+├────────────────────────────────────────┤
+│              [Hủy]  [Tải xuống]         │
+└────────────────────────────────────────┘
+```
+
+```tsx
+<Modal size="lg">
+  <header>...</header>
+  <iframe
+    srcDoc={htmlString}
+    sandbox=""              // ⚠ tối thiểu privilege — no script/form/link
+    className="w-full h-[60vh] border-0"
+  />
+  <footer className="flex justify-end gap-2">
+    <button onClick={onCancel}>Hủy</button>
+    <button onClick={onDownload} className="bg-crimson text-white">
+      Tải xuống
+    </button>
+  </footer>
+</Modal>
+```
+
+**Critical: `sandbox=""` (empty value)** — disable mọi privilege vì preview HTML có thể chứa data từ run, không cần execute. CSS embedded vẫn work.
+
+**Download:** `<a download blob URL>` qua `useExportPdf.triggerDownload()` (xem `prototype/src/lib/hooks/useExportPdf.ts`).
+
+### 6.22 ShareLinkModal (Cluster 6)
+
+> [v1.5] Pattern cho share link creation flow.
+
+**Auto-create on open:**
+
+```tsx
+useEffect(() => {
+  if (open && !link) createShareLink({ run_id, expires_in_days: 7 });
+}, [open]);
+```
+
+**Layout:**
+
+```
+┌─────────────────────────────────────────┐
+│ "Chia sẻ kết quả run-{id}"          [X]  │
+├─────────────────────────────────────────┤
+│ Đường dẫn:                              │
+│ ┌─────────────────────────────────────┐ │
+│ │ http://localhost:3001/share/abc-... │ │  ← font mono full-width
+│ └─────────────────────────────────────┘ │
+│              [📋 Sao chép]               │
+│                                          │
+│ Hết hạn còn 7 ngày                      │  ← countdown
+│                                          │
+│ [🔄 Tạo link mới]                        │  ← regenerate
+└─────────────────────────────────────────┘
+```
+
+**Copy logic** (xem [TAD g02 §9.3](tad/g02-api.md)):
+
+```ts
+const copyUrl = `${window.location.origin}/share/${link.token}`;
+//                ^^^^^^^^^^^^^^^^^^^^^^ — KHÔNG hardcode mock backend URL
+navigator.clipboard.writeText(copyUrl).then(() => toast.success('Đã sao chép link'));
+```
+
+**Regenerate:** click → POST /api/share again → token mới + URL update; **link cũ vẫn active** (KHÔNG hủy auto). Settings management cho phép user revoke thủ công.
+
+**Countdown:** `Math.ceil((expires_at_ms - now_ms) / 86400000)` ngày. Red nếu <1 ngày.
+
+### 6.23 SharedView Header (Cluster 6)
+
+> [v1.5] Header watermark cho public `/share/[token]` route.
+
+```tsx
+<header className="border-b py-4 px-6"
+  style={{ backgroundColor: 'var(--color-theme-card-bg)' }}>
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-lg font-bold">{brand}</h1>
+      <p className="text-xs opacity-70">{tagline}</p>
+    </div>
+    <div className="text-right">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5
+        rounded-full text-xs font-medium"
+        style={{
+          backgroundColor: withAlpha('var(--ssi-info)', 0.15),
+          color: 'var(--ssi-info)',
+        }}>
+        <Eye size={12} /> Read-only shared view
+      </span>
+      <p className="text-xs mt-1 opacity-70">
+        Chia sẻ bởi {brand} ngày {formatDate(created_at)}
+      </p>
+      <p className="text-xs" style={{ color: countdownColor }}>
+        {countdownText}  {/* "Hết hạn còn N ngày" */}
+      </p>
+    </div>
+  </div>
+</header>
+```
+
+**Countdown color:** ssi-up nếu >3 ngày, ssi-ref (amber) nếu 1-3 ngày, ssi-down nếu <1 ngày.
+
+### 6.24 CollapsibleSection (Cluster 6)
+
+> [v1.5] Pattern wrapper cho Settings sections (sections 2-6).
+
+```tsx
+function CollapsibleSection({ id, title, defaultOpen, children }) {
+  const [isOpen, setIsOpen] = useState(() => {
+    const stored = localStorage.getItem(`settings.section.${id}`);
+    return stored === 'open' || (stored === null && defaultOpen);
+  });
+
+  function toggle() {
+    const next = !isOpen;
+    setIsOpen(next);
+    localStorage.setItem(`settings.section.${id}`, next ? 'open' : 'closed');
+  }
+
+  return (
+    <section className="rounded-md mb-3"
+      style={{ backgroundColor: 'var(--color-theme-card-bg)' }}>
+      <button onClick={toggle}
+        className="w-full flex items-center justify-between p-4">
+        <h3 className="text-md font-medium">{title}</h3>
+        <ChevronRight
+          size={18}
+          className="transition-transform duration-200"
+          style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0)' }}
+        />
+      </button>
+      {isOpen && (
+        <div className="p-4 border-t"
+          style={{ borderColor: 'var(--color-theme-table-border)' }}>
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+```
+
+**localStorage key:** `settings.section.{id}` value `"open"` / `"closed"`.
+
+**Default:** `defaultOpen` prop falls back nếu localStorage rỗng.
+
+**Animation:** chevron rotate 200ms transition; content có thể animate height nếu cần (hiện cluster 6 dùng conditional render).
+
+### 6.25 ThresholdSliders (Cluster 6)
+
+> [v1.5] 2 range slider + debounce 500ms + cross-validation + preview line.
+
+**Layout:**
+
+```tsx
+<div className="space-y-4">
+  <RangeSlider
+    label="Ngưỡng MUA"
+    value={buyThreshold}
+    min={50} max={95}
+    onChange={setBuyThreshold}
+  />
+  <RangeSlider
+    label="Ngưỡng GIỮ"
+    value={holdThreshold}
+    min={20} max={74}
+    onChange={setHoldThreshold}
+  />
+  <ThresholdPreview buy={buyThreshold} hold={holdThreshold} />
+  {error && <p className="text-xs text-ssi-down">{error}</p>}
+</div>
+```
+
+**Debounce 500ms (autosave):**
+
+```tsx
+const lastSavedRef = useRef({ buy: initial.buy, hold: initial.hold });
+
+useEffect(() => {
+  if (buyThreshold <= holdThreshold) {
+    setError('Ngưỡng MUA phải lớn hơn ngưỡng GIỮ');
+    return;          // ⚠ KHÔNG fire save khi invalid
+  }
+  setError(null);
+
+  // Skip if same as last saved (prevent dup)
+  if (lastSavedRef.current.buy === buyThreshold &&
+      lastSavedRef.current.hold === holdThreshold) return;
+
+  const timer = setTimeout(async () => {
+    await saveSettings({ buy_threshold: buyThreshold, hold_min_threshold: holdThreshold });
+    lastSavedRef.current = { buy: buyThreshold, hold: holdThreshold };
+    toast.success('Đã lưu ngưỡng');
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [buyThreshold, holdThreshold]);
+```
+
+**Preview line** update real-time (KHÔNG debounce — visual feedback tức thì):
+
+```
+0────GIỮ▼──────────MUA▼──────────────100
+     45              75
+```
+
+### 6.26 TelegramSettings (Cluster 6)
+
+> [v1.5] Pattern cho Telegram section — explicit save (NOT debounce).
+
+```tsx
+const [enabled, setEnabled] = useState(initial.enabled);
+const [token, setToken]     = useState(initial.token);
+const [chatId, setChatId]   = useState(initial.chatId);
+const [topN, setTopN]       = useState(initial.topN);
+const [error, setError]     = useState<string | null>(null);
+
+async function onSave() {
+  // Inline validation
+  if (enabled && !chatId) return setError('Bật Telegram cần điền chat_id');
+  if (enabled && !token)  return setError('Bật Telegram cần điền token');
+  setError(null);
+
+  await saveSettings({
+    telegram_enabled: enabled,
+    telegram_token: token,
+    telegram_chat_id: chatId,
+    telegram_top_n: topN,
+  });
+  toast.success('Đã lưu cấu hình Telegram');
+}
+```
+
+**Why explicit save (NOT debounce):** validation `enabled+empty fields → 400 ERR-14-02`. Auto-save mid-typing → toast lỗi liên tục. Xem [TAD c07 §3](tad/c07-telegram.md) cho rationale comparison vs sliders + sources.
+
+**Toggle off** → fields ẩn + save persist `enabled=false` ngay (no validation needed).
+
+**TelegramTestButton** (separate button cạnh Save):
+
+```tsx
+async function onTest() {
+  const { sent, error } = await apiFetch<TelegramTestResponse>('/api/telegram/test', {
+    method: 'POST',
+  });
+  if (sent) toast.success('Đã gửi tin thử');
+  else      toast.error(`Gửi tin thử thất bại — ${error}`);
+}
+```
+
+Mock distribution ~70%/30% — dev/QA bấm 3-4 lần để thấy cả 2 outcomes.
 
 ---
 

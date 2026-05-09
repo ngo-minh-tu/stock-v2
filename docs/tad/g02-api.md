@@ -4,7 +4,7 @@ title: API Design — Endpoint Registry, Pagination, Health/Version, Key Respons
 parent: 00-tad-system-overview.md
 type: global
 source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7); cluster 1 reconciliation 2026-05-09
-version: v1.4 LOCKED (cluster 5 reconciliation)
+version: v1.5 LOCKED (cluster 6 reconciliation)
 ---
 
 # g02 — API Design
@@ -16,6 +16,7 @@ version: v1.4 LOCKED (cluster 5 reconciliation)
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error). ❌ §3 health/version response: bump `srs_version: v1.0 → v1.2`, `tad_version: v1.1 → v1.2` (đồng bộ với cluster 1 reconciliation).
 - **v1.3 (2026-05-09, cluster 4 reconciliation):** ➕ Bổ sung §7 Key Response Shapes (Cluster 4): `GET /api/stocks` (LatestPrice + newly_listed flag), `GET /api/news` (source_errors envelope + pagination), `GET /api/news/sentiment/{ticker}` (30-day rollup, count=0 → NEUTRAL/0.0/empty breakdown). Bump `srs_version: v1.2 → v1.4`, `tad_version: v1.2 → v1.3`.
 - **v1.4 (2026-05-09, cluster 5 reconciliation):** ❌ §1 endpoint registry: `DELETE /portfolio/{id}` 204 → **200 + envelope** (rationale §8.1). ➕ ADDED `DELETE /runs/{id}` (cluster 5 missing in original registry); ➕ ADDED `GET /backtest/{id}/status` + `GET /backtest/{id}/results` (cluster 5 2-stage polling). ➕ Bổ sung §8 Key Response Shapes (Cluster 5): PortfolioListResponse + HoldingRow joined, validateHolding mirror, DELETE 200+envelope rationale, CompareResponse 4 sub-shapes, RunSummary expanded với 5 new fields, Backtest 2-stage polling shapes + 1.5s timing. Bump `srs_version: v1.4`, `tad_version: v1.3 → v1.4`.
+- **v1.5 (2026-05-09, cluster 6 reconciliation):** ➕ §1 ADDED `DELETE /share/{token}` 200+envelope (cluster 6); UPDATE `POST /share`, `GET /share` (list active), `GET /share/{token}` (public, no auth). ➕ Bổ sung §9 Key Response Shapes (Cluster 6): PDF Content-Disposition, Share CRUD shapes (uuid v4 + 7-day TTL), Telegram test mock 70/30, Password change return new token. Bump `tad_version: v1.4 → v1.5`.
 
 ---
 
@@ -54,10 +55,12 @@ version: v1.4 LOCKED (cluster 5 reconciliation)
 | GET | /backtest/{id}/status | 200 {status, progress} | 4 | **[v1.4]** Poll backtest progress (1.5s interval) |
 | GET | /backtest/{id} | 200 {metrics} | 4 | Backtest metrics (fetch khi terminal) |
 | GET | /backtest/{id}/results | 200 {results[]} | 4 | **[v1.4]** Per-ticker backtest results |
-| GET | /export/pdf/{run_id} | 200 binary/pdf | 3 | Download PDF |
+| GET | /export/pdf/{run_id} | 200 binary/pdf | 3 | Download PDF (Content-Disposition attachment §9.1) |
 | POST | /share | 201 {token, url, expires} | 4 | Create share link |
-| GET | /share/{token} | 200 {read-only results} | 4 | View shared |
-| POST | /telegram/test | 200 {sent, error} | 3 | Test send |
+| GET | /share | 200 {items[]} | 4 | **[v1.5]** List active share links (Settings management) |
+| GET | /share/{token} | 200 {read-only results} | 4 | View shared (PUBLIC route — bypass ProtectedRoute) |
+| DELETE | /share/{token} | **200 + envelope** | 4 | **[v1.5]** Revoke share link (rationale §8.1) |
+| POST | /telegram/test | 200 {sent, error} | 3 | Test send (~70% success / ~30% fail mock §9.4) |
 | GET | /settings | 200 {settings} | 3 | Get settings |
 | PUT | /settings | 200 {settings} | 3 | Update settings |
 
@@ -97,7 +100,7 @@ GET /version → 200
   "app_version": "0.1.0",
   "prd_version": "v0.5A",
   "srs_version": "v1.4",
-  "tad_version": "v1.4",
+  "tad_version": "v1.5",
   "model_version": "baseline_v2",
   "db_tables": 16
 }
@@ -526,3 +529,115 @@ type BacktestResultsResponse = {
 - BÁN: `actual_return_3m < 0`
 
 Backend Phase 4 phải implement strict version với per-ticker VN-Index reference (mock không track).
+
+---
+
+## 9. Key Response Shapes (Cluster 6)
+
+### 9.1 PDF Export — `GET /api/export/pdf/{run_id}`
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="run-{id}.pdf"
+
+<binary PDF>          # production weasyprint
+<HTML string>         # prototype mock (xem c06 §1.2)
+```
+
+**Trade-off prototype:** HTML giả serve as `application/pdf` — file `.pdf` mở bằng PDF reader sẽ broken; mở bằng browser sẽ render OK. Production replace mock template bằng weasyprint render thật. Frontend KHÔNG đổi (download flow giống nhau).
+
+### 9.2 Share — Create + List + Get + Delete
+
+**`POST /api/share`:**
+
+```ts
+type ShareCreateRequest = { run_id: string; expires_in_days?: number };  // default 7
+
+type ShareCreateResponse = {
+  token: string;          // uuid v4
+  url: string;             // https://app.example/share/{token} — store URL
+  created_at: string;
+  expires_at: string;      // +7 days
+};
+```
+
+Status: 201 Created.
+
+**`GET /api/share`** (Settings management):
+
+```ts
+type ShareListResponse = {
+  items: Array<{
+    token: string;
+    run_id: string;
+    created_at: string;
+    expires_at: string;
+  }>;
+};
+```
+
+Sort newest first. Filter only non-expired (production).
+
+**`GET /api/share/{token}`** (PUBLIC, no auth):
+
+```ts
+type SharedViewResponse = {
+  token: string;
+  run_id: string;
+  expires_at: string;
+  data: {
+    summary: { /* ...same as DashboardResponse.summary */ };
+    dashboard: { /* ...DashboardResponse */ };
+    top_mua: TopMuaItem[];     // read-only Top MUA
+  };
+};
+```
+
+404 nếu token invalid hoặc expired.
+
+**`DELETE /api/share/{token}`:** 200 + envelope `{deleted: true}` (xem §8.1 cluster 5 rationale).
+
+### 9.3 Frontend Share URL — 2 Forms
+
+| Form | Where stored | Where actually used |
+|---|---|---|
+| Mock backend URL `https://app.example/share/{token}` | `ShareLink.url` field (matches TAD spec) | — |
+| Origin-relative `${window.location.origin}/share/{token}` | computed at copy time | Clipboard write — user mở được trên cùng tab |
+
+**Rationale:** prototype chạy ở `localhost:3001`; copy mock URL → user mở sẽ broken (no DNS). Button "Sao chép" override với `window.location.origin`. Production: backend trả URL **relative** (`/share/{token}`), frontend tự build với origin runtime → không hardcode domain.
+
+### 9.4 Telegram Test — `POST /api/telegram/test`
+
+```ts
+type TelegramTestResponse = {
+  sent: boolean;
+  error: string | null;
+};
+```
+
+**Mock distribution (cluster 6):**
+- `Math.random() >= 0.3` → `{sent: true, error: null}` (~70%)
+- `Math.random() < 0.3` → `{sent: false, error: 'Telegram API timeout' | 'Bot token invalid' | 'Chat not found'}` (~30%)
+
+**Envelope:** `{success: true, data: {sent, error}}` — HTTP success (200), Telegram error là application-level state. Frontend handle qua `data.sent` flag (xem [c07 §4](c07-telegram.md)).
+
+### 9.5 Password Change — `PUT /api/auth/password`
+
+```ts
+type PasswordChangeRequest = {
+  current: string;
+  new: string;
+};
+
+type PasswordChangeResponse = {
+  token: string;       // new JWT (production) hoặc mock_jwt_{ts} (prototype)
+};
+```
+
+Validation:
+- `current` empty → 400 ERR-AUTH-01 "Mật khẩu hiện tại bắt buộc"
+- `new.length < 8` → 400 ERR-AUTH-02 "Mật khẩu mới phải ≥8 ký tự"
+- (Production) bcrypt verify `current` against `user_profile.password_hash`
+
+Frontend: write `localStorage.token = response.token` trực tiếp (KHÔNG qua `AuthContext.setToken`); subsequent API calls dùng token mới tự động qua `apiFetch` reads localStorage mỗi request. Xem [c08 §5](c08-auth.md) cho rationale.
