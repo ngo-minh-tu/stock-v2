@@ -17,6 +17,7 @@ version: v1.1 LOCKED (post-prototype reconciliation)
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung UC-15-02 (Settings Page UI progressive disclosure) — Settings render theo từng phase: cluster 1 chỉ có Theme + Language sections; sections sources/telegram/threshold/password defer sang cluster 6. AC-15-05/06 mới. ➕ Schema thêm 2 field audit metadata (`settings_version: int`, `updated_at: ISO 8601`) khớp với prototype `mocks/data/settings.ts` (AC-15-03 đã đề cập `settings_version` nhưng schema cũ không list).
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung Mock Outcome section (prototype-only dev tool, cluster 2 ownership) + Coming Soon card placeholder. ❌ AC-15-05 cũ "không placeholder Coming soon trong production UI" → ✅ REPLACED — cluster 2 prototype có Coming Soon card, spec phải reflect prototype đã duyệt. Production hide hẳn vs Coming Soon là UX choice của mỗi cluster, không cấm tuyệt đối.
 
 ## UC-15-01: View/Update Settings
 
@@ -78,7 +79,7 @@ version: v1.1 LOCKED (post-prototype reconciliation)
 | AC-15-02 | Telegram enabled + empty chat_id → validation error |
 | AC-15-03 | Settings save → settings_version tăng (dùng cho audit) |
 | AC-15-04 | Theme change → UI update ngay lập tức không cần reload |
-| AC-15-05 | Settings page render theo phase: chỉ section thuộc phase đã ship mới hiển thị; section của phase sau hoàn toàn ẩn (không placeholder "Coming soon" trong production UI) |
+| AC-15-05 | Settings page render: section đã ship hiển thị đầy đủ; section chưa ship → có thể hide hẳn HOẶC dùng "Coming Soon" placeholder card (mỗi cluster quyết định theo UX của cluster đó). Cluster 1 hide hẳn; cluster 2 thêm Coming Soon card cho roadmap visibility |
 | AC-15-06 | Mỗi section là 1 unit độc lập (theme picker / language picker / sources / telegram / thresholds / password) — apply/save tại chỗ, không có nút Save tổng |
 
 ## UC-15-02: Settings Page UI — Progressive Disclosure (Phase 2-4)
@@ -91,10 +92,16 @@ Settings page là single page render danh sách section theo thứ tự cố đ�
 |---|---|---|---|---|
 | 1 | Theme picker (4 radio cards: Classic Dark / Classic Light / Light / OLED) | 4 | cluster 1 | `<ThemePicker />` |
 | 2 | Language picker (VIE / ENG radio) | 4 | cluster 1 | `<LanguagePicker />` |
-| 3 | News sources (5 toggles: cafef / vnexpress / vietstock / batdongsan / thanhnien) | 3 | cluster 6 | `<SourcesPicker />` |
-| 4 | Telegram (enable + chat_id + token + top_n) | 3 | cluster 6 | `<TelegramSection />` |
-| 5 | Thresholds (buy_threshold + hold_min_threshold + default_capital) | 3 | cluster 6 | `<ThresholdsSection />` |
-| 6 | Password change (old + new + confirm) | 2 | cluster 6 | `<PasswordSection />` |
+| 3 | **Mock Outcome (PROTOTYPE-ONLY)** — segmented buttons `success / warnings / failed / conflict` | — | cluster 2 | `<MockOutcomePicker />` |
+| 4 | News sources (5 toggles: cafef / vnexpress / vietstock / batdongsan / thanhnien) | 3 | cluster 6 | `<SourcesPicker />` |
+| 5 | Telegram (enable + chat_id + token + top_n) | 3 | cluster 6 | `<TelegramSection />` |
+| 6 | Thresholds (buy_threshold + hold_min_threshold + default_capital) | 3 | cluster 6 | `<ThresholdsSection />` |
+| 7 | Password change (old + new + confirm) | 2 | cluster 6 | `<PasswordSection />` |
+| 8 | **Coming Soon card** (Construction icon, label "Còn các mục cluster 6 sẽ thêm") | — | cluster 2 (placeholder) | inline trong settings page |
+
+> [v1.3] **Mock Outcome** section là prototype-only dev tool — KHÔNG ship MVP. MVP frontend strip section này khi build. Lý do: cho dev/QA force test 4 outcome (success/warnings/failed/conflict) của run flow mà không cần manipulate runs-store thủ công.
+
+> [v1.3] **Coming Soon card** là placeholder trong prototype để PO thấy "section gì sẽ ship cluster 6". Production MVP có 2 lựa chọn: (a) hide hẳn (như AC-15-05 nguyên gốc nói), hoặc (b) giữ Coming Soon nếu muốn show roadmap. **Quyết định**: theo prototype đã duyệt → giữ Coming Soon card trong production MVP đến khi cluster 6 ship đủ section, lúc đó replace bằng section thật.
 
 ### Apply behavior
 

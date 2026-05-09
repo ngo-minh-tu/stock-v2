@@ -18,6 +18,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §1.1 (data-theme resolution rule), §1.2 (anti-flash boot script), §3 (provider stack order), §4 (icon library — Lucide React). ❌ REMOVED `frontend/src/i18n/` path → ✅ REPLACED bằng `frontend/src/messages/` (next-intl convention thực sự).
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ❌ REMOVED §3 4-layer provider stack inline (outdated sau cluster 2 expand 4→7 layers) → ✅ REPLACED bằng pointer-to [g05 §4] (single source of truth). Tránh duplicate spec (rule "nồi cám").
 
 ---
 
@@ -87,25 +88,11 @@ Assets: `frontend/src/messages/vi.json`, `frontend/src/messages/en.json` (next-i
 
 ## 3. Provider Stack Order
 
-> [v1.2] Chốt từ cluster 1: outer → inner
+> [v1.3] Chi tiết đầy đủ + rationale tại [g05 §4 Frontend Provider Stack](g05-cross-cutting.md). Cluster 2 mở rộng từ 4 → **7 layers** (thêm ToastProvider, MockOutcomeProvider, RunProvider).
 
-```tsx
-<MswBootstrap>          {/* dev only: gate child render until MSW ready */}
-  <LocaleProvider>      {/* next-intl wrapper, đọc localStorage.locale */}
-    <ThemeProvider>     {/* data-theme attr management, đọc localStorage.theme */}
-      <AuthProvider>    {/* token state, đọc localStorage.token */}
-        {children}
-      </AuthProvider>
-    </ThemeProvider>
-  </LocaleProvider>
-</MswBootstrap>
-```
+Tóm tắt outer → inner: `Toast` → `MockOutcome` → `MswBootstrap` → `Locale` → `Theme` → `Auth` → `Run`.
 
-**Tại sao thứ tự này:**
-- MSW phải start TRƯỚC mọi provider khác (Auth gọi `/api/auth/*` ngay khi mount → cần mock sẵn sàng).
-- Locale ngoài Theme: theme switcher hiển thị label theo locale (Sáng/Tối vs Light/Dark) → cần Locale ready.
-- Theme ngoài Auth: ThemeProvider không phụ thuộc auth state, nhưng đặt ngoài để toàn app (kể cả `/login`) có theme đúng.
-- Auth innermost: chỉ guard `(app)` group qua ProtectedRoute, không cần wrap login page.
+Cluster 1 (4 layers) dùng `Msw → Locale → Theme → Auth`; cluster 2 (7 layers) thêm Toast outermost (Run/Auth gọi useToast), MockOutcome outer than Msw (dev toggle trước login), Run innermost (mọi page dùng useRun).
 
 ---
 

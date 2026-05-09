@@ -14,6 +14,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §F note giải thích quan hệ giữa schema enums (`Theme` 3-value + `ClassicMode`) và CSS resolved `data-theme` attribute (4-value: classic-dark, classic-light, light, oled). Bổ sung §L Frontend Constants (STORAGE_KEYS, MOCK_JWT_PREFIX).
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung §M VND Unit Conventions — track inconsistency giữa current_price (ngàn đồng) / market_cap (tỷ đồng) / allocation_amount (đồng) / total_capital (đồng). Cluster 3 sẽ chốt thống nhất hoặc thêm format helpers.
 
 ## A. Recommendation Enum
 
@@ -163,3 +164,22 @@ MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW han
 ```
 
 Used by: prototype `lib/constants.ts`, MVP frontend mirror.
+
+## M. VND Unit Conventions (Cluster 2 - Cluster 3 TBD)
+
+> [v1.3] Cluster 2 phát hiện convention không nhất quán giữa các field VNĐ. Cluster 3 (Stock Detail) sẽ thống nhất hoặc thêm helper `formatPrice` / `formatVnd`.
+
+| Field | Current convention (prototype) | Example | Rationale |
+|---|---|---|---|
+| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND | Match SSI iBoard convention (price board) |
+| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND | Same as current_price for arithmetic consistency |
+| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND | Match financial reporting convention (BCTC) |
+| `result.risk.allocation_amount` | **đồng** | `150_000_000` | Raw VND (user enters total_capital ở capital modal) |
+| `summary.total_capital` | **đồng** | `500_000_000` | Raw VND from CapitalModal input |
+
+**Cluster 3 task:** quyết định thống nhất 1 trong 3 hướng:
+- (a) Tất cả về raw VNĐ (`đồng`) — đơn giản, mất compactness
+- (b) Tất cả về ngàn đồng — match price board
+- (c) Giữ multi-unit + format helpers (`formatPrice(value, 'thousand')`, `formatVnd(value)`) — flexible, cần discipline
+
+→ Khi cluster 3 chốt, update bảng này và bump version.
