@@ -1,19 +1,24 @@
 ---
 name: System Overview
-description: Tổng quan SRS v1.0 — VN Real Estate AI Screener. Mô tả phạm vi, actor, dependency và index trỏ tới 4 file global (g*) + 17 file tính năng (f*).
+description: Tổng quan SRS v1.2 — VN Real Estate AI Screener. Mô tả phạm vi, actor, dependency và index trỏ tới 4 file global (g*) + 17 file tính năng (f*).
 type: overview
-source: docs/SRS_v1.0_VN_RealEstate_AI_Screener.md
+source: docs/SRS_v1.0_VN_RealEstate_AI_Screener.md (v1.0 baseline); cluster 1 reconciliation 2026-05-09 (bump v1.2)
+version: v1.2 LOCKED (post-prototype reconciliation)
 ---
 
 # 00 — System Overview
 
 > *Dữ liệu dẫn đường, quyết định thuộc về bạn*
 
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bump version 1.0 → 1.2 đồng bộ với cluster 1 reconciliation. Document Flow: ❌ SRS v1.0 → ✅ SRS v1.2. Các file f15, f16, f17, g03 đã có changelog riêng. Files f01-f14, g01, g02, g04 chưa reconcile — sẽ touch khi đến cluster tương ứng.
+
 | Field | Details |
 |---|---|
-| SRS Version | 1.0 |
+| SRS Version | 1.2 (post-prototype reconciliation) |
 | PRD Reference | v0.5A Final Locked (May 4, 2026) |
-| Document Flow | PRD v0.5A → **SRS v1.0** → Technical Design Document |
+| Document Flow | PRD v0.5A → **SRS v1.2** → Technical Design Document |
 | Audience | Dev / AI Coding Agent / QA |
 | Language | Vietnamese (primary) + English (technical terms) |
 | Author | Ngô Minh Tú — BA: Claude AI |

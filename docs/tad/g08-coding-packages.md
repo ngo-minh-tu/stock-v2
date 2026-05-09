@@ -3,7 +3,8 @@ id: g08
 title: Coding Packages — Vibecoding Order (Package 0–10)
 parent: 00-tad-system-overview.md
 type: global
-source: docs/TAD_v1.1_Hardened_Locked_Final.md (§27)
+source: docs/TAD_v1.1_Hardened_Locked_Final.md (§27); cluster 1 reconciliation 2026-05-09
+version: v1.2 LOCKED (post-prototype reconciliation)
 ---
 
 # g08 — Coding Packages (Appendix)
@@ -11,6 +12,34 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§27)
 > Parent: [00-tad-system-overview.md](00-tad-system-overview.md)
 >
 > Thứ tự vibecoding module-by-module.
+
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §"Frontend prototype precedes packages" giải thích quan hệ giữa Package N (kế hoạch backend+frontend tích hợp) và Cluster N (prototype frontend riêng đã hoàn thành 2026-05-04 → 2026-05-08). Frontend portion của Package 8/9/10 đã được prototype xong, MVP build = backend Package 0-7 + integrate prototype frontend code thay vì rebuild from scratch.
+
+---
+
+## Frontend Prototype Precedes Packages
+
+> [v1.2] Đọc trước khi follow Package list bên dưới
+
+Trước khi bắt đầu Vibecoding theo Package 0-10, dự án đã chạy **prototype frontend phase** từ 2026-05-04 đến 2026-05-08, organized thành 6 clusters tập trung vào UI/UX validation:
+
+| Cluster | Tên | Coverage trong Package list |
+|---|---|---|
+| 1 | Shell & Foundation | Phần FE của Package 3 (Auth + Settings page shell) + Package 10 (Theme + i18n) |
+| 2 | Screening Flow | Phần FE của Package 8 (Dashboard + Top MUA + Red Flags) + Package 7 (Run trigger UI) |
+| 3 | Stock Detail | Phần FE của Package 8 (Stock Detail page với candlestick + radar + breakdown) |
+| 4 | Market & Browse | Phần FE của Package 9 (Price Board + News page) |
+| 5 | Personal & History | Phần FE của Package 9 (Portfolio Lite + Run History + Compare) + Package 10 (Backtest UI) |
+| 6 | Export & Integrations | Phần FE của Package 9 (Telegram + PDF) + Package 10 (Settings full + Share link) |
+
+**Kế hoạch MVP build sau prototype:**
+1. Package 0-2: Backend bootstrap + DB setup (mới, chưa làm trong prototype)
+2. Package 3-7: Backend services + APIs (mới, prototype mock với MSW)
+3. Package 8-10: **KHÔNG rebuild frontend from scratch**. Thay vào đó: copy prototype frontend code vào `frontend/`, replace MSW handlers bằng calls to backend FastAPI thực, fix integration bugs.
+
+**Lý do:** prototype đã được user duyệt UI/UX → spec docs đã reconcile theo prototype (xem [TAD changelog v1.2](00-tad-system-overview.md)) → MVP frontend code phải MATCH prototype, không phải MATCH Package list cũ. Package list bên dưới giữ làm reference cho **scope** mỗi package (test coverage, AC validation), không phải là build order frontend.
 
 ---
 

@@ -12,7 +12,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconcil
 > *Dữ liệu dẫn đường, quyết định thuộc về bạn*
 
 **Version 1.1 — Hardened for Vibecoding**
-**Based on:** PRD v0.5A + SRS v1.0 + TAD v1.0 + 3rd-party review
+**Based on:** PRD v0.5A + SRS v1.2 + TAD v1.2 (post-prototype reconciliation 2026-05-09) + 3rd-party review
 **Author:** Ngô Minh Tú | **BA (Business Analyst):** Claude AI
 
 | Field | Details |
@@ -66,11 +66,12 @@ Module-specific designs. Each component file points to its implementing SRS file
 ## 1. System Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    FRONTEND (Next.js 14+)                     │
-│  Login │ Dashboard │ PriceBoard │ TopMUA │ Detail │ Settings │
-│                          │ REST API                           │
-└──────────────────────────┼────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       FRONTEND (Next.js 14+)                              │
+│  Login │ Dashboard │ TopMUA │ RedFlags │ StockDetail │ PriceBoard         │
+│        │ News │ Portfolio │ RunHistory │ Settings │ Share (public)        │
+│                          │ REST API                                       │
+└──────────────────────────┼───────────────────────────────────────────────┘
                            │
 ┌──────────────────────────┼────────────────────────────────────┐
 │                    BACKEND (FastAPI)                           │

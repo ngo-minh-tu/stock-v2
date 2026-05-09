@@ -72,7 +72,7 @@ class RunStatus(str, Enum):
     FAILED = "FAILED"
 ```
 
-Note: SRS v1.0 Appendix ghi 3 states (RUNNING/COMPLETED/FAILED) — đây là simplified view. Implementation dùng 7 states ở trên. RUNNING trong SRS = CHECKING_DATA | SCREENING | SCORING trong TAD.
+Note: [SRS g03 §G Appendix](../srs/g03-appendix-enums-constants.md) ghi 3 states (RUNNING/COMPLETED/FAILED) — đây là simplified view. Implementation dùng 7 states ở trên. RUNNING trong SRS = CHECKING_DATA | SCREENING | SCORING trong TAD.
 
 ### 2.2 Async Flow
 
