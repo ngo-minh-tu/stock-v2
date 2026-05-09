@@ -4,7 +4,7 @@ title: API Design — Endpoint Registry, Pagination, Health/Version, Key Respons
 parent: 00-tad-system-overview.md
 type: global
 source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7); cluster 1 reconciliation 2026-05-09
-version: v1.3 LOCKED (cluster 4 reconciliation)
+version: v1.4 LOCKED (cluster 5 reconciliation)
 ---
 
 # g02 — API Design
@@ -15,6 +15,7 @@ version: v1.3 LOCKED (cluster 4 reconciliation)
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error). ❌ §3 health/version response: bump `srs_version: v1.0 → v1.2`, `tad_version: v1.1 → v1.2` (đồng bộ với cluster 1 reconciliation).
 - **v1.3 (2026-05-09, cluster 4 reconciliation):** ➕ Bổ sung §7 Key Response Shapes (Cluster 4): `GET /api/stocks` (LatestPrice + newly_listed flag), `GET /api/news` (source_errors envelope + pagination), `GET /api/news/sentiment/{ticker}` (30-day rollup, count=0 → NEUTRAL/0.0/empty breakdown). Bump `srs_version: v1.2 → v1.4`, `tad_version: v1.2 → v1.3`.
+- **v1.4 (2026-05-09, cluster 5 reconciliation):** ❌ §1 endpoint registry: `DELETE /portfolio/{id}` 204 → **200 + envelope** (rationale §8.1). ➕ ADDED `DELETE /runs/{id}` (cluster 5 missing in original registry); ➕ ADDED `GET /backtest/{id}/status` + `GET /backtest/{id}/results` (cluster 5 2-stage polling). ➕ Bổ sung §8 Key Response Shapes (Cluster 5): PortfolioListResponse + HoldingRow joined, validateHolding mirror, DELETE 200+envelope rationale, CompareResponse 4 sub-shapes, RunSummary expanded với 5 new fields, Backtest 2-stage polling shapes + 1.5s timing. Bump `srs_version: v1.4`, `tad_version: v1.3 → v1.4`.
 
 ---
 
@@ -38,7 +39,8 @@ version: v1.3 LOCKED (cluster 4 reconciliation)
 | GET | /runs/{run_id}/results | 200 {results[]} | 2 | Full results array |
 | GET | /runs/{run_id}/dashboard | 200 {aggregate} | 2 | 5 charts + 5 KPI cards |
 | GET | /runs/{run_id}/stocks/{ticker} | 200 {detail} | 2 | **[v1.1 NEW]** Stock analysis by run |
-| GET | /runs/{run_id}/compare/{run_id_b} | 200 {diff} | 3 | Compare 2 runs |
+| GET | /runs/{run_id}/compare/{run_id_b} | 200 {diff} | 3 | Compare 2 runs (4-section schema §8.3) |
+| DELETE | /runs/{run_id} | **200 + envelope** | 3 | **[v1.4]** Delete run (200+envelope, không 204 — rationale §8.1) |
 | GET | /stocks | 200 {items[], total} | 2 | Whitelist + latest prices, paginated |
 | GET | /stocks/{ticker} | 200 {static info} | 2 | Static info + latest price |
 | GET | /stocks/{ticker}/prices | 200 {prices[]} | 2 | Historical OHLCV |
@@ -47,9 +49,11 @@ version: v1.3 LOCKED (cluster 4 reconciliation)
 | GET | /portfolio | 200 {items[]} | 3 | Holdings |
 | POST | /portfolio | 201 {holding} | 3 | Add holding |
 | PUT | /portfolio/{id} | 200 {holding} | 3 | Update holding |
-| DELETE | /portfolio/{id} | 204 | 3 | Delete holding |
-| POST | /backtest | 202 {backtest_id} | 4 | Start backtest |
-| GET | /backtest/{id} | 200 {metrics} | 4 | Backtest results |
+| DELETE | /portfolio/{id} | **200 + envelope** | 3 | **[v1.4]** Delete holding (rationale §8.1) |
+| POST | /backtest | 202 {backtest_id, status: PENDING} | 4 | Start backtest (Stage 1 of 2-stage polling §8.6) |
+| GET | /backtest/{id}/status | 200 {status, progress} | 4 | **[v1.4]** Poll backtest progress (1.5s interval) |
+| GET | /backtest/{id} | 200 {metrics} | 4 | Backtest metrics (fetch khi terminal) |
+| GET | /backtest/{id}/results | 200 {results[]} | 4 | **[v1.4]** Per-ticker backtest results |
 | GET | /export/pdf/{run_id} | 200 binary/pdf | 3 | Download PDF |
 | POST | /share | 201 {token, url, expires} | 4 | Create share link |
 | GET | /share/{token} | 200 {read-only results} | 4 | View shared |
@@ -93,7 +97,7 @@ GET /version → 200
   "app_version": "0.1.0",
   "prd_version": "v0.5A",
   "srs_version": "v1.4",
-  "tad_version": "v1.3",
+  "tad_version": "v1.4",
   "model_version": "baseline_v2",
   "db_tables": 16
 }
@@ -352,3 +356,173 @@ type SentimentSummaryResponse = {
 ```
 
 Frontend SentimentSummaryWidget render "Không có tin trong 30 ngày" italic note thay vì error (xem [SRS f10 AC-10-12](../srs/f10-news-sentiment.md)).
+
+---
+
+## 8. Key Response Shapes (Cluster 5)
+
+### 8.1 DELETE Endpoints — 200 + Envelope (NOT 204)
+
+Cluster 5 **đổi convention** cho mọi DELETE endpoint: trả `200 OK + {success:true, data:{deleted:true}}` thay vì `204 No Content`.
+
+**Rationale:** `apiFetch` wrapper (xem §5) parse JSON với `await res.json()`. 204 empty body → `await res.json()` throw `SyntaxError: Unexpected end of JSON input`. Để giữ envelope đồng nhất + `apiFetch` không cần special-case 204 → return 200 với envelope `{deleted: true}`.
+
+**Trade-off:** lệch khỏi REST best-practice (DELETE thường 204). Nhưng UI nhận envelope nhất quán — đáng đổi.
+
+**Áp dụng:** `DELETE /portfolio/{id}`, `DELETE /runs/{id}`, `DELETE /share/{token}` (cluster 6).
+
+### 8.2 Portfolio
+
+**`GET /api/portfolio`:**
+
+```ts
+type PortfolioListResponse = {
+  items: PortfolioHolding[];
+  total: number;
+};
+
+type PortfolioHolding = {
+  id: number;
+  ticker: string;
+  quantity: number;
+  buy_price: number;        // ngàn đồng
+  buy_date: string;          // YYYY-MM-DD
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+};
+```
+
+Frontend page join với `/api/stocks` snapshot trong `useMemo` để build `HoldingRow[]` (= holding + computed `current_price`, `cost_basis`, `market_value`, `unrealized_pnl`, `unrealized_pnl_pct`).
+
+**`POST /api/portfolio` validateHolding (server-side mirror SRS f11 AC-11-02..04 + buy_date ≤ TODAY):**
+
+```ts
+function validateHolding(req: PortfolioCreateRequest): ValidationError | null {
+  if (!STOCK_FIXTURE.includes(req.ticker)) return { code: 'ERR-11-04', ... };
+  if (!Number.isInteger(req.quantity) || req.quantity <= 0) return { code: 'ERR-11-02', ... };
+  if (!Number.isFinite(req.buy_price) || req.buy_price <= 0) return { code: 'ERR-11-03', ... };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(req.buy_date)) return { code: 'ERR-11-05', ... };
+  if (req.buy_date > MOCK_FIXTURE_TODAY) return { code: 'ERR-11-06', ... };  // xem SRS g03 §S
+  return null;
+}
+```
+
+### 8.3 Compare Response (4 sections)
+
+**`GET /api/runs/{a}/compare/{b}`** — schema mới cluster 5 (REPLACE old `{added_to_buy, removed_from_buy, ...}`):
+
+```ts
+type CompareResponse = {
+  summary_diff: {
+    scored: { a: number, b: number, delta: number },
+    buy_count: { a: number, b: number, delta: number },
+    hold_count: { a: number, b: number, delta: number },
+    sell_count: { a: number, b: number, delta: number },
+    avg_score: { a: number, b: number, delta: number },
+    duration_seconds: { a: number, b: number, delta: number }
+  };
+  recommendation_changes: Array<{
+    ticker: string; name: string;
+    rec_a: 'MUA' | 'GIỮ' | 'BÁN';
+    rec_b: 'MUA' | 'GIỮ' | 'BÁN';
+    score_a: number; score_b: number;
+    direction: 'upgrade' | 'downgrade';   // theo REC_RANK heuristic — xem SRS g03 §Q
+  }>;
+  new_entries: Array<{ ticker, name, rec_b, score_b }>;
+  removed:     Array<{ ticker, name, rec_a, score_a }>;
+  score_distribution: {
+    buckets: ['<30', '30-45', '45-60', '60-75', '75-90', '≥90'],
+    a_counts: number[];   // 6 numbers
+    b_counts: number[];
+  };
+};
+```
+
+**Validation:** `run_a !== run_b` server-side → 400 ERR-12-01.
+
+**Compute pattern (mock):** `computeCompare()` thuần function đọc `runsStore.get(a).computed.results` trực tiếp, KHÔNG roundtrip 2 lần `/api/runs/{id}/results`. Backend phase phải tự fetch khi MSW thay bằng FastAPI thật.
+
+### 8.4 RunSummary Expanded (cluster 5 additive)
+
+Cluster 5 thêm 5 field vào `RunSummary` (additive — RunSelector cluster 2 không bị ảnh hưởng):
+
+```ts
+type RunSummary = {
+  // cluster 2 fields (existing)
+  run_id: string;
+  run_at: string;
+  status: RunStatus;
+  scored_count: number;
+  buy_count: number;
+  hold_count: number;
+  sell_count: number;
+  // cluster 5 new fields (additive)
+  model_version: 'baseline_v1' | 'baseline_v2';
+  settings_version: number;            // 1 | 2
+  duration_seconds: number;             // live cho active runs (now - started_at_ms); recalc khi terminal
+  warnings_count: number;               // derived từ warnings_json.length
+  avg_score: number;                    // mean(ai_score) trên scored
+};
+```
+
+**`runs-store.start()`** mặc định `baseline_v2` + settings 2 (production model). Cluster 6 wire Settings UI → runsStore.
+
+### 8.5 Backtest 2-Stage Polling
+
+```
+Stage 1: POST /api/backtest
+         body: { period_from, period_to }
+         response: 202 { backtest_id, status: 'PENDING' }
+         frontend: setActiveId(backtest_id)
+
+Stage 2: usePolling on /api/backtest/{id}/status
+         interval: 1500ms (NOT 2000ms — backtest only 8.5s total)
+         terminal: COMPLETED | FAILED
+         When status === 'COMPLETED':
+           fire /api/backtest/{id}        (metrics)
+           fire /api/backtest/{id}/results (per-ticker rows)
+           via useApiResource (single-fire, không poll)
+```
+
+**State machine 4 transitions:** PENDING → RUNNING (5%) → RUNNING (25%) → RUNNING (55%) → RUNNING (80%) → COMPLETED. Total 8.5s mock.
+
+**1.5s vs 2s rationale:** backtest chỉ 8.5s mock total, polling 2s tick chỉ 4 lần → progress jump rời rạc. 1.5s tick 5-6 lần smooth hơn.
+
+### 8.6 BacktestMetricsResponse + ResultsResponse
+
+```ts
+type BacktestMetricsResponse = {
+  backtest_id: number;
+  period_from: string;
+  period_to: string;
+  status: 'COMPLETED' | 'FAILED';
+  recommendation_accuracy: number;     // 0..1
+  price_error_mean: number;             // 0..100 (%)
+  portfolio_roi: number;                // signed % (e.g. +18.5)
+  vnindex_roi: number;
+  alpha: number;                         // = portfolio_roi - vnindex_roi
+  correct_count: number;
+  total_count: number;                   // = scored_count latest run, NOT 81
+  roi_curve: Array<{ week: string; portfolio: number; vnindex: number }>;  // 9-26 weekly points
+};
+
+type BacktestResultsResponse = {
+  results: Array<{
+    ticker: string;
+    predicted_recommendation: 'MUA' | 'GIỮ' | 'BÁN';
+    predicted_price: number;             // ngàn đồng
+    actual_price: number;                 // mock: predicted × (1 ± errPct)
+    price_error_pct: number;
+    actual_return_3m: number;             // signed %
+    recommendation_correct: boolean;       // heuristic — xem SRS f12 AC-12-23
+  }>;
+};
+```
+
+**Mock heuristic correctness** (prototype, KHÔNG strict per PRD §4.5):
+- MUA: `actual_return_3m > 0`
+- GIỮ: `-7% ≤ actual_return_3m ≤ +12%` (xem g03 §K BACKTEST_HOLD_RETURN_*)
+- BÁN: `actual_return_3m < 0`
+
+Backend Phase 4 phải implement strict version với per-ticker VN-Index reference (mock không track).

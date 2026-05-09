@@ -10,6 +10,7 @@
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ ADDED `--color-theme-tooltip-background` + `--color-theme-tooltip-border` vào cả 4 theme blocks (gap có từ cluster 1, lộ ở cluster 2 khi 8 chart components dùng). ➕ NEW §6.7 Chart Tooltips (chuẩn padding/border/shadow/blur), §6.8 Pie Center Label (donut hole pattern), §6.9 Radar Custom Tooltip (INWARD placement, polar geometry, dual-series). ➕ ADDED Toast Warning color `#f49f3b` (hardcoded brand alert).
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ NEW §6.10 Stock Detail Chart Patterns — gộp 4 patterns: Candlestick (Lightweight Charts MA colors + grid opacity + 2-tier selector + crosshair legend), AiScoreRing (tier-based color), RecommendationPill (soft-tinted vs Badge solid), StopLoss panel-frame card.
 - **v1.4 (2026-05-09, cluster 4 reconciliation):** ➕ NEW §3.7 Exchange Tag Colors (`--exchange-hose` ssi-up green / `--exchange-hnx` ssi-floor blue / `--exchange-upcom` riêng). ➕ ADDED `--exchange-upcom` token vào 4 theme block (classic-dark + oled = `#c9a227` amber trầm; classic-light + light = `#e78b03` giữ tone cũ). ❌ §3.2 NOTE: UPCOM exchange badge KHÔNG dùng `--ssi-ref` (#fdff12 quá chói trên OLED + classic-dark — phát hiện cluster 4 post-fix 2026-05-08); ref yellow giữ cho TTCK reference price rule. ➕ §6.5 UPDATE Price Board Table — anchor prop on dynamic PriceCell, ceiling/floor BEFORE up/down clamp `>=`/`<=`, default sort `[close DESC]`, ExchangeBadge integration. ➕ NEW §6.11 NewsCard + SentimentChip pattern. ➕ NEW §6.12 SentimentSummaryWidget (CSS conic-gradient doughnut, KHÔNG Recharts pie). ➕ NEW §6.13 Source Error Banner (persistent, không dismissible). ➕ NEW §6.14 Mobile Filter Drawer (slide-in + overlay backdrop).
+- **v1.4 (2026-05-09, cluster 5 reconciliation):** ➕ NEW §6.15 PortfolioKPI 4-card grid (PnL color signed). ➕ NEW §6.16 HoldingFormModal validation pattern (6 client-side rules + datalist max 8 + ESC + edit mode disable). ➕ NEW §6.17 RunHistoryTable MiniBars 3-bar + Compare button A/B label. ➕ NEW §6.18 ComparePanel 4-section grid (CompareSummary positiveIsGood, RecommendationChangesTable row tint, NewRemovedSection 2-col, ScoreHistogram 6-bucket). ➕ NEW §6.19 BacktestResultCard 4-metric + 2-series ROI chart. ➕ NEW §6.20 DeleteConfirmModal common pattern (used by holding + run + share).
 
 ---
 
@@ -976,6 +977,289 @@ Gap-track: `<hr>` 1px gray, opacity 0.3, margin top 8px.
 **Z-index:** backdrop `z-40`, drawer `z-50` để drawer luôn trên backdrop.
 
 **Close triggers:** click backdrop / click X button / press ESC (key listener bên ngoài).
+
+### 6.15 PortfolioKPI 4-card Grid (Cluster 5)
+
+> [v1.4] Pattern cho 4 KPI cards ở `/portfolio` page.
+
+```tsx
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <KpiCard label="Tổng vốn" value={formatVnd(totalCost, 'raw')} />
+  <KpiCard label="Giá trị hiện tại" value={formatVnd(currentValue, 'raw')} />
+  <KpiCard
+    label="Lãi/lỗ"
+    value={formatVnd(pnl, 'raw')}
+    hint={`${pnl_pct.toFixed(2)}%`}
+    color={pnl > 0 ? 'var(--ssi-up)' : pnl < 0 ? 'var(--ssi-down)' : 'var(--ssi-stable)'}
+  />
+  <KpiCard label="Số mã" value={count.toString()} />
+</div>
+```
+
+**P&L color signed rule:**
+- `pnl > 0` → `var(--ssi-up)` xanh lá
+- `pnl < 0` → `var(--ssi-down)` đỏ
+- `pnl === 0` → `var(--ssi-stable)` neutral
+
+**Hint** (dòng dưới value): pnl_pct với 2dp signed. Apply same color theo pnl sign.
+
+**KpiCard pattern:**
+
+```tsx
+<div className="rounded-md p-4"
+  style={{ backgroundColor: 'var(--color-theme-card-bg)' }}>
+  <div className="text-xs opacity-70">{label}</div>
+  <div className="text-2xl font-bold mt-1" style={{ color }}>{value}</div>
+  {hint && <div className="text-xs mt-1" style={{ color }}>{hint}</div>}
+</div>
+```
+
+### 6.16 HoldingFormModal (Cluster 5)
+
+> [v1.4] Add/edit shared modal pattern cho Portfolio.
+
+**Layout structure:**
+
+```
+┌────────────────────────────────────┐
+│ "Thêm mã" / "Sửa {ticker}"     [X] │
+├────────────────────────────────────┤
+│ Ticker  [____] (datalist max 8)    │  ← edit: disabled
+│ Số lượng [____]                    │
+│ Giá mua  [____] ngàn đồng           │
+│ Ngày mua [____] (max=TODAY)         │
+│ Ghi chú  [________________]         │
+│                                     │
+│ [Inline error message nếu có]      │
+│                                     │
+│        [Hủy]  [Lưu]                │
+└────────────────────────────────────┘
+```
+
+**Auto-focus:** `useRef + .focus()` trong useEffect:
+- Add mode → ticker input
+- Edit mode → save button (user thường chỉ đổi qty/price)
+
+**Edit mode:** ticker input `disabled` (không cho đổi mã, chỉ qty/price/date/notes).
+
+**Datalist:**
+
+```tsx
+<input list="ticker-suggestions" />
+<datalist id="ticker-suggestions">
+  {STOCK_FIXTURE.slice(0, 8).map(s => (
+    <option key={s.ticker} value={s.ticker}>{s.name}</option>
+  ))}
+</datalist>
+```
+
+Max 8 suggestion để tránh dropdown dài; user gõ thêm để filter native HTML.
+
+**ESC + backdrop close:** key listener trên window + onClick backdrop. Hủy button cùng handler.
+
+**Validation flow:**
+1. Client-side check 6 rules → set inline error → return early.
+2. Submit POST/PUT → server validate cùng rules.
+3. Server error → display inline + toast.
+4. Server success → close modal + toast + reload.
+
+### 6.17 RunHistoryTable Patterns (Cluster 5)
+
+> [v1.4] MiniBars + Compare button A/B label.
+
+**MiniBars 3-bar pattern (cột MUA/GIỮ/BÁN):**
+
+```tsx
+function MiniBars({ buy, hold, sell }: { buy: number; hold: number; sell: number }) {
+  const max = Math.max(buy, hold, sell, 1);
+  const widths = {
+    buy:  `${(buy  / max) * 100}%`,
+    hold: `${(hold / max) * 100}%`,
+    sell: `${(sell / max) * 100}%`,
+  };
+  return (
+    <div className="flex flex-col gap-0.5 w-20">
+      <Bar width={widths.buy}  color="var(--ssi-up)"   value={buy}  />
+      <Bar width={widths.hold} color="var(--ssi-ref)"  value={hold} />
+      <Bar width={widths.sell} color="var(--ssi-down)" value={sell} />
+    </div>
+  );
+}
+
+function Bar({ width, color, value }) {
+  return (
+    <div className="flex items-center gap-1">
+      <div className="h-1.5 rounded-full" style={{ width, backgroundColor: color }} />
+      <span className="text-2xs tabular-nums opacity-80">{value}</span>
+    </div>
+  );
+}
+```
+
+**Compare button A/B label visual:**
+
+```tsx
+{isSelectedA && <span className="bg-crimson text-white px-1.5 rounded">A</span>}
+{isSelectedB && <span className="bg-info text-white px-1.5 rounded">B</span>}
+{!isSelected && <ArrowLeftRight size={14} />}  // default icon
+```
+
+Border tone:
+- A: `border-color: var(--color-theme-crimson)`
+- B: `border-color: var(--ssi-info)`
+
+### 6.18 ComparePanel 4-section Grid (Cluster 5)
+
+> [v1.4] Pattern cho ComparePanel khi A và B đã chọn.
+
+**Layout:**
+
+```
+┌─────────────────────────────────┐
+│ "So sánh A vs B"            [X] │  ← header
+├─────────────────────────────────┤
+│ §1 Summary table (4-col)        │  ← 6 row metrics
+├─────────────────────────────────┤
+│ §2 Recommendation changes        │  ← TanStack 6-col, row tint
+├─────────────────────────────────┤
+│ §3 New (left) | Removed (right) │  ← md:grid-cols-2
+├─────────────────────────────────┤
+│ §4 Score histogram (Recharts)   │
+└─────────────────────────────────┘
+```
+
+**§1 CompareSummary positiveIsGood color:**
+
+```tsx
+function deltaColor(delta: number, positiveIsGood: boolean | null): string {
+  if (positiveIsGood === null) return 'var(--ssi-stable)';
+  if (delta === 0) return 'var(--ssi-stable)';
+  const isPositive = delta > 0;
+  const isGood = positiveIsGood === isPositive;
+  return isGood ? 'var(--ssi-up)' : 'var(--ssi-down)';
+}
+```
+
+| Metric | positiveIsGood |
+|---|---|
+| scored | true |
+| buy_count | true |
+| sell_count | **false** (bug fix: tăng SELL ≠ tốt) |
+| hold_count | null (neutral) |
+| avg_score | true |
+| duration_seconds | **false** (longer = slower) |
+
+**§2 Row tint (RecommendationChangesTable):**
+
+```tsx
+<tr style={{
+  backgroundColor: row.direction === 'upgrade'
+    ? withAlpha('var(--ssi-up)', 0.08)
+    : withAlpha('var(--ssi-down)', 0.08)
+}}>
+```
+
+Sort: upgrade-first → delta magnitude DESC.
+
+**§3 NewRemovedSection** — `<div className="grid md:grid-cols-2 gap-4">` 2 card. Each card: title `"{count} mã"`, list scrollable.
+
+**§4 ScoreHistogram** — Recharts `<BarChart>` 2 series:
+
+```tsx
+<Bar dataKey="a_count" fill="var(--ssi-up)"   name={`Run A`} />
+<Bar dataKey="b_count" fill="var(--ssi-info)" name={`Run B`} />
+```
+
+X-axis: 6 bucket labels (`<30 / 30-45 / 45-60 / 60-75 / 75-90 / ≥90`). Y-axis: count.
+
+### 6.19 BacktestResultCard (Cluster 5)
+
+> [v1.4] Result card với 4 metric + ROI chart + detail toggle.
+
+**Header:**
+```
+backtest_id · period_from → period_to · {correct}/{total} đúng
+```
+
+**4 metric cards:**
+
+```tsx
+<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+  <MetricCard
+    label="Độ chính xác"
+    value={`${(accuracy * 100).toFixed(1)}%`}
+    valueClass="text-3xl"
+    color={accuracy >= 0.6 ? 'var(--ssi-up)' : 'var(--ssi-down)'}
+  />
+  <MetricCard label="Sai số giá TB" value={`${priceError.toFixed(1)}%`} />
+  <MetricCard
+    label="ROI Danh mục" value={`${signed(portfolioRoi)}%`}
+    color={portfolioRoi >= 0 ? 'var(--ssi-up)' : 'var(--ssi-down)'}
+  />
+  <MetricCard
+    label="Alpha" value={`${signed(alpha)}%`}
+    hint="Outperformance"
+    color={alpha >= 0 ? 'var(--ssi-up)' : 'var(--ssi-down)'}
+  />
+</div>
+```
+
+**Accuracy threshold rule:** ≥60% → green; <60% → red. UI hint user về model effectiveness.
+
+**ROI Chart (BacktestRoiChart):**
+
+```tsx
+<LineChart data={roi_curve}>
+  <Line dataKey="portfolio" stroke="var(--ssi-up)"   name="Danh mục" />
+  <Line dataKey="vnindex"   stroke="var(--ssi-info)" name="VN-Index" />
+  <YAxis tickFormatter={(v) => `${v}%`} />
+</LineChart>
+```
+
+Gap giữa 2 line ≈ alpha (visualization).
+
+**Toggle "Xem chi tiết X mã"** → expand `<BacktestDetailTable>` bên dưới.
+
+### 6.20 DeleteConfirmModal — Common Pattern (Cluster 5+)
+
+> [v1.4] Pattern dùng chung cho Delete Holding (cluster 5), Delete Run (cluster 5), Revoke Share (cluster 6).
+
+**Layout:**
+
+```tsx
+<Modal>
+  <header>
+    <h2 className="text-md font-medium">{title}</h2>
+  </header>
+  <div className="p-4 space-y-3">
+    <p>Bạn có chắc muốn xóa <strong>{interpolation}</strong>?</p>
+    {warning && (
+      <p className="text-xs opacity-70">{warning}</p>
+    )}
+  </div>
+  <footer className="flex justify-end gap-2 p-4">
+    <button onClick={onCancel}>Hủy</button>
+    <button
+      onClick={onConfirm}
+      style={{ backgroundColor: 'var(--ssi-down)', color: 'white' }}
+      className="rounded px-3 py-1.5"
+    >
+      {confirmLabel ?? 'Xóa'}
+    </button>
+  </footer>
+</Modal>
+```
+
+**Variants:**
+| Use case | Title | Interpolation | Warning |
+|---|---|---|---|
+| Delete holding | "Xóa khỏi danh mục" | `<ticker>` | — |
+| Delete run | "Xóa run" | `<run_id>` | "Hành động này không thể hoàn tác. Toàn bộ dữ liệu run + scored results sẽ bị xóa vĩnh viễn." |
+| Revoke share | "Thu hồi link" | `<token prefix>...` | "Người đã có link sẽ không thể truy cập nữa." |
+
+**ESC + Cancel handler:** cùng `onCancel` callback.
+
+**Confirm button:** ssi-down red (visual hint destructive action).
 
 ---
 

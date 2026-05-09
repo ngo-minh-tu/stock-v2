@@ -17,6 +17,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung §M VND Unit Conventions — track inconsistency giữa current_price (ngàn đồng) / market_cap (tỷ đồng) / allocation_amount (đồng) / total_capital (đồng). Cluster 3 sẽ chốt thống nhất hoặc thêm format helpers.
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ Bổ sung §N Reason Codes (15 enum strict whitelist GUARD-02). §M cluster 3 update: chưa thống nhất unit, defer sang cluster 4 (Price Board) khi join với portfolio.
 - **v1.4 (2026-05-09, cluster 4 reconciliation):** ❌ §M REMOVED "Cluster 4 task: chốt 1 trong 3 hướng" → ✅ REPLACED bằng decision: **multi-unit + helpers** (Option C — giữ convention từng field, defer single-unit sweep sang backend phase). ➕ ADDED §O TtckColor enum + `priceColor()` pure function signature. ➕ ADDED §P NEWLY_LISTED_INDEXES fixture anchor (deterministic 6 mã).
+- **v1.4 (2026-05-09, cluster 5 reconciliation):** ➕ ADDED §Q REC_RANK (BAN=0, GIU=1, MUA=2 heuristic for compare upgrade direction). ➕ ADDED §R SCORE_DISTRIBUTION_BUCKETS (6 ranges low-incl high-excl). ➕ ADDED §S MOCK_FIXTURE_TODAY = '2026-05-07' anchor cho buy_date validation + news fixture.
 
 ## A. Recommendation Enum
 
@@ -266,3 +267,64 @@ const NEWLY_LISTED_INDEXES = new Set([5, 17, 31, 46, 58, 73]);
 Used by: [f05-price-board.md](f05-price-board.md) AC-05-07, prototype `mocks/data/price-board-fixture.ts`.
 
 **Backend phase note:** field `newly_listed` đã có trong [TAD g03 Table 1 stocks](../tad/g03-database.md). Production sẽ tính qua first-listed-date < 4 quarters thay vì hardcode index — frontend KHÔNG cần đổi (chỉ đọc flag).
+
+## Q. REC_RANK — Recommendation Upgrade Direction Heuristic (Cluster 5)
+
+> [v1.4] Heuristic dùng cho `compare.recommendation_changes.direction`. Map enum string → integer rank để so sánh thứ tự.
+
+```ts
+const REC_RANK: Record<Recommendation, number> = {
+  'BÁN': 0,
+  'GIỮ': 1,
+  'MUA': 2,
+};
+
+function compareDirection(rec_a: Recommendation, rec_b: Recommendation): 'upgrade' | 'downgrade' {
+  return REC_RANK[rec_b] > REC_RANK[rec_a] ? 'upgrade' : 'downgrade';
+}
+```
+
+**Rationale:** SRS f12 không định nghĩa rõ "upgrade direction" pre-cluster-5. Cluster 5 đặt rank theo semantic (BUY tích cực hơn HOLD tích cực hơn SELL). UI legend rõ ràng: **BÁN→GIỮ là upgrade**, **MUA→BÁN là downgrade**.
+
+Used by: [f12-run-history-backtest.md](f12-run-history-backtest.md) §UC-12-02, prototype `mocks/data/compare-compute.ts`.
+
+## R. SCORE_DISTRIBUTION_BUCKETS — Compare Histogram (Cluster 5)
+
+> [v1.4] 6 buckets cho score histogram trong ComparePanel §4. **Low-inclusive, high-exclusive** boundaries.
+
+```ts
+const SCORE_DISTRIBUTION_BUCKETS = [
+  { label: '<30',    min: 0,    max: 30  },
+  { label: '30-45',  min: 30,   max: 45  },
+  { label: '45-60',  min: 45,   max: 60  },
+  { label: '60-75',  min: 60,   max: 75  },
+  { label: '75-90',  min: 75,   max: 90  },
+  { label: '≥90',    min: 90,   max: 101 },  // include 100
+] as const;
+
+// Membership: bucket.min ≤ score < bucket.max
+function bucketOf(score: number): string {
+  return SCORE_DISTRIBUTION_BUCKETS.find(b => score >= b.min && score < b.max)?.label ?? '<30';
+}
+```
+
+**Rationale:** boundary low-incl high-excl phổ biến statistics. Score = 60 thuộc bucket `60-75` (không phải `45-60`). Score = 100 thuộc bucket `≥90`.
+
+Used by: [f12-run-history-backtest.md](f12-run-history-backtest.md) UC-12-02 §4 ScoreHistogram.
+
+## S. MOCK_FIXTURE_TODAY — Anchor Date (Cluster 4 + 5)
+
+> [v1.4] Anchor "today" cố định cho mọi fixture date math trong prototype mock layer.
+
+```ts
+const MOCK_FIXTURE_TODAY = '2026-05-07';     // YYYY-MM-DD
+const FIXTURE_NOW_MS = Date.parse('2026-05-07T08:00:00Z');  // ms
+```
+
+**Used by:**
+- [f10 §UC-10-02](f10-news-sentiment.md) — `relativeTime()` anchor, news fixture date generation
+- [TAD c04 §5](../tad/c04-news-sentiment.md) — FIXTURE_NOW_MS anchor pattern
+- [f11 §UC-11-02](f11-portfolio-lite.md) AC-11-15 — `buy_date max` constraint
+- Mock handler `validateHolding`, `validateBacktest`
+
+**Backend phase:** thay bằng `datetime.now(UTC)` thực — frontend KHÔNG cần đổi (chỉ format response timestamps qua i18n keys).
