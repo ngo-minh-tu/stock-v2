@@ -4,7 +4,7 @@ title: API Design — Endpoint Registry, Pagination, Health/Version, Key Respons
 parent: 00-tad-system-overview.md
 type: global
 source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7); cluster 1 reconciliation 2026-05-09
-version: v1.2 LOCKED (post-prototype reconciliation)
+version: v1.3 LOCKED (cluster 4 reconciliation)
 ---
 
 # g02 — API Design
@@ -14,6 +14,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error). ❌ §3 health/version response: bump `srs_version: v1.0 → v1.2`, `tad_version: v1.1 → v1.2` (đồng bộ với cluster 1 reconciliation).
+- **v1.3 (2026-05-09, cluster 4 reconciliation):** ➕ Bổ sung §7 Key Response Shapes (Cluster 4): `GET /api/stocks` (LatestPrice + newly_listed flag), `GET /api/news` (source_errors envelope + pagination), `GET /api/news/sentiment/{ticker}` (30-day rollup, count=0 → NEUTRAL/0.0/empty breakdown). Bump `srs_version: v1.2 → v1.4`, `tad_version: v1.2 → v1.3`.
 
 ---
 
@@ -91,9 +92,9 @@ GET /version → 200
 {
   "app_version": "0.1.0",
   "prd_version": "v0.5A",
-  "srs_version": "v1.2",
-  "tad_version": "v1.2",
-  "model_version": "baseline_v1",
+  "srs_version": "v1.4",
+  "tad_version": "v1.3",
+  "model_version": "baseline_v2",
   "db_tables": 16
 }
 ```
@@ -245,3 +246,109 @@ try {
 ```
 
 Backend FastAPI MUST wrap mọi response (kể cả 4xx/5xx) bằng envelope này. Xem [g05 §3 Error Response Standard](g05-cross-cutting.md). Frontend `apiFetch` rely vào shape này để parse.
+
+---
+
+## 7. Key Response Shapes (Cluster 4)
+
+### 7.1 `GET /api/stocks?limit=100&offset=0`
+
+```ts
+type StockListItem = {
+  ticker: string;
+  name: string;
+  exchange: 'HOSE' | 'HNX' | 'UPCOM';
+  sector: string;
+  newly_listed: boolean;     // true cho 6 mã anchor (xem SRS g03 §P)
+  latest: LatestPrice;
+};
+
+type LatestPrice = {
+  open: number;       // ngàn đồng
+  high: number;
+  low: number;
+  close: number;       // current_price (ưu tiên từ run mới nhất nếu có)
+  reference: number;
+  ceiling: number;
+  floor: number;
+  change: number;       // signed
+  change_pct: number;   // signed %
+  volume: number;       // raw shares
+  as_of: string;        // ISO 8601
+};
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [ /* 81 StockListItem */ ],
+    "total": 81,
+    "limit": 100,
+    "offset": 0
+  }
+}
+```
+
+**Anchor logic** (mock + backend):
+- `current_price` ưu tiên lấy từ run mới nhất terminal (`runsStore.latest()`); fallback fixture seed nếu chưa có run. Đảm bảo Stock Detail header và Price Board cùng số tiền cho cùng 1 mã.
+- `newly_listed=true` qua `NEWLY_LISTED_INDEXES = {5,17,31,46,58,73}` (mock); backend tính qua first-listed-date < 4 quarters.
+- `seed%12 → ceiling`, `seed%13 → floor`, `seed%17 → reference` anchor cases (mock-only) đảm bảo AC-05-02 luôn cover 5 cases TTCK.
+
+### 7.2 `GET /api/news?limit=20&offset=0&...`
+
+Query params:
+
+| Param | Type | Note |
+|---|---|---|
+| `limit`, `offset` | number | Default 20, 0 |
+| `source` | NewsSource[] (CSV) | Multi-select OR-logic; empty = all |
+| `sentiment` | SentimentLabel | Single; absent = ALL |
+| `ticker` | string | Single; filter `related_tickers` contains |
+| `from`, `to` | ISO 8601 | Date range |
+| `mock_news_failure` | NewsSource | Dev only — simulate source down |
+
+```ts
+type NewsListResponse = {
+  items: NewsArticle[];
+  total: number;
+  limit: number;
+  offset: number;
+  source_errors: NewsSource[];   // luôn tồn tại, có thể empty
+};
+```
+
+**`source_errors` envelope:** 200 OK với array (KHÔNG return 503 per-source). Lý do: client cần data từ source khác + banner đồng thời. Xem [TAD c04 §4](c04-news-sentiment.md).
+
+### 7.3 `GET /api/news/sentiment/{ticker}?days=30`
+
+```ts
+type SentimentSummaryResponse = {
+  ticker: string;
+  score_avg: number;             // 2dp signed
+  label_counts: {
+    POSITIVE: number;
+    NEUTRAL: number;
+    NEGATIVE: number;
+  };
+  source_breakdown: Record<NewsSource, number>;
+  total: number;
+};
+```
+
+**count=0 case (GUARD-08):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "ticker": "MOCK_INSUFFICIENT",
+    "score_avg": 0.0,
+    "label_counts": { "POSITIVE": 0, "NEUTRAL": 0, "NEGATIVE": 0 },
+    "source_breakdown": {},
+    "total": 0
+  }
+}
+```
+
+Frontend SentimentSummaryWidget render "Không có tin trong 30 ngày" italic note thay vì error (xem [SRS f10 AC-10-12](../srs/f10-news-sentiment.md)).

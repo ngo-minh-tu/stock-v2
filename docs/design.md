@@ -2,13 +2,14 @@
 
 > Extracted from [ssi.com.vn](https://www.ssi.com.vn) — Công ty Cổ phần Chứng khoán SSI
 > Version: iBoard v2.0.5.5 | Last updated: April 2026
-> Project version: v1.2 (post-prototype reconciliation 2026-05-09)
+> Project version: v1.4 (post-prototype reconciliation 2026-05-09)
 
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ❌ REMOVED AG-Grid references (TAD §2 đã exclude AG-Grid; project dùng TanStack Table v8). Cập nhật §6.5 (Price Board Table styling) sang pattern TanStack Table + CSS variables. §10 Tech Stack: cập nhật Data Grid + Charts khớp với TAD §2 (TanStack + Recharts + Lightweight Charts). Line 43 type scale: "AG-Grid data" → "TanStack Table data".
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ ADDED `--color-theme-tooltip-background` + `--color-theme-tooltip-border` vào cả 4 theme blocks (gap có từ cluster 1, lộ ở cluster 2 khi 8 chart components dùng). ➕ NEW §6.7 Chart Tooltips (chuẩn padding/border/shadow/blur), §6.8 Pie Center Label (donut hole pattern), §6.9 Radar Custom Tooltip (INWARD placement, polar geometry, dual-series). ➕ ADDED Toast Warning color `#f49f3b` (hardcoded brand alert).
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ NEW §6.10 Stock Detail Chart Patterns — gộp 4 patterns: Candlestick (Lightweight Charts MA colors + grid opacity + 2-tier selector + crosshair legend), AiScoreRing (tier-based color), RecommendationPill (soft-tinted vs Badge solid), StopLoss panel-frame card.
+- **v1.4 (2026-05-09, cluster 4 reconciliation):** ➕ NEW §3.7 Exchange Tag Colors (`--exchange-hose` ssi-up green / `--exchange-hnx` ssi-floor blue / `--exchange-upcom` riêng). ➕ ADDED `--exchange-upcom` token vào 4 theme block (classic-dark + oled = `#c9a227` amber trầm; classic-light + light = `#e78b03` giữ tone cũ). ❌ §3.2 NOTE: UPCOM exchange badge KHÔNG dùng `--ssi-ref` (#fdff12 quá chói trên OLED + classic-dark — phát hiện cluster 4 post-fix 2026-05-08); ref yellow giữ cho TTCK reference price rule. ➕ §6.5 UPDATE Price Board Table — anchor prop on dynamic PriceCell, ceiling/floor BEFORE up/down clamp `>=`/`<=`, default sort `[close DESC]`, ExchangeBadge integration. ➕ NEW §6.11 NewsCard + SentimentChip pattern. ➕ NEW §6.12 SentimentSummaryWidget (CSS conic-gradient doughnut, KHÔNG Recharts pie). ➕ NEW §6.13 Source Error Banner (persistent, không dismissible). ➕ NEW §6.14 Mobile Filter Drawer (slide-in + overlay backdrop).
 
 ---
 
@@ -87,6 +88,8 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
 | **Floor (Sàn)** | `text-floor` | `#00c9ff` | `#088db7` | `#52d3f9` | Giá sàn — xanh dương |
 | **Stable (Đứng giá)** | `text-stable` | `#dfe1e3` | `#1e2329` | `#d6d6d6` | Không đổi — trung tính |
 
+> [v1.4] **UPCOM exchange badge KHÔNG dùng `--ssi-ref`** (#fdff12 quá chói trên OLED + classic-dark; phát hiện cluster 4 post-fix 2026-05-08). Giữ `--ssi-ref` cho TTCK reference price rule (PriceCell color rule); UPCOM exchange tag dùng `--exchange-upcom` riêng — xem §3.7.
+
 ### 3.3 Flash Colors (Price Board Highlights)
 
 | Semantic | Token | Value | Usage |
@@ -125,6 +128,20 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
 | Info | `toast-background-info` | `#009bde` |
 | Success | `toast-background-success` | `#3fa885` |
 | Warning | `toast-background-warning` | `#f49f3b` |
+
+### 3.7 Exchange Tag Colors (Cluster 4)
+
+> [v1.4] Exchange badge cho HOSE / HNX / UPCOM dùng tokens **riêng**, KHÔNG reuse TTCK price tokens (`--ssi-ref` vàng quá chói cho UPCOM trên OLED + classic-dark). Tách biến để nâng cấp tone từng exchange độc lập với TTCK price rule.
+
+| Exchange | Token | Classic Dark | OLED | Light | Classic Light | Source token mapping |
+|---|---|---|---|---|---|---|
+| **HOSE** | `--exchange-hose` | (alias) | (alias) | (alias) | (alias) | `var(--ssi-up)` xanh lá |
+| **HNX** | `--exchange-hnx` | (alias) | (alias) | (alias) | (alias) | `var(--ssi-floor)` xanh dương |
+| **UPCOM** | `--exchange-upcom` | `#c9a227` | `#c9a227` | `#e78b03` | `#e78b03` | **dedicated** (amber trầm cho dark, gold cho light) |
+
+**Lý do tách `--exchange-upcom`:** prototype cluster 4 dùng `--ssi-ref` cho UPCOM badge → user report yellow #fdff12 chói trên OLED/classic-dark, không nhìn được chữ. Không thể đổi `--ssi-ref` vì biến này là TTCK reference yellow dùng khắp Price Board (5-color rule), GIU recommendation badge, run-history bars — và PRD §8.2 AC-17-03 yêu cầu ổn định cross-theme. Fix: tách biến mới chỉ cho exchange tag.
+
+Used by: [SRS f05 §AC-05-08](srs/f05-price-board.md), `prototype/src/components/badges/ExchangeBadge.tsx`, Price Board exchange filter chips.
 
 ---
 
@@ -193,6 +210,9 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
   --color-theme-tooltip-background:  rgba(20, 18, 32, 0.96);
   --color-theme-tooltip-border:      rgba(255, 255, 255, 0.10);
+
+  /* === Exchange tags === [v1.4 cluster 4] */
+  --exchange-upcom:                  #c9a227;   /* amber trầm cho dark — không dùng --ssi-ref vì #fdff12 chói */
 
   /* === Filter === */
   --color-theme-filter-bg:           #403b58;
@@ -272,6 +292,9 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   --color-theme-tooltip-background:  rgba(255, 255, 255, 0.98);
   --color-theme-tooltip-border:      rgba(0, 0, 0, 0.10);
 
+  /* === Exchange tags === [v1.4 cluster 4] */
+  --exchange-upcom:                  #e78b03;   /* gold cho light — giữ tone cũ pre-fix */
+
   /* === Filter === */
   --color-theme-filter-bg:           #f8f8fb;
   --color-theme-filter-border:       #e5e5e5;
@@ -345,6 +368,9 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   --color-theme-tooltip-background:  rgba(10, 10, 10, 0.96);
   --color-theme-tooltip-border:      rgba(255, 255, 255, 0.14);
 
+  /* === Exchange tags === [v1.4 cluster 4] */
+  --exchange-upcom:                  #c9a227;   /* amber trầm — ssi-ref vàng quá chói trên OLED */
+
   /* === Filter === */
   --color-theme-filter-bg:           #505050;
   --color-theme-filter-border:       #505050;
@@ -401,6 +427,9 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
   /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
   --color-theme-tooltip-background:  rgba(255, 255, 255, 0.98);
   --color-theme-tooltip-border:      rgba(0, 0, 0, 0.10);
+
+  /* === Exchange tags === [v1.4 cluster 4] */
+  --exchange-upcom:                  #e78b03;   /* gold cho light — giữ tone cũ pre-fix */
 
   /* TTCK colors === Light variant (giống §4.2) === */
 }
@@ -540,6 +569,8 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
 ### 6.5 Price Board Table (TanStack Table v8)
 
 > [v1.2] Replaces AG-Grid styling. TanStack Table là headless library — markup do React component control trực tiếp, không có default CSS class selectors như AG-Grid. Apply theme tokens qua React `style` prop hoặc Tailwind utilities.
+>
+> [v1.4] Cluster 4 update — 14-col spec, PriceCell 2-mode pattern, ExchangeBadge integration.
 
 **Theme tokens vẫn áp dụng (đã defined trong §4.1, §4.2, §4.3, §4.4):**
 - `--color-theme-price-table-header` — header row background
@@ -559,18 +590,59 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
   }}
 >{header}</th>
 
-// Body row (alternating)
-<tr style={{
-  backgroundColor: index % 2 === 0
-    ? 'var(--color-theme-price-table-row-even)'
-    : 'var(--color-theme-price-table-row-odd)',
-}}>...</tr>
+// Body row (alternating, with data-color-tag for a11y/QA)
+<tr
+  data-color-tag={priceColor(row.close, row.ceiling, row.floor, row.reference)}
+  style={{
+    backgroundColor: index % 2 === 0
+      ? 'var(--color-theme-price-table-row-even)'
+      : 'var(--color-theme-price-table-row-odd)',
+  }}
+>...</tr>
 
 // Cell
 <td className="text-2xs tabular-nums px-2 py-1">{value}</td>
 ```
 
 **Typography:** font-size `text-2xs` (11px / 0.688rem) cho data cells, `tabular-nums` cho numeric alignment, Roboto antialiased.
+
+**PriceCell 2-mode (cluster 4):**
+
+```tsx
+// Static — force token color (Reference/Ceiling/Floor/Open columns)
+<PriceCell mode="static" fixedColor="ref" value={32.5} />
+
+// Dynamic — apply priceColor() rule
+<PriceCell mode="dynamic" value={row.close} anchor={row.close}
+  ceiling={row.ceiling} floor={row.floor} reference={row.reference} />
+
+// Dynamic with anchor decoupled — Change/Change% color match Close, value displays change
+<PriceCell mode="dynamic" value={row.change} anchor={row.close}
+  ceiling={row.ceiling} floor={row.floor} reference={row.reference} />
+```
+
+**Color rule** (xem [SRS g03 §O priceColor()](srs/g03-appendix-enums-constants.md)):
+
+```ts
+// ORDER MATTERS — ceiling/floor BEFORE up/down
+if (price >= ceiling) return 'ceil';   // var(--ssi-ceil) tím
+if (price <= floor)   return 'floor';   // var(--ssi-floor) xanh dương
+if (price === reference) return 'ref';  // var(--ssi-ref) vàng
+if (price > reference)   return 'up';   // var(--ssi-up) xanh lá
+return 'down';                          // var(--ssi-down) đỏ
+```
+
+Dùng `>=`/`<=` (KHÔNG `===` strict) cho ceiling/floor để robust với rounding 2dp.
+
+**Default sort:** `[{ id: 'close', desc: true }]` — Close DESC. TanStack Table accept initial state này.
+
+**ExchangeBadge integration** (cột "Sàn" + filter chips dùng chung):
+
+```tsx
+<ExchangeBadge exchange="UPCOM" />  // dùng var(--exchange-upcom) — KHÔNG --ssi-ref
+```
+
+Xem §3.7 cho color tokens. UPCOM tách `--exchange-upcom` riêng vì `--ssi-ref` (#fdff12) chói trên badge nhỏ.
 
 ### 6.6 Toast Notifications
 
@@ -739,6 +811,171 @@ Centered layout (vs label/value stacking lỏng cũ):
 Big price: `tabular-nums`, size lớn (~text-3xl), color `var(--ssi-down)`.
 Distance pill: rounded-full, bg `withAlpha(ssi-down, 0.15)`, text `var(--ssi-down)`, padding 2px 8px.
 Gap-track: `<hr>` 1px gray, opacity 0.3, margin top 8px.
+
+### 6.11 NewsCard + SentimentChip (Cluster 4)
+
+> [v1.4] Component pattern cho `<NewsCard>` ở News page.
+
+**Card structure:**
+
+```
+┌────────────────────────────────────────────────┐
+│ ┃ [C] CafeF · 2 giờ trước              ↗       │  ← header
+│ ┃                                              │
+│ ┃ Tiêu đề bài viết (link new tab)              │  ← title 2-line clamp
+│ ┃                                              │
+│ ┃ Snippet 2 dòng giới thiệu nội dung bài...    │  ← snippet opacity 0.7
+│ ┃                                              │
+│ ┃ [▲ POSITIVE] [KDH] [VHM]                     │  ← footer chips
+└────────────────────────────────────────────────┘
+  ↑ border-left 3px theo SENTIMENT_BORDER_TINT[label]
+```
+
+**Border-left** 3px solid:
+| Label | Color |
+|---|---|
+| POSITIVE | `var(--ssi-up)` xanh lá |
+| NEUTRAL | `var(--ssi-ref)` vàng (or stable nếu cần dịu hơn) |
+| NEGATIVE | `var(--ssi-down)` đỏ |
+
+**Header row** (flex, gap 8px):
+- `<SourceLogo>` initials box (5 fixed colors: C/V/S/B/T) — `size-6 rounded text-xs font-bold`
+- Source name — `text-xs`
+- Relative time — `text-xs opacity-70`, qua i18n keys `news.time.{minutesAgo|hoursAgo|daysAgo|weeksAgo}` (KHÔNG hard-code chuỗi vi/en)
+- Open-link icon (Lucide `ExternalLink`) — `size-3.5 opacity-60`, click → `window.open(url, '_blank')`
+
+**Title:** `<a target="_blank" rel="noopener noreferrer">`, `text-base font-medium line-clamp-2`.
+
+**Snippet:** `text-sm opacity-70 line-clamp-2`.
+
+**Footer:** `<SentimentChip>` + ticker chips (`<TickerChip>` click → `/stock-detail?ticker=X`).
+
+**`unavailable` reason:** khi `sentiment_reason === "unavailable"` → render italic note "Lý do không khả dụng" thay cho default citation.
+
+**`<SentimentChip>` pattern:**
+
+```tsx
+<span className={`
+  inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+  text-xs font-medium border
+`} style={{
+  color: SENTIMENT_COLOR[label],
+  borderColor: withAlpha(SENTIMENT_COLOR[label], 0.4),
+  backgroundColor: withAlpha(SENTIMENT_COLOR[label], 0.1),
+}}>
+  {label === 'POSITIVE' && <TrendingUp size={12} />}
+  {label === 'NEUTRAL'  && <Minus size={12} />}
+  {label === 'NEGATIVE' && <TrendingDown size={12} />}
+  {label}
+</span>
+```
+
+**Tooltip:** `Score: {score} ({label})` (xem cluster prompt §4.3).
+
+### 6.12 Sentiment Summary Doughnut — CSS Conic-Gradient (Cluster 4)
+
+> [v1.4] Pattern cho `<SentimentSummaryWidget>` khi user filter ticker. **KHÔNG dùng Recharts pie** — overhead lớn cho chart 3 slice; conic-gradient pure CSS.
+
+```tsx
+<div className="relative size-32 rounded-full"
+  style={{
+    background: `conic-gradient(
+      var(--ssi-up)   0%        ${posPct}%,
+      var(--ssi-ref)  ${posPct}% ${posPct + neuPct}%,
+      var(--ssi-down) ${posPct + neuPct}% 100%
+    )`,
+  }}
+>
+  {/* inset white circle cho doughnut effect */}
+  <div className="absolute inset-3 rounded-full
+    bg-[var(--color-theme-card-bg)]
+    flex items-center justify-center flex-col">
+    <span className="text-2xs opacity-70">avg</span>
+    <span className="text-lg font-bold">{scoreAvg.toFixed(2)}</span>
+  </div>
+</div>
+```
+
+**Theme awareness:** CSS var `--ssi-up/ref/down` resolve theo `[data-theme]` parent → re-render khi theme đổi tự động, không cần React re-render.
+
+**count=0 case (GUARD-08):** thay vì render empty doughnut → render italic note "Không có tin trong 30 ngày — sentiment NEUTRAL/0.0".
+
+**Source breakdown bar** (bên dưới doughnut):
+- Horizontal bar 5-segment, mỗi segment width tỷ lệ với count, color theo source palette (5 màu fixed C/V/S/B/T).
+- Legend 5 row dưới bar.
+
+### 6.13 Source Error Banner (Cluster 4)
+
+> [v1.4] Persistent banner, **không dismissible**.
+
+```tsx
+<div className="flex items-center gap-2 px-4 py-3 rounded
+  border-l-4 mb-4"
+  style={{
+    backgroundColor: withAlpha(toastWarning, 0.12),  // #f49f3b @ 12%
+    borderLeftColor: toastWarning,
+    color: 'var(--color-theme-text-secondary)',
+  }}
+>
+  <AlertCircle size={16} className="shrink-0"
+    style={{ color: toastWarning }} />
+  <span className="text-sm">
+    Nguồn {sourceNames.join(', ')} tạm thời không khả dụng.
+    Đã hiển thị tin từ các nguồn còn lại.
+  </span>
+</div>
+```
+
+**Why không dismissible:** user cần biết coverage thiếu trong suốt session. Dismiss → user mất context và tưởng đã thấy đủ tin.
+
+**Color choice:** dùng toast warning tone (`#f49f3b`) thay `var(--ssi-down)` đỏ vì source down ≠ critical error — chỉ là partial degradation.
+
+### 6.14 Mobile Filter Drawer (Cluster 4)
+
+> [v1.4] Pattern slide-in drawer cho mobile <768px.
+
+**Trigger:** filter button trong page header (visible chỉ khi `md:hidden`).
+
+**Drawer layout:**
+
+```tsx
+{drawerOpen && (
+  <>
+    {/* Overlay backdrop */}
+    <div
+      className="fixed inset-0 z-40 bg-black/50 md:hidden"
+      onClick={() => setDrawerOpen(false)}
+    />
+    {/* Drawer */}
+    <aside
+      className={`
+        fixed top-0 right-0 z-50 h-screen w-80
+        translate-x-0 transition-transform duration-200
+        md:hidden overflow-y-auto
+      `}
+      style={{ backgroundColor: 'var(--color-theme-card-bg)' }}
+    >
+      <header className="flex items-center justify-between p-4 border-b">
+        <h2 className="text-md font-medium">Bộ lọc</h2>
+        <button onClick={() => setDrawerOpen(false)}>
+          <X size={20} />
+        </button>
+      </header>
+      <div className="p-4">
+        {/* same FilterPanel content as desktop sticky aside */}
+      </div>
+    </aside>
+  </>
+)}
+```
+
+**Width:** 320px (`w-80`) — đủ chỗ cho 5 filter section, không quá rộng để cover toàn bộ screen.
+
+**Animation:** `transition-transform duration-200` cho slide effect; entry from `translate-x-full` → exit cleanup.
+
+**Z-index:** backdrop `z-40`, drawer `z-50` để drawer luôn trên backdrop.
+
+**Close triggers:** click backdrop / click X button / press ESC (key listener bên ngoài).
 
 ---
 

@@ -14,6 +14,7 @@ version: v1.3 LOCKED (cluster 2 reconciliation)
 ## Changelog
 
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung §4 Frontend Polling & Reload Pattern (`usePolling` hook với cancelledRef, `useApiResource` GET-once + reloadKey, `lastCompletedRunId` broadcast). §5 Prototype 5-step state machine alignment với 7-state backend enum.
+- **v1.4 (2026-05-09, cluster 4 reconciliation):** ➕ Bổ sung §4.5 RunContext Mount-Once Hydration — fetch `GET /api/runs?limit=1` on mount → set `lastCompletedRunId` nếu run terminal và state đang null (functional updater); `runsHydrated` flag phân biệt "đang hydrate" vs "store rỗng". Lý do: Price Board / News / Portfolio click ticker không kèm `run_id` trước khi user trigger run nào → page Stock Detail render error misleading.
 
 ---
 
@@ -300,6 +301,50 @@ setTimeout(() => {
 **Lý do functional setState:** chống case run A timer fire sau khi user đã start run B → nếu unconditional clear, sẽ wipe state run B.
 
 **Critical: `handledRunRef` dùng `useRef` (KHÔNG `useState`)** — đây là "đã fire toast cho run này chưa" flag. Nếu dùng state, effect deps thay đổi → tự re-run → clear setTimeout của chính nó.
+
+### 4.5 RunContext Mount-Once Hydration (cluster 4 post-fix)
+
+**Vấn đề:** Price Board / News / Portfolio (cluster 4-5) click ticker → navigate `/stock-detail?ticker=X` KHÔNG kèm `run_id`. Stock Detail page fallback sang `RunContext.lastCompletedRunId` — biến này khởi tạo `null` mỗi lần mount/refresh và chỉ set sau khi user nhấn "Chạy" trong session. `runsStore` đã seed 7 historical run nhưng React context không biết → Stock Detail render error misleading "Mã không tồn tại trong run này hoặc đã bị loại".
+
+**Fix:** mount-once hydration trong `RunProvider`:
+
+```tsx
+const [lastCompletedRunId, setLastCompletedRunId] = useState<string | null>(null);
+const [runsHydrated, setRunsHydrated] = useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+  apiFetch<{ items: RunSummary[] }>('/api/runs?limit=1')
+    .then(({ items }) => {
+      if (cancelled) return;
+      const latest = items[0];
+      if (latest && isTerminal(latest.status)) {
+        // Functional updater — không đè run đang chạy nếu user đã start run khác
+        setLastCompletedRunId(prev => prev ?? latest.run_id);
+      }
+    })
+    .catch(() => {})
+    .finally(() => { if (!cancelled) setRunsHydrated(true); });
+  return () => { cancelled = true; };
+}, []);
+```
+
+### 4.6 3-Branch Consumer Pattern (Stock Detail page)
+
+```tsx
+const { lastCompletedRunId, runsHydrated } = useRun();
+const runId = searchParams.get('run_id') ?? lastCompletedRunId;
+
+if (!runId && !runsHydrated) return <Spinner />;          // đang hydrate
+if (!runId && runsHydrated) return <NoRunMessage />;       // store rỗng
+if (loading) return <Spinner />;                            // có runId, đang fetch
+if (error || !data) return <ErrorBlock />;                  // fetch lỗi
+return <StockDetail data={data} />;                         // OK
+```
+
+**Lý do tách 3 branch:** tránh flash error misleading lúc đang hydrate. Nếu collapse `!runId → ErrorBlock` → user mở deep-link sẽ thấy error đỏ trong ~50ms trước khi hydrate xong → UX cực xấu.
+
+**Áp dụng:** xem [SRS f08 §UC-08-02](../srs/f08-stock-detail.md).
 
 ---
 

@@ -16,6 +16,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §F note giải thích quan hệ giữa schema enums (`Theme` 3-value + `ClassicMode`) và CSS resolved `data-theme` attribute (4-value: classic-dark, classic-light, light, oled). Bổ sung §L Frontend Constants (STORAGE_KEYS, MOCK_JWT_PREFIX).
 - **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung §M VND Unit Conventions — track inconsistency giữa current_price (ngàn đồng) / market_cap (tỷ đồng) / allocation_amount (đồng) / total_capital (đồng). Cluster 3 sẽ chốt thống nhất hoặc thêm format helpers.
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ➕ Bổ sung §N Reason Codes (15 enum strict whitelist GUARD-02). §M cluster 3 update: chưa thống nhất unit, defer sang cluster 4 (Price Board) khi join với portfolio.
+- **v1.4 (2026-05-09, cluster 4 reconciliation):** ❌ §M REMOVED "Cluster 4 task: chốt 1 trong 3 hướng" → ✅ REPLACED bằng decision: **multi-unit + helpers** (Option C — giữ convention từng field, defer single-unit sweep sang backend phase). ➕ ADDED §O TtckColor enum + `priceColor()` pure function signature. ➕ ADDED §P NEWLY_LISTED_INDEXES fixture anchor (deterministic 6 mã).
 
 ## A. Recommendation Enum
 
@@ -166,19 +167,22 @@ MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW han
 
 Used by: prototype `lib/constants.ts`, MVP frontend mirror.
 
-## M. VND Unit Conventions (Cluster 2 - Cluster 4 TBD)
+## M. VND Unit Conventions (chốt cluster 4)
 
-> [v1.3] Cluster 2 phát hiện convention không nhất quán. Cluster 3 reuse mà chưa thống nhất → defer sang cluster 4 (Price Board) khi join với portfolio buộc fix.
+> [v1.4] Cluster 4 chốt **Option C — multi-unit + helpers**. Lý do chọn: prototype reuse convention từng field qua cluster 1-4, đổi sang single-unit sẽ touch >20 chỗ (PriceCell/Stock Detail header/Risk Panel/Portfolio P&L/Run summary). Single-unit defer sang backend phase khi schema migration. Frontend hiện dùng helper `formatPrice` / `formatVnd` qua `lib/format.ts`.
 
-| Field | Current convention | Example |
-|---|---|---|
-| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND |
-| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND |
-| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND |
-| `result.risk.allocation_amount` | **đồng** | `150_000_000` |
-| `summary.total_capital` | **đồng** | `500_000_000` |
+| Field | Convention | Example | Helper |
+|---|---|---|---|
+| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND | `formatPrice(value, 'thousand')` |
+| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND | `formatPrice(value, 'thousand')` |
+| `latest_price.{open,high,low,close,reference,ceiling,floor}` | **ngàn đồng** | (đồng bộ với current_price) | PriceCell tự format |
+| `holding.buy_price` (cluster 5) | **ngàn đồng** | `35.5` = 35.500 VND | `formatPrice(value, 'thousand')` |
+| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND | `formatVnd(value, 'billion')` |
+| `result.risk.allocation_amount` | **đồng** | `150_000_000` | `formatVnd(value, 'raw')` |
+| `summary.total_capital` | **đồng** | `500_000_000` | `formatVnd(value, 'raw')` |
+| `latest_price.volume` | **raw shares** | `1_250_000` | `formatVolume(value)` (1K=1.000 shares, 1M=1.000.000) |
 
-**Cluster 4 task:** chốt 1 trong 3 hướng — (a) all raw đồng, (b) all ngàn đồng, (c) multi-unit + helpers `formatPrice/formatVnd`.
+**Backend phase task (post-MVP):** thống nhất single unit trong DB schema (đề xuất raw đồng cho price + market_cap để khớp tiêu chuẩn FastAPI / vnstock); frontend tiếp tục multi-unit display qua format helpers.
 
 ## N. Reason Codes — Entry Signal Explanation (Cluster 3)
 
@@ -214,3 +218,51 @@ enum ReasonCode {
 **Default per signal** (sinh tự động khi screening result không có explicit code) — xem [`prototype/src/mocks/data/reason-codes.ts`](../../prototype/src/mocks/data/reason-codes.ts) `DEFAULT_REASON_BY_SIGNAL` map.
 
 Used by: [f03-entry-point-logic.md](f03-entry-point-logic.md) (output schema), [f08-stock-detail.md](f08-stock-detail.md) (EntrySignalPanel reason chips).
+
+## O. TtckColor + priceColor() — TTCK 5-color Rule (Cluster 4)
+
+> [v1.4] Pure function trong `lib/constants.ts`, source of truth cho PriceCell + Stock Detail header + Portfolio current price cell.
+
+```ts
+type TtckColor = 'ceil' | 'up' | 'ref' | 'down' | 'floor';
+
+function priceColor(
+  price: number,
+  ceiling: number,
+  floor: number,
+  reference: number
+): TtckColor {
+  if (price >= ceiling) return 'ceil';   // ORDER MATTERS: ceiling/floor BEFORE up/down
+  if (price <= floor)   return 'floor';
+  if (price === reference) return 'ref';
+  if (price > reference)   return 'up';
+  return 'down';
+}
+```
+
+**Token mapping** (xem [design.md §3.2](../design.md)):
+
+| TtckColor | CSS variable |
+|---|---|
+| `ceil`  | `var(--ssi-ceil)` |
+| `up`    | `var(--ssi-up)` |
+| `ref`   | `var(--ssi-ref)` |
+| `down`  | `var(--ssi-down)` |
+| `floor` | `var(--ssi-floor)` |
+
+**Quan trọng:** dùng `>=` / `<=` (KHÔNG `===` strict) cho ceiling/floor để robust với rounding 2dp (`32.50` vs `32.500001`). Float compare exact equal trên 2dp đôi khi sai.
+
+Used by: [f05-price-board.md](f05-price-board.md), [f08-stock-detail.md](f08-stock-detail.md), [f11-portfolio-lite.md](f11-portfolio-lite.md).
+
+## P. NEWLY_LISTED_INDEXES — Fixture Anchor (Cluster 4)
+
+> [v1.4] Deterministic anchor đảm bảo AC-05-07 (filter "Mới niêm yết" cluster 4) luôn có ≥1 mã pass. KHÔNG random — đảm bảo reload luôn cùng kết quả.
+
+```ts
+const NEWLY_LISTED_INDEXES = new Set([5, 17, 31, 46, 58, 73]);
+// 6 mã trong fixture 81 stock được tag `newly_listed=true`
+```
+
+Used by: [f05-price-board.md](f05-price-board.md) AC-05-07, prototype `mocks/data/price-board-fixture.ts`.
+
+**Backend phase note:** field `newly_listed` đã có trong [TAD g03 Table 1 stocks](../tad/g03-database.md). Production sẽ tính qua first-listed-date < 4 quarters thay vì hardcode index — frontend KHÔNG cần đổi (chỉ đọc flag).

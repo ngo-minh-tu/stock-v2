@@ -5,18 +5,20 @@ type: feature
 module: SRS-08
 prd_fr: FR-06
 phase: 2
-version: v1.3 LOCKED (cluster 3 reconciliation)
+version: v1.4 LOCKED (cluster 4 reconciliation)
 ---
 
 # F08 — Stock Detail
 
 > Parent: [00-system-overview.md](00-system-overview.md)
-> Related — features: [f02-feature-engineering.md](f02-feature-engineering.md), [f03-entry-point-logic.md](f03-entry-point-logic.md), [f07-red-flags-risk-warnings.md](f07-red-flags-risk-warnings.md), [f09-risk-management.md](f09-risk-management.md)
+> Related — features: [f02-feature-engineering.md](f02-feature-engineering.md), [f03-entry-point-logic.md](f03-entry-point-logic.md), [f05-price-board.md](f05-price-board.md) (deep-link source), [f07-red-flags-risk-warnings.md](f07-red-flags-risk-warnings.md), [f09-risk-management.md](f09-risk-management.md), [f10-news-sentiment.md](f10-news-sentiment.md) (deep-link source), [f11-portfolio-lite.md](f11-portfolio-lite.md) (deep-link source)
 > Related — global: [g03](g03-appendix-enums-constants.md) (Recommendation, EntrySignal, WarningBadge, ReasonCodes, 38 Feature IDs)
+> Related — tech: [TAD g01-runtime §4.5](../tad/g01-runtime.md) (RunContext hydration)
 
 ## Changelog
 
 - **v1.3 (2026-05-09, cluster 3 reconciliation):** ❌ REMOVED ASCII single-block layout (wireframe pre-prototype) → ✅ REPLACED bằng 5-section detailed spec match prototype. Bollinger Bands status → **deferred** (raw_indicators payload đã có, UI toggle chưa wire — cluster 6 enable). MA20/50/200/MA-Vol added (Fix #2 candlestick upgrade). 2-tier interval/lookback selector replaces single period. AC-08-06..14.
+- **v1.4 (2026-05-09, cluster 4 reconciliation):** ➕ ADDED UC-08-02 Deep-link without run_id → page resolve via `RunContext.lastCompletedRunId` (mount-once hydrate `GET /api/runs?limit=1`); 3-branch loading state phân biệt "đang hydrate" vs "store rỗng" vs "có run nhưng load lỗi". Lý do: cluster 4 phát hiện click ticker từ Price Board / News (không kèm run_id) hiển thị error misleading "Mã không tồn tại trong run này" — bug kiến trúc frontend, sẽ tái xuất hiện với backend thật khi user refresh / share deep link. AC-08-15..16 mới.
 
 ## UC-08-01: Display Full Stock Analysis
 
@@ -34,7 +36,7 @@ Mã đã được scored trong run được chọn (`/runs/{run_id}/stocks/{tick
 | Sub-component | Source | Spec |
 |---|---|---|
 | Ticker + Name | `static.ticker`, `static.name` | Bold uppercase ticker + plain name |
-| `<ExchangeBadge>` | `static.exchange` | HOSE (xanh) / HNX (xanh dương) / UPCOM (vàng) outline |
+| `<ExchangeBadge>` | `static.exchange` | HOSE (`var(--exchange-hose)` xanh ssi-up) / HNX (`var(--exchange-hnx)` xanh dương ssi-floor) / UPCOM (`var(--exchange-upcom)` amber riêng — xem [design.md §3.7](../design.md)) outline |
 | Sector | `static.sector` | Plain text |
 | Current price + delta % | `static.current_price`, `static.reference_price` | TTCK 5-color rule (ceil/up/ref/down/floor) + `<DeltaArrow>` ▲/▼ small |
 | `<AiScoreRing>` | `scoring.ai_score` | SVG donut tier-based color (≥70 var(--ssi-up) / 40-69 amber / <40 var(--ssi-down)) + score number center + "AI Score" label |
@@ -101,3 +103,35 @@ INSUFFICIENT_DATA case → render "Không đủ data" message thay vì 3 card.
 | AC-08-12 | Run selector chỉ list run đã chấm mã này; mã chưa ở run nào → dropdown rỗng |
 | AC-08-13 | Period switcher refetch (KHÔNG client-side filter) — đổi interval/lookback → fire `useStockPrices` mới với path khác |
 | AC-08-14 | INSUFFICIENT_DATA case: ẩn S/R bar trong EntrySignalPanel, render "Không đủ data" thay vì 3 RiskPanel cards |
+
+## UC-08-02: Deep-link Without run_id (cluster 4 post-fix)
+
+### Trigger
+
+User click ticker từ:
+- [`f05`](f05-price-board.md) Price Board row
+- [`f10`](f10-news-sentiment.md) NewsCard ticker chip
+- [`f11`](f11-portfolio-lite.md) PortfolioTable row
+
+URL: `/stock-detail?ticker={X}` (KHÔNG kèm `run_id`).
+
+### Resolution Strategy
+
+`RunContext` (xem [TAD g01-runtime §4.5](../tad/g01-runtime.md)) mount-once fetch `GET /api/runs?limit=1` → set `lastCompletedRunId` nếu run terminal và state đang null (functional updater để không đè run đang chạy). `runsHydrated` flag set true sau khi response về (regardless of empty/non-empty).
+
+Stock Detail page consume `{ lastCompletedRunId, runsHydrated }`:
+
+| State | Branch | UI |
+|---|---|---|
+| `!runId && !runsHydrated` | Đang hydrate | Loading spinner |
+| `!runId && runsHydrated` | Hydrate xong, store rỗng (chưa có run nào terminal) | "noRun" message + CTA "Chạy sàng lọc trước" → trigger RunButton flow |
+| `runId && loading` | Có runId, đang fetch detail | Loading spinner |
+| `runId && error` | Có runId, fetch lỗi (mã không tồn tại trong run / run failed) | Error block "Không tải được chi tiết mã" |
+| `runId && data` | Đầy đủ | Render 5 sections (UC-08-01) |
+
+### Acceptance Criteria
+
+| AC ID | Criteria |
+|---|---|
+| AC-08-15 | Deep-link `/stock-detail?ticker=X` không kèm `run_id` → page resolve via `lastCompletedRunId`; nếu không có run terminal nào → render "noRun" message (KHÔNG flash error block "Mã không tồn tại") |
+| AC-08-16 | Loading state phân biệt "đang hydrate runs" vs "đang fetch detail" vs "không có run nào" — KHÔNG render error misleading lúc đang hydrate |
