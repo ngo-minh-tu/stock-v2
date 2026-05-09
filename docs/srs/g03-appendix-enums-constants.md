@@ -3,12 +3,17 @@ name: Appendix — Enums & Constants Registry
 description: Single source of truth cho mọi enum (Recommendation, EntrySignal, Sentiment, NewsSource, WarningBadge, Theme, RunStatus, ExcludedReason), 38 scoring feature IDs, raw indicators và constants. Mọi file f* tham chiếu.
 type: global
 source: SRS §26
+version: v1.2 LOCKED (post-prototype reconciliation)
 ---
 
 # G03 — Enum & Constant Registry
 
 > Parent: [00-system-overview.md](00-system-overview.md)
 > Đây là **single source of truth**. Mọi feature file (f01-f17) tham chiếu định nghĩa tại đây thay vì redefine.
+
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §F note giải thích quan hệ giữa schema enums (`Theme` 3-value + `ClassicMode`) và CSS resolved `data-theme` attribute (4-value: classic-dark, classic-light, light, oled). Bổ sung §L Frontend Constants (STORAGE_KEYS, MOCK_JWT_PREFIX).
 
 ## A. Recommendation Enum
 
@@ -72,6 +77,8 @@ enum Language     { VIE, ENG }
 
 Used by: [f15-settings.md](f15-settings.md), [f17-theme-i18n.md](f17-theme-i18n.md)
 
+> **Schema vs CSS resolved attribute:** Settings store dùng cặp `(theme, classic_mode)` (3 × 2 = 6 combinations, nhưng `classic_mode` chỉ có ý nghĩa khi `theme=CLASSIC`). CSS render qua attribute `data-theme` trên `<html>` resolve thành **4 giá trị duy nhất**: `classic-dark`, `classic-light`, `light`, `oled` (xem [f17 §UC-17-01](f17-theme-i18n.md) cho mapping rule). Không serialize/transmit `data-theme` qua API — chỉ là client-side CSS resolution.
+
 ## G. Run Status Enum
 
 ```
@@ -124,6 +131,21 @@ Support_Zone, Resistance_Zone
 ```
 
 Used by: [f03-entry-point-logic.md](f03-entry-point-logic.md)
+
+## L. Frontend Constants (Cluster 1)
+
+```
+STORAGE_KEYS = {
+  TOKEN:        "token",         // JWT session token (single-user MVP)
+  THEME:        "theme",         // Theme enum value
+  CLASSIC_MODE: "classic_mode",  // ClassicMode enum value
+  LOCALE:       "locale"         // Language enum value
+}
+
+MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW handler sinh; MVP backend dùng JWT thực
+```
+
+Used by: prototype `lib/constants.ts`, MVP frontend mirror.
 
 ## K. Constants
 

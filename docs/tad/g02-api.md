@@ -3,12 +3,17 @@ id: g02
 title: API Design — Endpoint Registry, Pagination, Health/Version, Key Responses
 parent: 00-tad-system-overview.md
 type: global
-source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7)
+source: docs/TAD_v1.1_Hardened_Locked_Final.md (§7); cluster 1 reconciliation 2026-05-09
+version: v1.2 LOCKED (post-prototype reconciliation)
 ---
 
 # g02 — API Design
 
 > Parent: [00-tad-system-overview.md](00-tad-system-overview.md)
+
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error).
 
 ---
 
@@ -148,3 +153,95 @@ GET /version → 200
   }
 }
 ```
+
+---
+
+## 5. Frontend API Client (`apiFetch`)
+
+> [v1.2] Chốt từ cluster 1 prototype — tất cả API call FE đều đi qua wrapper này
+
+```ts
+// frontend/src/lib/api.ts
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = typeof window !== 'undefined'
+    ? localStorage.getItem('token')
+    : null;
+
+  const res = await fetch(path, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
+  });
+
+  // 401 anywhere → auto logout
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new Error('UNAUTHORIZED');
+  }
+
+  const body = await res.json();
+
+  // 409 → typed error cho job lock conflict (cluster 2 POST /api/run)
+  if (res.status === 409) {
+    throw new JobConflictError(body.error?.message ?? 'Job conflict', body.error?.code);
+  }
+
+  if (!body.success) {
+    throw new Error(body.error?.message ?? `HTTP ${res.status}`);
+  }
+
+  return body.data as T;
+}
+
+export class JobConflictError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'JobConflictError';
+  }
+}
+```
+
+**Trách nhiệm wrapper:**
+1. Auto-inject `Authorization: Bearer {token}` từ `localStorage.token`.
+2. Parse envelope `{success, data}` → return `data` trực tiếp; throw nếu `success=false`.
+3. 401 → clear token + redirect `/login` (không retry).
+4. 409 → throw `JobConflictError` typed (caller dùng `instanceof` để hiển thị toast "Đang có tác vụ chạy").
+5. Network error / 5xx → throw generic `Error`, caller responsibility xử lý.
+
+**Caller pattern:**
+
+```ts
+try {
+  const data = await apiFetch<DashboardData>('/api/runs/123/dashboard');
+} catch (e) {
+  if (e instanceof JobConflictError) showToast(e.message, 'warning');
+  else showToast('Lỗi tải dữ liệu', 'error');
+}
+```
+
+---
+
+## 6. Response Envelope (chuẩn cho mọi endpoint)
+
+**Success:**
+```json
+{ "success": true, "data": <T> }
+```
+
+**Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERR-XX-XX",
+    "message": "Human-readable VN message",
+    "detail": "Technical detail (optional)"
+  }
+}
+```
+
+Backend FastAPI MUST wrap mọi response (kể cả 4xx/5xx) bằng envelope này. Xem [g05 §3 Error Response Standard](g05-cross-cutting.md). Frontend `apiFetch` rely vào shape này để parse.

@@ -5,6 +5,7 @@ type: feature
 module: SRS-17
 prd_fr: FR-14 (partial)
 phase: 4
+version: v1.2 LOCKED (post-prototype reconciliation)
 ---
 
 # F17 — Theme System & i18n
@@ -13,16 +14,24 @@ phase: 4
 > Related — features: [f15-settings.md](f15-settings.md)
 > Related — global: [g03](g03-appendix-enums-constants.md) (Theme, ClassicMode, Language enums)
 
+## Changelog
+
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** Lock classic-light visual identity (cool-blue tint hue ~215°, distinct from light theme — chi tiết palette tại design.md §4.4). Bổ sung anti-flash mechanism (boot script đọc localStorage trước React mount). Lock `--ssi-*` TTCK colors khai báo trong cả 4 themes. AC-17-08..11 mới.
+
 ## UC-17-01: Switch Theme (Phase 4)
 
-### 4 States
+### 4 States — resolved `data-theme` attribute
 
-| Selection | Result |
-|---|---|
-| theme=CLASSIC, classic_mode=DARK | Nền #020210, text light |
-| theme=CLASSIC, classic_mode=LIGHT | Nền trắng/xám nhạt, text dark |
-| theme=LIGHT | Nền #EDEDED, text dark. Toggle ẩn. |
-| theme=OLED | Nền true black, text light. Toggle ẩn. |
+CSS theme được áp qua attribute `data-theme` trên `<html>`, resolve từ cặp `(theme, classic_mode)`:
+
+| settings.theme | settings.classic_mode | resolved `data-theme` | Visual identity |
+|---|---|---|---|
+| CLASSIC | DARK | `classic-dark` | Nền `#020210` purple-black, accent crimson, text light |
+| CLASSIC | LIGHT | `classic-light` | Nền cool-blue tint (hue ~215°, B > R = G), accent crimson preserved (xem design.md §4.4) |
+| LIGHT | (ignored) | `light` | Nền `#EDEDED` pure neutral grays, text dark |
+| OLED | (ignored) | `oled` | Nền true black `#000000`, text light |
+
+> `classic_mode` chỉ apply khi `theme=CLASSIC`. Nếu user toggle từ CLASSIC sang LIGHT/OLED, giá trị `classic_mode` được preserve trong settings (để khi quay lại CLASSIC vẫn nhớ preference) nhưng không ảnh hưởng `data-theme` rendered.
 
 ### Acceptance Criteria
 
@@ -30,7 +39,11 @@ phase: 4
 |---|---|
 | AC-17-01 | Toggle Sáng/Tối chỉ hiển thị khi theme=CLASSIC |
 | AC-17-02 | Chuyển theme → tất cả components update (no flash/reload) |
-| AC-17-03 | Màu TTCK VN (trần/sàn/tăng/giảm) giữ nguyên mọi theme |
+| AC-17-03 | Màu TTCK VN (trần/sàn/tăng/giảm/tham chiếu) giữ nguyên mọi theme — biến `--ssi-up/down/ref/ceil/floor/stable` declared trong cả 4 theme blocks |
+| AC-17-08 | `classic-light` phải khác biệt rõ với `light` bằng mắt thường — minimum ΔE ~5-10 ở borders + surfaces (xem design.md §4.4 cho palette chốt) |
+| AC-17-09 | Reload trang khi theme=`oled` hoặc `classic-dark` → KHÔNG flash trắng → đen. Anti-flash: inline boot script trong `<head>` đọc `localStorage.theme` + `localStorage.classic_mode` rồi set `data-theme` TRƯỚC khi React mount |
+| AC-17-10 | Theme switcher đặt ở Header (góc trên phải) + replicate trong Settings page (cùng component logic) |
+| AC-17-11 | Default lần đầu (chưa có localStorage): `theme=CLASSIC, classic_mode=DARK` → resolved `classic-dark` |
 
 ## UC-17-02: Switch Language (Phase 4)
 

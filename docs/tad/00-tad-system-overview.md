@@ -2,8 +2,8 @@
 id: 00
 title: TAD System Overview — Architecture, Tech Stack, Project Structure
 type: overview
-version: v1.1 — Hardened, LOCKED
-source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28)
+version: v1.2 — LOCKED (post-prototype reconciliation)
+source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconciliation 2026-05-09
 ---
 
 # TECHNICAL ARCHITECTURE DOCUMENT (TAD) — System Overview
@@ -30,6 +30,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28)
 |---|---|---|
 | v1.0 | 04/05 | Initial TAD |
 | v1.1 | 04/05 | 8 must-fixes + 4 should-fixes from 1st review. Then 2 must-fixes + 5 should-fixes from 2nd review merged in-place: single heavy job lock, SQLite WAL, source-level cache wording, /health + /version, run_error field, repositories/ dir, timeout env vars. Final patches: architecture diagram job lock wording + in-memory refresh job status storage + SQLite busy_timeout. **LOCKED.** |
+| v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: + Lucide React (icons), + MSW (dev mocks). c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). **LOCKED.** |
 
 ---
 
@@ -136,12 +137,17 @@ Module-specific designs. Each component file points to its implementing SRS file
 
 | Library | Bundle | Purpose |
 |---|---|---|
-| Next.js 14+ | — | App Router, SSR |
-| Lightweight Charts | ~40KB | Candlestick |
-| Recharts | ~60KB | Line, Bar, Treemap, Pie, Radar |
-| TanStack Table v8 | ~15-30KB | Price Board, tables |
-| next-intl | ~10KB | i18n VIE/ENG |
-| tailwindcss | Dev only | Styling |
+| Next.js 14+ | — | App Router, client-side routing (single-user MVP, không SSR session) |
+| React 18 | — | UI runtime |
+| Lightweight Charts | ~40KB | Candlestick (Stock Detail — cluster 3) |
+| Recharts | ~60KB | Line, Bar, Treemap, Pie, Radar (Dashboard, Stock Detail — cluster 2-3) |
+| TanStack Table v8 | ~15-30KB | Price Board, sortable tables (cluster 4) |
+| next-intl | ~10KB | i18n VIE/ENG; locale persisted localStorage, không URL prefix |
+| Lucide React | ~5KB tree-shake | **[v1.2]** Icon library (theme-aware qua `currentColor`) |
+| tailwindcss | Dev only | Styling utilities + 4 theme blocks `[data-theme="..."]` trong themes.css |
+| MSW (Mock Service Worker) | Dev only | **[v1.2]** API mocking trong prototype/dev; production frontend không dùng — gọi backend thực |
+
+**Loại trừ:** AG-Grid và Highcharts (PRD đề cập nhưng không dùng — TanStack Table + Recharts đã đủ scope).
 
 ---
 
