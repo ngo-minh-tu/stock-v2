@@ -17,7 +17,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 
 ## Changelog
 
-- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §1.1 (data-theme resolution rule), §1.2 (anti-flash boot script), §3 (provider stack order), §4 (icon library — Lucide React).
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §1.1 (data-theme resolution rule), §1.2 (anti-flash boot script), §3 (provider stack order), §4 (icon library — Lucide React). ❌ REMOVED `frontend/src/i18n/` path → ✅ REPLACED bằng `frontend/src/messages/` (next-intl convention thực sự).
 
 ---
 
@@ -79,7 +79,7 @@ export const themeBootScript = `
 
 **i18n:** next-intl. VIE default. ENG full. Nút VIE|ENG góc trên phải. Key missing → fallback VIE.
 
-Assets: `frontend/src/i18n/vi.json`, `frontend/src/i18n/en.json`.
+Assets: `frontend/src/messages/vi.json`, `frontend/src/messages/en.json` (next-intl convention dùng path `messages/`, KHÔNG phải `i18n/`).
 
 **Locale persistence:** `localStorage.locale` (KHÔNG URL prefix `/vi/...`, `/en/...`). Lý do: single-user MVP, không cần SEO multi-locale URL, đơn giản hóa routing.
 

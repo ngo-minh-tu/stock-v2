@@ -13,7 +13,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 
 ## Changelog
 
-- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error).
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung §5 (Frontend API client `apiFetch` wrapper pattern: Bearer auto, envelope parse, 401 auto-logout, `JobConflictError` cho 409) và §6 (Response envelope shape — chuẩn hóa cho cả success & error). ❌ §3 health/version response: bump `srs_version: v1.0 → v1.2`, `tad_version: v1.1 → v1.2` (đồng bộ với cluster 1 reconciliation).
 
 ---
 
@@ -91,8 +91,8 @@ GET /version → 200
 {
   "app_version": "0.1.0",
   "prd_version": "v0.5A",
-  "srs_version": "v1.0",
-  "tad_version": "v1.1",
+  "srs_version": "v1.2",
+  "tad_version": "v1.2",
   "model_version": "baseline_v1",
   "db_tables": 16
 }

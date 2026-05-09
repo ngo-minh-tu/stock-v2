@@ -51,7 +51,7 @@ CSS theme được áp qua attribute `data-theme` trên `<html>`, resolve từ c
 
 | AC ID | Criteria |
 |---|---|
-| AC-17-04 | Nút VIE\|ENG góc trên phải |
+| AC-17-04 | Language switcher (VIE\|ENG) đặt ở Header (góc trên phải) + replicate trong Settings page (cùng pattern với theme switcher — xem AC-17-10) |
 | AC-17-05 | Chuyển ngôn ngữ → tất cả labels update, data giữ nguyên |
 | AC-17-06 | Ngôn ngữ mặc định = VIE |
 | AC-17-07 | Key missing → fallback VIE |

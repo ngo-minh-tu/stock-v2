@@ -132,21 +132,6 @@ Support_Zone, Resistance_Zone
 
 Used by: [f03-entry-point-logic.md](f03-entry-point-logic.md)
 
-## L. Frontend Constants (Cluster 1)
-
-```
-STORAGE_KEYS = {
-  TOKEN:        "token",         // JWT session token (single-user MVP)
-  THEME:        "theme",         // Theme enum value
-  CLASSIC_MODE: "classic_mode",  // ClassicMode enum value
-  LOCALE:       "locale"         // Language enum value
-}
-
-MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW handler sinh; MVP backend dùng JWT thực
-```
-
-Used by: prototype `lib/constants.ts`, MVP frontend mirror.
-
 ## K. Constants
 
 ```
@@ -163,3 +148,18 @@ BACKTEST_HOLD_RETURN_MIN        = -7     // %
 BACKTEST_HOLD_RETURN_MAX        = 12     // %
 BACKTEST_SELL_UNDERPERFORM      = 5      // % vs VN-Index
 ```
+
+## L. Frontend Constants (Cluster 1)
+
+```
+STORAGE_KEYS = {
+  TOKEN:        "token",         // JWT session token (single-user MVP)
+  THEME:        "theme",         // Theme enum value
+  CLASSIC_MODE: "classic_mode",  // ClassicMode enum value
+  LOCALE:       "locale"         // Language enum value
+}
+
+MOCK_JWT_PREFIX = "mock_jwt_"   // Prototype-only: prefix cho fake token MSW handler sinh; MVP backend dùng JWT thực
+```
+
+Used by: prototype `lib/constants.ts`, MVP frontend mirror.

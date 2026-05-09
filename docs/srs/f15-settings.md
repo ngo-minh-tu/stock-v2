@@ -16,7 +16,7 @@ version: v1.1 LOCKED (post-prototype reconciliation)
 
 ## Changelog
 
-- **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung UC-15-02 (Settings Page UI progressive disclosure) — Settings render theo từng phase: cluster 1 chỉ có Theme + Language sections; sections sources/telegram/threshold/password defer sang cluster 6. AC-15-05/06 mới.
+- **v1.2 (2026-05-09, cluster 1 reconciliation):** ➕ Bổ sung UC-15-02 (Settings Page UI progressive disclosure) — Settings render theo từng phase: cluster 1 chỉ có Theme + Language sections; sections sources/telegram/threshold/password defer sang cluster 6. AC-15-05/06 mới. ➕ Schema thêm 2 field audit metadata (`settings_version: int`, `updated_at: ISO 8601`) khớp với prototype `mocks/data/settings.ts` (AC-15-03 đã đề cập `settings_version` nhưng schema cũ không list).
 
 ## UC-15-01: View/Update Settings
 
@@ -52,7 +52,11 @@ version: v1.1 LOCKED (post-prototype reconciliation)
   language: enum(VIE | ENG) (default VIE),
 
   // Auth
-  password_hash: string
+  password_hash: string,
+
+  // Audit metadata (managed by backend, không user-editable)
+  settings_version: int (auto-increment mỗi lần PATCH thành công, dùng cho audit + cache invalidation),
+  updated_at: ISO 8601 datetime string (UTC)
 }
 ```
 

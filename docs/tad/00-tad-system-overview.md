@@ -19,7 +19,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconcil
 |---|---|
 | TAD Version | 1.1 — Hardened |
 | Changes from v1.0 | 8 must-fixes + 4 should-fixes from 3rd-party review |
-| Document Flow | PRD v0.5A ✅ → SRS v1.0 ✅ → **TAD v1.1 (this)** ✅ → Vibecoding Plan |
+| Document Flow | PRD v0.5A ✅ → SRS v1.2 ✅ → **TAD v1.2 (this)** ✅ → Vibecoding Plan |
 | Status | **LOCKED for coding** |
 
 ---
@@ -30,7 +30,7 @@ source: docs/TAD_v1.1_Hardened_Locked_Final.md (§1-3, §28); cluster 1 reconcil
 |---|---|---|
 | v1.0 | 04/05 | Initial TAD |
 | v1.1 | 04/05 | 8 must-fixes + 4 should-fixes from 1st review. Then 2 must-fixes + 5 should-fixes from 2nd review merged in-place: single heavy job lock, SQLite WAL, source-level cache wording, /health + /version, run_error field, repositories/ dir, timeout env vars. Final patches: architecture diagram job lock wording + in-memory refresh job status storage + SQLite busy_timeout. **LOCKED.** |
-| v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: ➕ Lucide React (icons), ➕ MSW (dev mocks). §3 Project structure: ❌ REMOVED `lib/formatters.ts` (không tồn tại trong prototype), ❌ REMOVED `i18n/` path → ✅ REPLACED bằng `messages/` (next-intl convention prototype dùng), ➕ ADDED `contexts/`, `mocks/`, app route groups, components subdirs theo cluster. c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). **LOCKED.** |
+| v1.2 | 2026-05-09 | Post-prototype reconciliation từ cluster 1 (Shell & Foundation). §2 Frontend tech stack: ➕ Lucide React (icons), ➕ MSW (dev mocks). §3 Project structure: ❌ REMOVED `lib/formatters.ts` (không tồn tại trong prototype), ❌ REMOVED `i18n/` path → ✅ REPLACED bằng `messages/` (next-intl convention prototype dùng), ➕ ADDED `contexts/`, `mocks/`, app route groups, components subdirs theo cluster. c08, c09, g02, g05 cập nhật pattern frontend (apiFetch, ProtectedRoute, anti-flash boot, provider stack, MSW catch-all). Patch v3 (cùng ngày): bump §1 Document Flow + footer + Change Log heading khỏi `v1.1`, c09 §2 path còn sót `i18n/`, g02 §3 health/version response trả version cũ, g03 §L position out-of-order, f17 AC-17-04 incomplete (thiếu Settings page replication), f15 schema thiếu `settings_version` + `updated_at`. **LOCKED.** |
 
 ---
 
@@ -275,7 +275,7 @@ vn-re-ai-screener/
 
 ---
 
-## TAD v1.1 Change Log
+## TAD Change Log (v1.0 → v1.1 → v1.2)
 
 ### From 1st review (v1.0 → v1.1)
 
@@ -311,4 +311,4 @@ vn-re-ai-screener/
 
 ---
 
-*— End of TAD v1.1 Overview — Hardened & LOCKED — Ready for Vibecoding Plan —*
+*— End of TAD v1.2 Overview — Hardened & LOCKED (post-prototype reconciliation) — Ready for Vibecoding Plan —*
