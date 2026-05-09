@@ -107,7 +107,7 @@ Trước khi bắt đầu Vibecoding theo Package 0-10, dự án đã chạy **p
 
 ## Package 8 — Core UI
 - Layout shell (sidebar + header)
-- Dashboard page (6 charts)
+- Dashboard page (5 charts + 5 KPI cards)
 - Top MUA page (list + expand + warnings)
 - Red Flags page
 - Stock Detail page (candlestick + radar + breakdown)

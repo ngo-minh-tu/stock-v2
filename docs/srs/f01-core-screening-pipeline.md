@@ -5,6 +5,7 @@ type: feature
 module: SRS-01
 prd_fr: FR-01
 phase: 1
+version: v1.3 LOCKED (cluster 2 reconciliation)
 ---
 
 # F01 — Core Screening Pipeline
@@ -12,6 +13,10 @@ phase: 1
 > Parent: [00-system-overview.md](00-system-overview.md)
 > Related — features: [f02-feature-engineering.md](f02-feature-engineering.md), [f03-entry-point-logic.md](f03-entry-point-logic.md), [f09-risk-management.md](f09-risk-management.md), [f14-telegram-bot.md](f14-telegram-bot.md)
 > Related — global: [g01](g01-global-errors-and-validation.md) (ERR-01-*), [g03](g03-appendix-enums-constants.md) (RunStatus, ExcludedReason)
+
+## Changelog
+
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ Bổ sung UC-01-02 Frontend Run Lifecycle UI (RunButton, CapitalModal, RunStatusCard, Toast + auto-reload via lastCompletedRunId). AC-01-11..18 mới về run UX.
 
 ## UC-01-01: Execute Manual Screening Run
 
@@ -105,3 +110,47 @@ Step 14: Return full results to frontend
 | ERR-01-01 | vnstock lỗi + không có cache | Return error message, run_status = FAILED |
 | ERR-01-02 | 0 mã qua 4 vòng lọc | Return empty results, run_status = COMPLETED, scored_count = 0 |
 | ERR-01-03 | AI Engine crash | Fallback to baseline, log error, continue run |
+
+## UC-01-02: Frontend Run Lifecycle UI
+
+> [v1.3] Chốt từ cluster 2 prototype
+
+### Components
+
+| Component | Vị trí | Behavior |
+|---|---|---|
+| `RunButton` | Header (bên trái Theme/Locale switcher) | Primary button "Chạy" → mở `CapitalModal` |
+| `CapitalModal` | Modal overlay | Input `total_capital` (default 500.000.000 VNĐ, format `fr-FR` với separator `.`); checkbox "Bỏ qua phân bổ vốn"; ESC + click-outside close. Submit → `POST /api/run` với `outcome` từ MockOutcomeContext (prototype only) |
+| `RunStatusCard` | Sticky dưới `<Header />`, mọi page sau login | Status badge (RunStatus enum) + step text (`current_step`) + progress bar (`progress_percent`). Cancel button **disabled** ở MVP (TAD g01: cancel chưa hỗ trợ) |
+| `RunSelector` | Dropdown trong Dashboard, TopMUA, RedFlags | Top 10 run gần nhất theo `run_at` DESC, label `dd/MM/yy HH:mm — N mã` |
+| `Toast` | Top-right viewport | Auto-fire khi run terminal: success 3s, warnings 3s, failed 4s, conflict (immediate) |
+
+### Run Lifecycle Flow (frontend)
+
+```
+1. User click RunButton → CapitalModal opens
+2. User submit total_capital → POST /api/run
+   ├─ 202 Accepted: runId saved → close modal → start polling
+   └─ 409 Conflict: toast warning "Đang có tác vụ chạy" → modal stays
+3. Polling /api/runs/{id}/status mỗi 2 giây (TAD g01 §2.2)
+   └─ Cập nhật RunStatusCard real-time
+4. Khi status terminal (COMPLETED | COMPLETED_WITH_WARNINGS | FAILED):
+   ├─ Stop polling
+   ├─ Fire toast với tone tương ứng (success/warning/error)
+   ├─ Set lastCompletedRunId = runId
+   └─ Auto-clear RunStatusCard sau toast duration
+5. Dashboard/TopMUA/RedFlags listen lastCompletedRunId → tự re-fetch dữ liệu
+```
+
+### Acceptance Criteria
+
+| AC ID | Criteria |
+|---|---|
+| AC-01-11 | RunButton xuất hiện trong Header trên mọi page sau login (kể cả Settings) |
+| AC-01-12 | CapitalModal default 500M VNĐ, format `fr-FR` (`500.000.000`); checkbox skip-allocation lưu state local trong modal |
+| AC-01-13 | Khi run đang chạy (status ∈ {PENDING, CHECKING_DATA, SCREENING, SCORING}): RunStatusCard sticky, click RunButton lại → 409 toast (server-side conflict) |
+| AC-01-14 | Polling interval = 2s (chuẩn TAD g01 §2.2). Auto-stop khi terminal |
+| AC-01-15 | Toast tone match outcome: COMPLETED → success xanh, COMPLETED_WITH_WARNINGS → warning cam, FAILED → error đỏ. Auto-dismiss: success/warnings 3s, failed 4s |
+| AC-01-16 | `lastCompletedRunId` broadcast xuống Dashboard/TopMUA/RedFlags pages → mọi page tự reload dữ liệu mới (no manual F5) |
+| AC-01-17 | Reload trang khi run đang chạy → RunStatusCard biến mất (state in-memory không persist). Backend khi ship sẽ resume qua `GET /api/runs/{id}/status` |
+| AC-01-18 | Cancel button trên RunStatusCard **disabled** ở MVP (TAD g01: chưa hỗ trợ cancel) |

@@ -35,7 +35,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 | GET | /runs/{run_id} | 200 {summary} | 1 | Run metadata |
 | GET | /runs/{run_id}/status | 200 {status, progress} | 2 | Poll run progress |
 | GET | /runs/{run_id}/results | 200 {results[]} | 2 | Full results array |
-| GET | /runs/{run_id}/dashboard | 200 {aggregate} | 2 | 6 charts + KPIs |
+| GET | /runs/{run_id}/dashboard | 200 {aggregate} | 2 | 5 charts + 5 KPI cards |
 | GET | /runs/{run_id}/stocks/{ticker} | 200 {detail} | 2 | **[v1.1 NEW]** Stock analysis by run |
 | GET | /runs/{run_id}/compare/{run_id_b} | 200 {diff} | 3 | Compare 2 runs |
 | GET | /stocks | 200 {items[], total} | 2 | Whitelist + latest prices, paginated |

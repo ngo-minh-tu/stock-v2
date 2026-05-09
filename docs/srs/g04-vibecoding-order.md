@@ -34,11 +34,11 @@ Step 14: Walk-Forward validation framework (4 đợt)
 ```
 Step 15: Auth (login page + middleware)                 → f16
 Step 16: Layout shell (sidebar + header + content area)
-Step 17: Dashboard page (6 charts)                      → f04
-Step 18: Top MUA page (list + explainability)           → f06
-Step 19: Red Flags page (excluded + warnings)           → f07
+Step 17: Dashboard page (5 charts + 5 KPI cards)        → f04
+Step 18: Top MUA page (TanStack Table + expand row + explainability) → f06
+Step 19: Red Flags page (Section A excluded + Section B warnings)  → f07
 Step 20: Stock Detail page (candlestick + radar + breakdown) → f08
-Step 21: "Chạy sàng lọc" button + run status feedback   → f01
+Step 21: RunButton + CapitalModal + RunStatusCard + Toast → f01
 Step 22: API integration (connect FE → BE)
 ```
 

@@ -14,6 +14,7 @@ version: v1.2 LOCKED (post-prototype reconciliation)
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** Bổ sung §4 (Frontend Provider Stack pointer → c09 §3) và §5 (MSW dev mock boundary — catch-all 404 NOT_IMPLEMENTED, prototype-only).
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ❌ REMOVED §4 placeholder pointer-to-c09 → ✅ REPLACED bằng full provider stack expanded 4 → 7 layers (cluster 2 thêm 3 contexts: Toast, MockOutcome, Run). Justification cho từng vị trí.
 
 ---
 
@@ -100,11 +101,46 @@ File: `backend/logs/app.log`
 
 ---
 
-## 4. Frontend Provider Stack
+## 4. Frontend Provider Stack (7 layers)
 
-> [v1.2] Chốt từ cluster 1 — chi tiết tại [c09 §3](c09-theme-i18n.md)
+> [v1.3] Mở rộng từ 4 → 7 layers ở cluster 2. Outer → inner:
 
-Outer → inner: `MswBootstrap` → `LocaleProvider` → `ThemeProvider` → `AuthProvider`. ProtectedRoute wrap riêng `(app)` group, không wrap toàn app (login page nằm ngoài).
+```tsx
+<ToastProvider>             {/* [v1.3] toast viewport — Run/Auth gọi useToast */}
+  <MockOutcomeProvider>     {/* [v1.3] dev-only outcome toggle, persist localStorage */}
+    <MswBootstrap>          {/* dev only: gate child render until MSW ready */}
+      <LocaleProvider>      {/* next-intl wrapper, đọc localStorage.locale */}
+        <ThemeProvider>     {/* data-theme attr management, đọc localStorage.theme */}
+          <AuthProvider>    {/* token state, đọc localStorage.token */}
+            <RunProvider>   {/* [v1.3] activeRunId + lastCompletedRunId + polling */}
+              {children}
+            </RunProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </LocaleProvider>
+    </MswBootstrap>
+  </MockOutcomeProvider>
+</ToastProvider>
+```
+
+**Order rationale:**
+
+| Layer | Tại sao ở vị trí này |
+|---|---|
+| ToastProvider | Outermost: RunProvider + AuthProvider call `useToast()` để show success/error toast → phải tồn tại trước cả 2 |
+| MockOutcomeProvider | Outer than Auth: dev tester có thể toggle outcome trước khi login |
+| MswBootstrap | Outer than network-callers (Auth, Run): MSW phải start trước mọi `apiFetch` |
+| LocaleProvider | Outer than Theme: theme switcher hiển thị label theo locale (Sáng/Tối vs Light/Dark) |
+| ThemeProvider | Outer than Auth: toàn app (kể cả `/login`) có theme đúng |
+| AuthProvider | Outer than Run: RunProvider check token validity trước khi gọi `/api/run` |
+| RunProvider | Innermost: hooks/components mọi page (`useRun`) gọi context |
+
+**ProtectedRoute** wrap riêng Next.js group `(app)`, không wrap toàn app (login page nằm ngoài). Xem [c08 §3](c08-auth.md).
+
+**Cluster 1 vs cluster 2:**
+- Cluster 1: 4 layers (Msw → Locale → Theme → Auth)
+- Cluster 2: +3 layers (Toast outer, MockOutcome outer than Msw, Run innermost)
+- Cluster 6 dự kiến: +1 ShareProvider cho `/share/[token]` public route — sẽ port khi reconcile cluster 6
 
 ---
 

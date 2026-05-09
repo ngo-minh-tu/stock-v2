@@ -7,6 +7,7 @@
 ## Changelog
 
 - **v1.2 (2026-05-09, cluster 1 reconciliation):** ❌ REMOVED AG-Grid references (TAD §2 đã exclude AG-Grid; project dùng TanStack Table v8). Cập nhật §6.5 (Price Board Table styling) sang pattern TanStack Table + CSS variables. §10 Tech Stack: cập nhật Data Grid + Charts khớp với TAD §2 (TanStack + Recharts + Lightweight Charts). Line 43 type scale: "AG-Grid data" → "TanStack Table data".
+- **v1.3 (2026-05-09, cluster 2 reconciliation):** ➕ ADDED `--color-theme-tooltip-background` + `--color-theme-tooltip-border` vào cả 4 theme blocks (gap có từ cluster 1, lộ ở cluster 2 khi 8 chart components dùng). ➕ NEW §6.7 Chart Tooltips (chuẩn padding/border/shadow/blur), §6.8 Pie Center Label (donut hole pattern), §6.9 Radar Custom Tooltip (INWARD placement, polar geometry, dual-series). ➕ ADDED Toast Warning color `#f49f3b` (hardcoded brand alert).
 
 ---
 
@@ -188,6 +189,10 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   --color-theme-panel-background:    #282637;
   --color-theme-icon-bg:             #282638;
 
+  /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
+  --color-theme-tooltip-background:  rgba(20, 18, 32, 0.96);
+  --color-theme-tooltip-border:      rgba(255, 255, 255, 0.10);
+
   /* === Filter === */
   --color-theme-filter-bg:           #403b58;
   --color-theme-filter-border:       #3f4160;
@@ -262,6 +267,10 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   --color-theme-card-bg:             #ffffff;
   --color-theme-panel-background:    #ffffff;
 
+  /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
+  --color-theme-tooltip-background:  rgba(255, 255, 255, 0.98);
+  --color-theme-tooltip-border:      rgba(0, 0, 0, 0.10);
+
   /* === Filter === */
   --color-theme-filter-bg:           #f8f8fb;
   --color-theme-filter-border:       #e5e5e5;
@@ -331,6 +340,10 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
   --color-theme-card-bg:             #323232;
   --color-theme-panel-background:    #313131;
 
+  /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
+  --color-theme-tooltip-background:  rgba(10, 10, 10, 0.96);
+  --color-theme-tooltip-border:      rgba(255, 255, 255, 0.14);
+
   /* === Filter === */
   --color-theme-filter-bg:           #505050;
   --color-theme-filter-border:       #505050;
@@ -383,6 +396,10 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
   --color-theme-table-row-odd:       #eff4fc;
   --color-theme-card-bg:             #eff4fc;
   --color-theme-panel-background:    #eff4fc;
+
+  /* === Tooltips (charts + custom) === [v1.3 cluster 2] */
+  --color-theme-tooltip-background:  rgba(255, 255, 255, 0.98);
+  --color-theme-tooltip-border:      rgba(0, 0, 0, 0.10);
 
   /* TTCK colors === Light variant (giống §4.2) === */
 }
@@ -565,9 +582,95 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
 .toast-success { background-color: #3fa885; }
 .toast-error   { background-color: #d32f2f; }
 .toast-info    { background-color: #009bde; }
-.toast-warning { background-color: #f49f3b; }
+.toast-warning { background-color: #f49f3b; }   /* hardcoded brand alert — không qua theme */
 .toast-default { background-color: var(--color-theme-toast-background-default); }
 ```
+
+> [v1.3] Toast warning `#f49f3b` được hardcoded (không qua CSS variable) vì là **brand alert intent color** — phải nhất quán qua 4 theme. Kiểm tra contrast OK với cả dark/light backgrounds.
+
+### 6.7 Chart Tooltips (Recharts custom + radar custom)
+
+> [v1.3] Cluster 2 — chuẩn pattern cho 8 chart components
+
+```css
+.chart-tooltip {
+  background-color: var(--color-theme-tooltip-background);
+  border: 1px solid var(--color-theme-tooltip-border);
+  border-radius: 0.375rem;     /* 6px — match shadow-md */
+  padding: 8px 12px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);  /* shadow-lg */
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+```
+
+**Recommendation color sync** (Treemap, Pie center label):
+- Khi hover ô / slice có `recommendation`, set `color = recommendationColor(rec)` (xem [TAD c05 §3](tad/c05-dashboard.md))
+- 3 dòng tooltip (ticker / rec+score / extra info) cùng màu, dòng cuối `opacity: 0.85` cho hierarchy
+
+**Recharts disable defaults:**
+- `<Tooltip isAnimationActive={false} animationDuration={0} contentStyle={{ transition: 'none' }} wrapperStyle={{ transition: 'none', pointerEvents: 'none' }} />` — chống tooltip "trôi" theo cursor
+- Nếu cần custom hover positioning (Radar, Pie center) → bỏ hẳn `<Tooltip>`, tự render overlay div
+
+### 6.8 Pie Center Label (Donut Hole Pattern)
+
+> [v1.3] Cluster 2 — Recommendation pie ở Dashboard
+
+Donut hole (`innerRadius=50%, outerRadius=72%`) chứa label cố định ở tâm:
+
+```tsx
+<div className="relative">
+  <ResponsiveContainer>
+    <PieChart>...</PieChart>
+  </ResponsiveContainer>
+  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+       style={{ paddingBottom: 24 }}>  {/* bù legend dưới đáy */}
+    {activeIndex === null ? (
+      <>
+        <div className="text-2xs uppercase tracking-wider opacity-70">Tổng</div>
+        <div className="text-2xl font-bold">{total}</div>
+        <div className="text-2xs opacity-70">mã</div>
+      </>
+    ) : (
+      <div style={{ color: recommendationColor(slice.name) }}>
+        <div className="text-2xs">{slice.name}</div>
+        <div className="text-2xl font-bold">{slice.value}</div>
+        <div className="text-2xs opacity-85">{percent}% · trên {total} mã</div>
+      </div>
+    )}
+  </div>
+</div>
+```
+
+**Critical:** `pointer-events-none` trên overlay để KHÔNG chặn mouse events vào pie bên dưới (nếu có pointer-events, hover detection trên pie sẽ vỡ).
+
+**Lý do bỏ recharts default `<Tooltip>`:** popup bám cursor → khi hover gần tâm donut, tooltip đè trực tiếp lên ring → mất thẩm mỹ. Center label cố định ở vị trí tâm → không bao giờ chèn ring.
+
+### 6.9 Radar Custom Tooltip (INWARD Placement)
+
+> [v1.3] Cluster 2 — file `prototype/src/components/charts/radar-tooltip.tsx`
+
+**Vấn đề với recharts default `<Tooltip>` trong RadarChart:**
+- Polygon-area hover detection → mỗi mousemove là 1 reposition → "nhảy lung tung"
+- OUTWARD placement (đẩy ra ngoài polygon) → đè vào PolarAngleAxis labels ("Sentiment", "Technical"…)
+
+**Pattern fix — INWARD placement:**
+
+1. **Custom dot factory:** mỗi axis vertex render visible dot (r=4, viền theme-aware) + invisible hitbox circle (r=14, `pointerEvents="all"`) cho dễ hover
+2. **Hover state:** `{x, y, dx, dy, axis, value, color, seriesName}` — `(dx, dy)` là unit vector từ tâm chart hướng OUT theo polar geometry
+3. **Tooltip position:** `tx = x - dx*offset, ty = y - dy*offset` (đẩy INWARD vào tâm polygon thay vì OUT)
+4. **Anchor động:** translate dựa vào `(dx, dy)` threshold 0.3 — `dx > 0.3 → translateX(-100%)` (tooltip bên trái dot), `dx < -0.3 → translateX(0%)` (bên phải), else center
+5. **PolarRadiusAxis angle = 45°** (KHÔNG 90°) → radius labels (0/25/50/75/100) ở góc chéo upper-right, nằm ngoài đường inward của tất cả dots
+6. **Custom outward tick** cho PolarAngleAxis labels: push thêm 6px ra ngoài để không sát polygon → tooltip inward không đè
+
+**Dual-series support** (Stock Detail radar — cluster 3):
+- Mỗi `<Radar>` series có dot factory riêng (e.g. `renderTickerDot` color = `--ssi-up`, `renderIndustryDot` color = `--text-secondary`)
+- Hover ticker dot → tooltip ticker; hover industry dot → tooltip industry; không show cả 2 cùng lúc
+
+**Lợi thiết kế:**
+- Tooltip position là **pure function** của (cx, cy, axis index, total axes) → identical mỗi lần hover cùng dot, không "trôi"
+- Không có `mousemove` listener — chỉ enter/leave per dot
+- Polygon interior thường trống (values < 100) → tooltip với background đặc che grid lines clean
 
 ---
 
