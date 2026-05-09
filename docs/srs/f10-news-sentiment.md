@@ -90,7 +90,7 @@ Reset button khôi phục về default (all sources / ALL sentiment / no ticker 
 
 | Region | Content |
 |---|---|
-| Border-left | 3px solid theo `SENTIMENT_BORDER_TINT[label]` (xem `prototype/src/components/news/SentimentChip.tsx`) |
+| Border-left | 3px solid theo `SENTIMENT_BORDER_TINT[label]` (xem `frontend/src/components/news/SentimentChip.tsx`) |
 | Header | `<SourceLogo>` initials box (5 màu fixed C/V/S/B/T) + source name + relative time + open-link icon → click → window.open new tab |
 | Title | `<a target="_blank">` link new tab, font-medium, 2-line clamp |
 | Snippet | `content_snippet`, opacity 0.7, 2-line clamp |

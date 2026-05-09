@@ -131,7 +131,7 @@ STEP 9: (fallback for MUA mã không match bất kỳ rule nào)
 
 ### Frontend Prototype Anchor Pattern
 
-> [v1.3] Cluster 3 — `prototype/src/mocks/data/run-compute.ts`
+> [v1.3] Cluster 3 — `frontend/src/mocks/data/run-compute.ts`
 
 Để demo 7 enum coverage trong UI, prototype dùng `decideEntrySignal(ticker, score, rec, badges)` với 2 cơ chế:
 1. **Anchor overrides** (per ticker, hardcoded): `VHM=BUY_STRONG, KDH=BUY_NOW (+1 badge HIGH_INVENTORY), NLG=WAIT_FOR_BREAKOUT, DXG=WAIT_FOR_PULLBACK, PDR=WAIT_FOR_CONFIRMATION` — ghi đè rule logic để demo có ticker mỗi enum

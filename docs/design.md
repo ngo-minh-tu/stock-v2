@@ -143,7 +143,7 @@ SSI sử dụng hệ thống 4 themes: **Classic** (dark purple), **OLED** (true
 
 **Lý do tách `--exchange-upcom`:** prototype cluster 4 dùng `--ssi-ref` cho UPCOM badge → user report yellow #fdff12 chói trên OLED/classic-dark, không nhìn được chữ. Không thể đổi `--ssi-ref` vì biến này là TTCK reference yellow dùng khắp Price Board (5-color rule), GIU recommendation badge, run-history bars — và PRD §8.2 AC-17-03 yêu cầu ổn định cross-theme. Fix: tách biến mới chỉ cho exchange tag.
 
-Used by: [SRS f05 §AC-05-08](srs/f05-price-board.md), `prototype/src/components/badges/ExchangeBadge.tsx`, Price Board exchange filter chips.
+Used by: [SRS f05 §AC-05-08](srs/f05-price-board.md), `frontend/src/components/badges/ExchangeBadge.tsx`, Price Board exchange filter chips.
 
 ---
 
@@ -580,7 +580,7 @@ Khi user chọn theme **Classic** rồi toggle sang chế độ Sáng, hệ th�
 - `--color-theme-price-table-row-even` / `--color-theme-price-table-row-odd` — alternating rows
 - `--color-theme-price-table-col-highlight` — sticky/highlighted column
 
-**Component pattern (xem [PriceBoardTable.tsx](../prototype/src/components/price-board/PriceBoardTable.tsx) cluster 4):**
+**Component pattern (xem [PriceBoardTable.tsx](../frontend/src/components/price-board/PriceBoardTable.tsx) cluster 4):**
 
 ```tsx
 // Header cell
@@ -723,7 +723,7 @@ Donut hole (`innerRadius=50%, outerRadius=72%`) chứa label cố định ở t�
 
 ### 6.9 Radar Custom Tooltip (INWARD Placement)
 
-> [v1.3] Cluster 2 — file `prototype/src/components/charts/radar-tooltip.tsx`
+> [v1.3] Cluster 2 — file `frontend/src/components/charts/radar-tooltip.tsx`
 
 **Vấn đề với recharts default `<Tooltip>` trong RadarChart:**
 - Polygon-area hover detection → mỗi mousemove là 1 reposition → "nhảy lung tung"
@@ -1299,7 +1299,7 @@ Gap giữa 2 line ≈ alpha (visualization).
 
 **Critical: `sandbox=""` (empty value)** — disable mọi privilege vì preview HTML có thể chứa data từ run, không cần execute. CSS embedded vẫn work.
 
-**Download:** `<a download blob URL>` qua `useExportPdf.triggerDownload()` (xem `prototype/src/lib/hooks/useExportPdf.ts`).
+**Download:** `<a download blob URL>` qua `useExportPdf.triggerDownload()` (xem `frontend/src/lib/hooks/useExportPdf.ts`).
 
 ### 6.22 ShareLinkModal (Cluster 6)
 

@@ -88,7 +88,7 @@ Panel-frame card design (xem [design.md §6.13](../design.md)):
 
 - **Visual bar** 2 segment: `final` (xanh) `\|` `penalty` (cam). Width tỷ lệ với `confidence_raw`
 - **3 label** tabular-aligned: `confidence_final` / `confidence_penalty` / `confidence_raw`
-- **Warning badges chips** dưới bar — list mã `risk.warning_badges[]`, mỗi chip có tooltip giải thích trigger condition (vi/en theo locale, từ [warning-badges.ts](../../prototype/src/mocks/data/warning-badges.ts) hoặc backend equivalent)
+- **Warning badges chips** dưới bar — list mã `risk.warning_badges[]`, mỗi chip có tooltip giải thích trigger condition (vi/en theo locale, từ [warning-badges.ts](../../frontend/src/mocks/data/warning-badges.ts) hoặc backend equivalent)
 
 ### Acceptance Criteria
 

@@ -170,18 +170,28 @@ Used by: prototype `lib/constants.ts`, MVP frontend mirror.
 
 ## M. VND Unit Conventions (chốt cluster 4)
 
-> [v1.4] Cluster 4 chốt **Option C — multi-unit + helpers**. Lý do chọn: prototype reuse convention từng field qua cluster 1-4, đổi sang single-unit sẽ touch >20 chỗ (PriceCell/Stock Detail header/Risk Panel/Portfolio P&L/Run summary). Single-unit defer sang backend phase khi schema migration. Frontend hiện dùng helper `formatPrice` / `formatVnd` qua `lib/format.ts`.
+> [v1.4] Cluster 4 chốt **Option C — multi-unit per field**. Lý do chọn: prototype reuse convention từng field qua cluster 1-4, đổi sang single-unit sẽ touch >20 chỗ (PriceCell/Stock Detail header/Risk Panel/Portfolio P&L/Run summary). Single-unit defer sang backend phase khi schema migration.
 
-| Field | Convention | Example | Helper |
+| Field | Convention | Example | Display format |
 |---|---|---|---|
-| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND | `formatPrice(value, 'thousand')` |
-| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND | `formatPrice(value, 'thousand')` |
-| `latest_price.{open,high,low,close,reference,ceiling,floor}` | **ngàn đồng** | (đồng bộ với current_price) | PriceCell tự format |
-| `holding.buy_price` (cluster 5) | **ngàn đồng** | `35.5` = 35.500 VND | `formatPrice(value, 'thousand')` |
-| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND | `formatVnd(value, 'billion')` |
-| `result.risk.allocation_amount` | **đồng** | `150_000_000` | `formatVnd(value, 'raw')` |
-| `summary.total_capital` | **đồng** | `500_000_000` | `formatVnd(value, 'raw')` |
-| `latest_price.volume` | **raw shares** | `1_250_000` | `formatVolume(value)` (1K=1.000 shares, 1M=1.000.000) |
+| `result.static.current_price` | **ngàn đồng** | `32.5` = 32.500 VND | 2dp tabular-nums (PriceCell) |
+| `result.risk.stop_loss_price` | **ngàn đồng** | `29.25` = 29.250 VND | 2dp |
+| `latest_price.{open,high,low,close,reference,ceiling,floor}` | **ngàn đồng** | (đồng bộ với current_price) | PriceCell mode static/dynamic |
+| `holding.buy_price` (cluster 5) | **ngàn đồng** | `35.5` = 35.500 VND | 2dp |
+| `result.static.market_cap` | **tỷ đồng** | `15.2` = 15.2 tỷ VND | 1dp + suffix "tỷ" |
+| `result.risk.allocation_amount` | **đồng** | `150_000_000` | `toLocaleString('fr-FR')` → `150.000.000` |
+| `summary.total_capital` | **đồng** | `500_000_000` | `toLocaleString('fr-FR')` |
+| `latest_price.volume` | **raw shares** | `1_250_000` | K/M suffix (1K=1.000 shares, 1M=1.000.000) |
+
+**Prototype state (2026-05-08 freeze):** mỗi component tự inline format — `formatVnd(amount)` duplicate ở `TopMuaTable.tsx`, `RunHistoryTable.tsx`, `PortfolioKPI.tsx`; `formatVolume(n)` inline ở `PriceBoardTable.tsx`; 22 chỗ `toLocaleString('fr-FR')` rải rác. **CHƯA có `lib/format.ts` consolidated**.
+
+**MVP build recommendation (frontend/):**
+1. Tạo `frontend/src/lib/format.ts` consolidate 3 helper:
+   - `formatVnd(amount: number, unit: 'raw' | 'thousand' | 'billion'): string`
+   - `formatVolume(shares: number): string` (K/M suffix)
+   - `formatPrice(value: number): string` (2dp tabular)
+2. Replace inline duplications → import from `lib/format.ts`.
+3. Behavior identical với prototype (cùng `toLocaleString('fr-FR')` locale).
 
 **Backend phase task (post-MVP):** thống nhất single unit trong DB schema (đề xuất raw đồng cho price + market_cap để khớp tiêu chuẩn FastAPI / vnstock); frontend tiếp tục multi-unit display qua format helpers.
 
@@ -216,7 +226,7 @@ enum ReasonCode {
 
 **Format trong API:** `entry.reason_code` là string composed bằng `+`, e.g. `"VALUATION_ATTRACTIVE+BULLISH_TREND"`. Frontend split `+` → filter qua whitelist enum → render mỗi token thành chip i18n.
 
-**Default per signal** (sinh tự động khi screening result không có explicit code) — xem [`prototype/src/mocks/data/reason-codes.ts`](../../prototype/src/mocks/data/reason-codes.ts) `DEFAULT_REASON_BY_SIGNAL` map.
+**Default per signal** (sinh tự động khi screening result không có explicit code) — xem [`frontend/src/mocks/data/reason-codes.ts`](../../frontend/src/mocks/data/reason-codes.ts) `DEFAULT_REASON_BY_SIGNAL` map.
 
 Used by: [f03-entry-point-logic.md](f03-entry-point-logic.md) (output schema), [f08-stock-detail.md](f08-stock-detail.md) (EntrySignalPanel reason chips).
 

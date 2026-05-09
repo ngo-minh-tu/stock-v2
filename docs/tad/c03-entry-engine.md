@@ -33,7 +33,7 @@ Output schema: `EntryResult { signal, support_zone, resistance_zone, reason_code
 
 ## 2. Frontend Prototype Anchor Pattern
 
-> [v1.3] Cluster 3 — `prototype/src/mocks/data/run-compute.ts` `decideEntrySignal(ticker, score, rec, badges)`
+> [v1.3] Cluster 3 — `frontend/src/mocks/data/run-compute.ts` `decideEntrySignal(ticker, score, rec, badges)`
 
 Backend MVP chỉ implement Step 1-9 priority order theo SRS-03 (KHÔNG có anchor overrides). Frontend prototype dùng anchor pattern để demo 7-enum coverage trong UI:
 

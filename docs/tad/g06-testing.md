@@ -37,7 +37,7 @@ Unit (pytest) → Integration (pytest + httpx) → Contract (engine interfaces) 
 
 ## 3. 81-Ticker Fixture (Frontend Prototype)
 
-> [v1.3] Cluster 2 prototype — file `prototype/src/mocks/data/stocks-fixture.ts`
+> [v1.3] Cluster 2 prototype — file `frontend/src/mocks/data/stocks-fixture.ts`
 
 Distribution:
 
@@ -66,7 +66,7 @@ Mỗi entry: `{ ticker, name, exchange, sector, seed }`. `seed` (number) dùng c
 
 ## 4. Mulberry32 PRNG (Reproducible Mocks)
 
-> [v1.3] KHÔNG dùng `Math.random()` — cluster 2 prototype `prototype/src/mocks/data/run-compute.ts`
+> [v1.3] KHÔNG dùng `Math.random()` — cluster 2 prototype `frontend/src/mocks/data/run-compute.ts`
 
 ```ts
 function mulberry32(seed: number): () => number {
@@ -123,7 +123,7 @@ Run-compute pick 3-5 templates per ticker theo ai_score range, fill `{value}` t�
 
 ## 6. MSW Singleton Store Pattern
 
-> [v1.3] Cluster 2 — file `prototype/src/mocks/data/runs-store.ts`
+> [v1.3] Cluster 2 — file `frontend/src/mocks/data/runs-store.ts`
 
 **Vấn đề:** MSW handlers là module re-imported giữa request. Nếu lưu state qua module-level variable, handler request 2 sẽ thấy fresh state (không thấy run từ request 1).
 
