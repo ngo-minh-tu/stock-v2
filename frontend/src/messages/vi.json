@@ -1,0 +1,868 @@
+{
+  "app": {
+    "brand": {
+      "name": "Ngô Minh Tú",
+      "tagline": "Dữ liệu dẫn đường, quyết định thuộc về bạn"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Đăng nhập",
+      "subtitle": "Truy cập VN Real Estate AI Screener",
+      "passwordLabel": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập…",
+      "error": "Đăng nhập thất bại. Vui lòng thử lại."
+    }
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "topMua": "Top MUA",
+    "redFlags": "Mã rủi ro",
+    "stockDetail": "Chi tiết mã",
+    "priceBoard": "Bảng giá",
+    "news": "Tin tức",
+    "portfolio": "Danh mục",
+    "runHistory": "Lịch sử chạy",
+    "settings": "Cài đặt"
+  },
+  "header": {
+    "themeAria": "Chọn giao diện",
+    "logout": "Đăng xuất"
+  },
+  "run": {
+    "button": {
+      "label": "Chạy",
+      "starting": "Đang khởi tạo…",
+      "running": "Đang chạy…"
+    },
+    "modal": {
+      "capital": {
+        "title": "Tổng vốn cho run này",
+        "description": "Số vốn dùng để phân bổ cho các mã MUA. Có thể bỏ qua nếu chỉ muốn chấm điểm.",
+        "label": "Tổng vốn",
+        "placeholder": "VD: 500000000",
+        "skipAllocation": "Bỏ qua, chạy không tính phân bổ vốn",
+        "submit": "Chạy",
+        "cancel": "Hủy",
+        "close": "Đóng",
+        "errorInvalid": "Vui lòng nhập số dương."
+      }
+    },
+    "card": {
+      "initializing": "Đang khởi tạo run…",
+      "warningsCount": "{count} cảnh báo",
+      "cancel": "Hủy",
+      "cancelDisabled": "MVP chưa hỗ trợ hủy run",
+      "close": "Đóng thông báo"
+    },
+    "status": {
+      "PENDING": "PENDING",
+      "CHECKING_DATA": "CHECKING DATA",
+      "SCREENING": "SCREENING",
+      "SCORING": "SCORING",
+      "COMPLETED": "HOÀN THÀNH",
+      "COMPLETED_WITH_WARNINGS": "HOÀN THÀNH (CẢNH BÁO)",
+      "FAILED": "THẤT BẠI"
+    }
+  },
+  "recommendation": {
+    "MUA": "MUA",
+    "GIU": "GIỮ",
+    "BAN": "BÁN"
+  },
+  "entry": {
+    "signal": {
+      "BUY_STRONG": "Mua mạnh",
+      "BUY_NOW": "Mua ngay",
+      "WAIT_FOR_BREAKOUT": "Chờ breakout",
+      "WAIT_FOR_PULLBACK": "Chờ pullback",
+      "WAIT_FOR_CONFIRMATION": "Chờ xác nhận",
+      "NO_ENTRY": "Không vào",
+      "INSUFFICIENT_DATA": "Thiếu dữ liệu"
+    }
+  },
+  "warning": {
+    "HIGH_DEBT": "Đòn bẩy cao",
+    "NEGATIVE_OCF": "Dòng tiền âm",
+    "LEGAL_RISK": "Rủi ro pháp lý",
+    "HIGH_INVENTORY": "Tồn kho cao"
+  },
+  "dashboard": {
+    "loading": "Đang tải dashboard…",
+    "errorLoad": "Không tải được dashboard. Vui lòng thử lại.",
+    "runId": "Run: {id}",
+    "empty": {
+      "message": "Chưa có dữ liệu — Bấm Chạy để bắt đầu run sàng lọc đầu tiên."
+    },
+    "kpi": {
+      "totalScored": "Tổng mã",
+      "muaCount": "Mã MUA",
+      "holdCount": "Mã GIỮ",
+      "sellCount": "Mã BÁN",
+      "alpha": "Alpha vs VN-Index",
+      "topUpside": "Top: {ticker} +{pct}%"
+    },
+    "chart": {
+      "treemap": {
+        "title": "Bản đồ thị trường (Treemap)",
+        "subtitle": "Kích cỡ = vốn hóa · Màu = khuyến nghị"
+      },
+      "pie": {
+        "title": "Tỷ lệ khuyến nghị",
+        "subtitle": "MUA / GIỮ / BÁN"
+      },
+      "line": {
+        "title": "Xu hướng VN-Index & ngành BĐS",
+        "subtitle": "6 tháng gần nhất"
+      },
+      "bar": {
+        "title": "Top 10 mã theo AI Score",
+        "subtitle": "Sắp xếp giảm dần"
+      },
+      "radar": {
+        "title": "Radar 5 nhóm features",
+        "subtitle": "Trung bình toàn ngành"
+      }
+    },
+    "runSelector": {
+      "label": "Run"
+    }
+  },
+  "topMua": {
+    "loading": "Đang tải kết quả…",
+    "noRun": "Chưa có run nào — Bấm Chạy để bắt đầu.",
+    "searchPlaceholder": "Tìm theo mã hoặc tên…",
+    "noMatch": "Không có mã nào khớp bộ lọc.",
+    "exportPdfTopMua": "Xuất PDF Top MUA",
+    "empty": {
+      "title": "Không có mã MUA trong run này",
+      "hint": "Thử hạ ngưỡng MUA trong Cài đặt khi Cluster 6 ra mắt."
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "aiScore": "AI Score",
+      "recommendation": "Khuyến nghị",
+      "confidence": "Tin cậy",
+      "upside": "Upside",
+      "entry": "Entry",
+      "warnings": "Cảnh báo"
+    },
+    "expand": {
+      "reasons": "Lý do (3-5)",
+      "riskAndAllocation": "Rủi ro & Phân bổ",
+      "buyPrice": "Giá tham chiếu mua",
+      "stopLoss": "Stop loss",
+      "allocation": "Phân bổ",
+      "confidence": "Tin cậy raw − penalty",
+      "warnings": "Cảnh báo",
+      "noWarnings": "Không có cảnh báo nào.",
+      "viewDetail": "Xem chi tiết"
+    }
+  },
+  "redFlags": {
+    "loading": "Đang tải…",
+    "noRun": "Chưa có run nào.",
+    "filter": {
+      "all": "Tất cả",
+      "round": "Vòng",
+      "reason": "Lý do",
+      "badge": "Loại badge"
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "round": "Loại ở vòng",
+      "reasonCode": "Mã lý do",
+      "reasonText": "Chi tiết",
+      "aiScore": "AI Score",
+      "recommendation": "Khuyến nghị",
+      "badges": "Cảnh báo",
+      "penalty": "Penalty"
+    },
+    "section": {
+      "excluded": {
+        "title": "Mã bị loại",
+        "description": "Bị loại qua 4 vòng lọc — không tham gia chấm điểm.",
+        "empty": "Không có mã bị loại trong run này.",
+        "count": "{n}/{total} mã"
+      },
+      "warnings": {
+        "title": "Mã có cảnh báo",
+        "description": "Đã chấm điểm nhưng có ≥1 warning badge → confidence bị trừ.",
+        "empty": "Không có mã có cảnh báo trong run này.",
+        "count": "{n} mã"
+      }
+    }
+  },
+  "stockDetail": {
+    "loading": "Đang tải chi tiết mã…",
+    "errorTitle": "Không tải được chi tiết mã",
+    "errorBody": "Mã không tồn tại trong run này hoặc đã bị loại.",
+    "noRun": "Chưa có run nào — bấm \"Chạy\" trên thanh đầu trang để bắt đầu phân tích.",
+    "missingTicker": "URL thiếu tham số ticker. Vào Top MUA và bấm \"Xem chi tiết\" để mở trang này.",
+    "header": {
+      "aiScore": "AI Score",
+      "runSelector": "Run đã chấm mã này"
+    },
+    "candlestick": {
+      "title": "Biểu đồ nến",
+      "subtitle": "OHLCV theo phiên · Overlay vùng S/R + Stop loss + Target",
+      "loading": "Đang tải dữ liệu giá…",
+      "reset": "Reset zoom",
+      "intervalGroup": "Khung nến",
+      "lookbackGroup": "Khoảng hiển thị",
+      "lookbackUnavailable": "Khoảng quá ngắn cho khung nến này",
+      "interval": {
+        "D": "D",
+        "W": "W",
+        "M": "M"
+      },
+      "lookback": {
+        "1T": "1T",
+        "3T": "3T",
+        "6T": "6T",
+        "1N": "1N",
+        "3N": "3N",
+        "YTD": "YTD",
+        "All": "Tất cả"
+      },
+      "maGroup": "Đường trung bình",
+      "maToggleShow": "Hiện đường này",
+      "maToggleHide": "Ẩn đường này",
+      "ma": {
+        "ma20": "MA20",
+        "ma50": "MA50",
+        "ma200": "MA200",
+        "ma_volume_20": "Vol MA20"
+      },
+      "overlay": {
+        "support": "Hỗ trợ",
+        "resistance": "Kháng cự",
+        "stopLoss": "Stop loss",
+        "target": "Target 3T"
+      }
+    },
+    "breakdown": {
+      "title": "Phân tích điểm số",
+      "subtitle": "Radar 5 nhóm · {availability}/38 features có sẵn",
+      "showFeatures": "Hiển thị 38 features",
+      "hideFeatures": "Ẩn 38 features",
+      "legend": {
+        "ticker": "{ticker}",
+        "industry": "TB ngành"
+      }
+    },
+    "feature": {
+      "features": "feature",
+      "imputedTooltip": "Đã impute, giảm confidence",
+      "column": {
+        "id": "ID",
+        "name": "Feature",
+        "value": "Giá trị",
+        "direction": "Hướng tốt"
+      },
+      "group": {
+        "fundamental": "Cơ bản",
+        "technical": "Kỹ thuật",
+        "macro": "Vĩ mô",
+        "realestate": "Đặc thù BĐS",
+        "sentiment": "Sentiment"
+      }
+    },
+    "entry": {
+      "title": "Tín hiệu vào lệnh",
+      "subtitle": "Theo SRS-03 priority order · Priority {priority}",
+      "reasonCodeLabel": "Reason code",
+      "srBar": {
+        "title": "Vị trí giá hiện tại giữa hỗ trợ và kháng cự"
+      },
+      "indicators": "Chỉ báo đã dùng",
+      "insufficientNote": "Mã này thiếu chỉ báo kỹ thuật cần thiết (≥2 raw indicators). Hệ thống không đoán entry signal — vui lòng đợi data đầy đủ."
+    },
+    "risk": {
+      "title": "Quản trị rủi ro",
+      "subtitle": "Stop loss · Phân bổ vốn · Tin cậy",
+      "insufficientNote": "Không đủ data để tính phân bổ và stop loss tin cậy.",
+      "stopLoss": {
+        "title": "Stop loss",
+        "calc": {
+          "buyPrice": "= Giá tham chiếu mua × 0,90",
+          "currentPrice": "= Giá hiện tại × 0,90 (chưa có buy price)"
+        },
+        "distance": "Cách giá hiện tại {pct}%"
+      },
+      "allocation": {
+        "title": "Phân bổ vốn",
+        "skipped": "Bỏ qua phân bổ — run không nhập tổng vốn.",
+        "weight": "Tỷ trọng {pct}% trên các mã MUA",
+        "basedOn": "Dựa trên tổng vốn {total} VND đã nhập khi chạy"
+      },
+      "confidence": {
+        "title": "Tin cậy",
+        "raw": "Raw",
+        "penalty": "Penalty",
+        "final": "Final",
+        "warningsLabel": "Cảnh báo gây penalty",
+        "noWarnings": "Không có cảnh báo nào.",
+        "penaltyTooltip": "Penalty −{points}pp do warning badges (PRD §7.7)"
+      }
+    }
+  },
+  "priceBoard": {
+    "loading": "Đang tải bảng giá…",
+    "errorLoad": "Không tải được bảng giá. Vui lòng thử lại.",
+    "subtitle": "{count} mã · cập nhật mock cho mỗi reload",
+    "search": {
+      "placeholder": "Tìm theo mã (VHM, KDH…)"
+    },
+    "filter": {
+      "title": "Bộ lọc",
+      "exchange": "Sàn",
+      "sector": "Ngành",
+      "sectorAll": "Tất cả ngành",
+      "newlyListedOnly": "Chỉ mã mới niêm yết",
+      "reset": "Xóa bộ lọc"
+    },
+    "newlyBadge": "Mới",
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "sector": "Ngành",
+      "exchange": "Sàn",
+      "reference": "TC",
+      "ceiling": "Trần",
+      "floor": "Sàn",
+      "open": "Mở",
+      "high": "Cao",
+      "low": "Thấp",
+      "close": "Đóng",
+      "change": "+/-",
+      "changePct": "%",
+      "volume": "KL",
+      "newly": "Niêm yết"
+    },
+    "empty": {
+      "title": "Không có mã phù hợp",
+      "hint": "Thử bỏ bớt bộ lọc hoặc xóa từ khóa tìm kiếm."
+    },
+    "perfNote": "{count} mã trên 1 trang · sort/lọc client-side"
+  },
+  "news": {
+    "loading": "Đang tải tin…",
+    "errorLoad": "Không tải được tin. Vui lòng thử lại.",
+    "filter": {
+      "title": "Bộ lọc tin",
+      "open": "Mở bộ lọc",
+      "close": "Đóng bộ lọc",
+      "source": "Nguồn",
+      "sentiment": "Sentiment",
+      "ticker": "Mã liên quan",
+      "tickerPlaceholder": "Chọn mã (VHM…)",
+      "tickerClear": "Bỏ chọn",
+      "dateRange": "Thời gian",
+      "reset": "Xóa bộ lọc",
+      "mockFailure": "Mô phỏng lỗi nguồn (dev)"
+    },
+    "source": {
+      "CAFEF": "CafeF",
+      "VNEXPRESS": "VnExpress",
+      "VIETSTOCK": "Vietstock",
+      "BATDONGSAN": "Batdongsan",
+      "THANHNIEN": "Thanh Niên"
+    },
+    "sentiment": {
+      "all": "Tất cả",
+      "POSITIVE": "Tích cực",
+      "NEUTRAL": "Trung tính",
+      "NEGATIVE": "Tiêu cực"
+    },
+    "dateRange": {
+      "7d": "7 ngày",
+      "30d": "30 ngày",
+      "90d": "90 ngày",
+      "all": "Tất cả"
+    },
+    "card": {
+      "openExternal": "Mở tin (tab mới)",
+      "tickers": "Mã liên quan",
+      "scoreTooltip": "Score: {score} ({label})"
+    },
+    "empty": {
+      "30days": "Không có tin trong 30 ngày qua phù hợp với bộ lọc.",
+      "filtered": "Không có tin phù hợp bộ lọc hiện tại."
+    },
+    "sourceError": "Nguồn {source} tạm thời không khả dụng. Đã hiển thị tin từ các nguồn còn lại.",
+    "summary": {
+      "title": "Sentiment cho {ticker} (30 ngày)",
+      "count": "{n} tin",
+      "scoreAvg": "Score TB",
+      "noData": "Không có tin trong 30 ngày — sentiment = NEUTRAL (GUARD-08).",
+      "sourceBreakdown": "Phân bổ theo nguồn"
+    },
+    "load": {
+      "more": "Tải thêm",
+      "loading": "Đang tải thêm…",
+      "end": "Đã hết tin."
+    },
+    "time": {
+      "minutesAgo": "{n}p trước",
+      "hoursAgo": "{n}h trước",
+      "daysAgo": "{n} ngày trước",
+      "justNow": "vừa xong"
+    }
+  },
+  "portfolio": {
+    "loading": "Đang tải danh mục…",
+    "errorLoad": "Không tải được danh mục. Vui lòng thử lại.",
+    "subtitle": "Theo dõi mã đã mua + lãi/lỗ chưa thực hiện. Giá hiện tại lấy từ phiên gần nhất.",
+    "addButton": "Thêm mã",
+    "kpi": {
+      "totalCost": "Tổng vốn đầu tư",
+      "currentValue": "Giá trị hiện tại",
+      "totalPnl": "Lãi/lỗ",
+      "holdingCount": "Số mã"
+    },
+    "column": {
+      "ticker": "Mã",
+      "name": "Tên",
+      "quantity": "SL",
+      "buyPrice": "Giá mua",
+      "buyDate": "Ngày mua",
+      "currentPrice": "Giá hiện tại",
+      "costBasis": "Tổng vốn",
+      "marketValue": "Giá trị hiện tại",
+      "pnl": "Lãi/lỗ",
+      "pnlPct": "Lãi/lỗ %",
+      "notes": "Ghi chú",
+      "action": "Thao tác"
+    },
+    "action": {
+      "edit": "Sửa",
+      "delete": "Xóa"
+    },
+    "modal": {
+      "add": {
+        "title": "Thêm mã vào danh mục"
+      },
+      "edit": {
+        "title": "Sửa thông tin mã"
+      },
+      "field": {
+        "ticker": "Mã (chọn từ danh sách)",
+        "quantity": "Số lượng",
+        "buyPrice": "Giá mua (ngàn đồng)",
+        "priceUnit": "k đ",
+        "buyDate": "Ngày mua",
+        "notes": "Ghi chú",
+        "notesPlaceholder": "Tùy chọn — VD: cắt lỗ nếu thủng 19"
+      },
+      "error": {
+        "tickerRequired": "Vui lòng nhập mã.",
+        "tickerNotInList": "Mã không có trong danh sách.",
+        "quantityInvalid": "Số lượng phải là số nguyên dương.",
+        "priceInvalid": "Giá mua phải là số dương.",
+        "dateRequired": "Vui lòng chọn ngày mua.",
+        "dateFuture": "Ngày mua không được sau hôm nay.",
+        "serverError": "Lỗi máy chủ. Vui lòng thử lại."
+      },
+      "add": "Thêm",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "submitting": "Đang lưu…",
+      "close": "Đóng"
+    },
+    "delete": {
+      "title": "Xóa mã khỏi danh mục",
+      "confirm": "Xóa {ticker} khỏi danh mục? Thao tác này không thể hoàn tác trong prototype.",
+      "delete": "Xóa",
+      "deleting": "Đang xóa…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "serverError": "Lỗi máy chủ khi xóa."
+    },
+    "empty": {
+      "title": "Chưa có mã nào trong danh mục",
+      "hint": "Thêm mã đầu tiên để bắt đầu theo dõi lãi/lỗ. Giá hiện tại lấy tự động từ bảng giá.",
+      "action": "Thêm mã đầu tiên"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Đã thêm mã",
+        "body": "{ticker} đã vào danh mục."
+      },
+      "editSuccess": {
+        "title": "Đã cập nhật",
+        "body": "{ticker} đã được cập nhật."
+      },
+      "deleteSuccess": {
+        "title": "Đã xóa",
+        "body": "{ticker} đã bị loại khỏi danh mục."
+      }
+    }
+  },
+  "runHistory": {
+    "loading": "Đang tải lịch sử…",
+    "errorLoad": "Không tải được lịch sử. Vui lòng thử lại.",
+    "subtitle": "10 run gần nhất — bao gồm seed historical + run mới chạy.",
+    "backtestDisabledNoRun": "Cần ít nhất 1 run hoàn thành để chạy backtest.",
+    "kpi": {
+      "totalRuns": "Tổng số runs",
+      "lastRun": "Run gần nhất",
+      "avgAccuracy": "Accuracy backtest gần nhất",
+      "avgAccuracyHint": "Chạy backtest để xem tỷ lệ đúng."
+    },
+    "column": {
+      "runId": "Run ID",
+      "runAt": "Thời gian",
+      "status": "Trạng thái",
+      "modelVersion": "Model",
+      "settingsVersion": "Settings",
+      "scoredCount": "Scored",
+      "breakdown": "MUA / GIỮ / BÁN",
+      "totalCapital": "Tổng vốn",
+      "duration": "Thời lượng",
+      "warnings": "Cảnh báo",
+      "action": "Thao tác"
+    },
+    "action": {
+      "view": "Xem run này (mở Dashboard)",
+      "compare": "Chọn so sánh",
+      "exportPdf": "Tải PDF run này",
+      "delete": "Xóa run"
+    },
+    "compare": {
+      "panelTitle": "So sánh 2 runs",
+      "panelSubtitle": "{a} vs {b}",
+      "hintNeedAB": "Bấm icon so sánh trên 2 run để xem diff.",
+      "hintNeedB": "Đã chọn run A. Bấm icon so sánh trên 1 run khác để chọn run B.",
+      "loading": "Đang tính diff…",
+      "error": "Không tính được diff giữa 2 runs.",
+      "clear": "Xóa lựa chọn",
+      "summary": "1) Tổng quan thay đổi",
+      "changes": "2) Đổi khuyến nghị",
+      "changesEmpty": "Không mã nào đổi khuyến nghị giữa 2 runs.",
+      "newRemoved": "3) Mã mới / mã bị loại",
+      "distribution": "4) Phân bổ AI Score",
+      "distributionSubtitle": "So sánh 6 buckets điểm số · A vs B",
+      "legend": "Nền xanh = nâng hạng (BÁN→GIỮ, GIỮ→MUA, BÁN→MUA) · Nền đỏ = hạ hạng",
+      "metric": {
+        "totalScored": "Tổng scored",
+        "buyCount": "Số mã MUA",
+        "holdCount": "Số mã GIỮ",
+        "sellCount": "Số mã BÁN",
+        "avgScore": "AI Score TB",
+        "duration": "Thời lượng"
+      },
+      "header": {
+        "metric": "Chỉ số",
+        "runA": "Run A",
+        "runB": "Run B"
+      },
+      "changesColumn": {
+        "ticker": "Mã",
+        "recA": "Run A",
+        "recB": "Run B",
+        "scoreA": "Điểm A",
+        "scoreB": "Điểm B"
+      },
+      "newEntries": {
+        "title": "Mã mới ({count})",
+        "empty": "Không có mã mới."
+      },
+      "removed": {
+        "title": "Mã bị loại ({count})",
+        "empty": "Không có mã bị loại."
+      },
+      "histogram": {
+        "runA": "Run A",
+        "runB": "Run B"
+      }
+    },
+    "delete": {
+      "title": "Xóa run",
+      "confirm": "Xóa run {runId}?",
+      "warning": "Mọi dữ liệu của run (kết quả, dashboard) sẽ bị xóa. Không thể hoàn tác trong prototype.",
+      "delete": "Xóa",
+      "deleting": "Đang xóa…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "serverError": "Lỗi máy chủ khi xóa."
+    },
+    "empty": {
+      "title": "Chưa có run nào",
+      "hint": "Bấm Chạy ở header để bắt đầu run đầu tiên."
+    },
+    "toast": {
+      "deleteSuccess": {
+        "title": "Đã xóa run",
+        "body": "Run {runId} đã bị xóa khỏi lịch sử."
+      }
+    }
+  },
+  "backtest": {
+    "modal": {
+      "title": "Chạy backtest",
+      "description": "Chọn khoảng thời gian để chạy backtest. Hệ thống sẽ so điểm dự đoán với lợi nhuận thực tế 3 tháng.",
+      "periodFrom": "Từ ngày",
+      "periodTo": "Đến ngày",
+      "submit": "Chạy backtest",
+      "submitting": "Đang gửi…",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "error": {
+        "range": "Ngày bắt đầu phải trước ngày kết thúc.",
+        "serverError": "Lỗi máy chủ khi chạy backtest."
+      }
+    },
+    "button": {
+      "start": "Chạy Backtest",
+      "running": "Đang backtest…"
+    },
+    "section": {
+      "title": "Kết quả Backtest"
+    },
+    "metric": {
+      "accuracy": "Accuracy khuyến nghị",
+      "priceError": "Sai số giá TB",
+      "portfolioRoi": "Portfolio ROI",
+      "vnindexRoi": "VN-Index ROI",
+      "alpha": "Alpha (Portfolio − VN-Index)"
+    },
+    "card": {
+      "title": "Backtest #{id}",
+      "range": "Từ {from} đến {to} · {correct}/{total} dự đoán đúng",
+      "accuracyHint": "Ngưỡng tối thiểu {threshold}%",
+      "alphaHint": "Phần outperform/underperform so với chỉ số",
+      "chartTitle": "Cumulative ROI",
+      "chartSubtitle": "Portfolio vs VN-Index theo tuần",
+      "showDetail": "Xem chi tiết {count} mã",
+      "hideDetail": "Ẩn chi tiết"
+    },
+    "chart": {
+      "portfolio": "Portfolio (MUA)",
+      "vnindex": "VN-Index"
+    },
+    "detail": {
+      "column": {
+        "ticker": "Mã",
+        "predicted": "Dự đoán",
+        "actualReturn": "Return 3T thực",
+        "predictedPrice": "Giá dự đoán",
+        "actualPrice": "Giá thực",
+        "error": "Sai số",
+        "correct": "Đúng?"
+      }
+    },
+    "failed": "Backtest thất bại. Vui lòng thử lại.",
+    "toast": {
+      "startTitle": "Đã bắt đầu backtest",
+      "startBody": "Khoảng {from} → {to}. Sẽ hiển thị kết quả khi xong."
+    }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "loading": "Đang tải cài đặt…",
+    "errorLoad": "Không tải được cài đặt. Vui lòng thử lại.",
+    "section": {
+      "appearance": "Giao diện",
+      "threshold": "Ngưỡng khuyến nghị",
+      "sources": "Nguồn tin",
+      "telegram": "Telegram",
+      "security": "Bảo mật",
+      "share": "Quản lý chia sẻ"
+    },
+    "theme": {
+      "label": "Giao diện",
+      "description": "Chọn 1 trong 4 trạng thái giao diện. Áp dụng ngay.",
+      "options": {
+        "classic-dark": "Classic — Tối",
+        "classic-light": "Classic — Sáng",
+        "light": "Sáng",
+        "oled": "OLED"
+      }
+    },
+    "language": {
+      "label": "Ngôn ngữ",
+      "description": "Chọn ngôn ngữ hiển thị. Áp dụng ngay.",
+      "options": {
+        "vi": "Tiếng Việt (VIE)",
+        "en": "English (ENG)"
+      }
+    },
+    "mockOutcome": {
+      "label": "Chế độ test UX (dev only)",
+      "description": "Quyết định kết cục của run kế tiếp khi bấm Chạy. Dùng để test 4 nhánh UX (success/warnings/failed/conflict) mà không cần backend thật.",
+      "hint": "Áp dụng cho run kế tiếp.",
+      "options": {
+        "success": "Thành công",
+        "warnings": "Có cảnh báo",
+        "failed": "Thất bại",
+        "conflict": "409 CONFLICT"
+      }
+    },
+    "threshold": {
+      "description": "Tùy chỉnh điểm số tối thiểu để xếp khuyến nghị MUA/GIỮ/BÁN. Tự lưu sau 0,5 giây.",
+      "buy": "MUA tối thiểu (50–95)",
+      "hold": "GIỮ tối thiểu (20–70)",
+      "preview": "Hiện tại: ≥{buy} = MUA · {holdLow}–{holdHigh} = GIỮ · <{holdLow} = BÁN",
+      "error": {
+        "invalid": "Ngưỡng MUA phải lớn hơn ngưỡng GIỮ."
+      },
+      "save": {
+        "success": "Đã lưu ngưỡng"
+      },
+      "saving": "Đang lưu…"
+    },
+    "sources": {
+      "description": "Bật/tắt nguồn tin sử dụng cho phân tích sentiment. Tự lưu mỗi lần thay đổi.",
+      "save": {
+        "success": "Đã cập nhật nguồn tin"
+      }
+    },
+    "telegram": {
+      "description": "Gửi tóm tắt run qua Telegram sau mỗi lần Chạy thành công."
+    },
+    "password": {
+      "description": "Đổi mật khẩu tài khoản. Sau khi đổi, phiên đăng nhập sẽ được làm mới.",
+      "current": "Mật khẩu hiện tại",
+      "new": "Mật khẩu mới",
+      "confirm": "Xác nhận mật khẩu mới",
+      "hint": "Tối thiểu 8 ký tự.",
+      "submit": "Lưu mật khẩu mới",
+      "success": "Đã đổi mật khẩu",
+      "reLoginNote": "Phiên đăng nhập đã được làm mới.",
+      "error": {
+        "currentRequired": "Vui lòng nhập mật khẩu hiện tại.",
+        "tooShort": "Mật khẩu mới phải có ít nhất 8 ký tự.",
+        "mismatch": "Mật khẩu xác nhận không khớp.",
+        "serverError": "Lỗi máy chủ. Vui lòng thử lại."
+      }
+    },
+    "share": {
+      "description": "Danh sách các link chia sẻ đang hoạt động. Có thể thu hồi bất kỳ lúc nào.",
+      "management": {
+        "loading": "Đang tải danh sách…",
+        "empty": "Chưa có link chia sẻ nào đang hoạt động.",
+        "column": {
+          "token": "Token",
+          "runId": "Run ID",
+          "createdAt": "Tạo lúc",
+          "expiresAt": "Hết hạn",
+          "action": "Thao tác"
+        },
+        "revoke": {
+          "button": "Thu hồi",
+          "confirm": "Thu hồi link {token}? Người nhận sẽ thấy 404 khi mở.",
+          "success": "Đã thu hồi link",
+          "error": "Không thu hồi được."
+        }
+      }
+    },
+    "comingSoon": {
+      "title": "Các mục khác",
+      "body": "Ngưỡng MUA/GIỮ/BÁN, nguồn tin, Telegram, đổi mật khẩu — sẽ có trong Cluster 6."
+    }
+  },
+  "export": {
+    "button": "Xuất PDF",
+    "loading": "Đang tạo PDF…",
+    "success": "Đã tải PDF",
+    "close": "Đóng",
+    "preview": {
+      "title": "Xem trước PDF",
+      "download": "Tải xuống"
+    },
+    "error": {
+      "title": "Lỗi xuất PDF"
+    }
+  },
+  "share": {
+    "button": "Chia sẻ",
+    "modal": {
+      "title": "Tạo link chia sẻ",
+      "creating": "Đang tạo link…",
+      "close": "Đóng"
+    },
+    "url": {
+      "label": "Đường dẫn chia sẻ"
+    },
+    "copy": {
+      "button": "Sao chép",
+      "aria": "Sao chép link",
+      "success": "Đã sao chép link",
+      "fail": "Không sao chép được"
+    },
+    "expires": "Hết hạn sau: {remaining}",
+    "regenerate": "Tạo link mới",
+    "note": {
+      "basicAuth": "Link cần Basic Auth (mật khẩu hệ thống) để xem trong môi trường thật. Prototype mock chỉ kiểm tra token."
+    },
+    "view": {
+      "header": "VN RE AI Screener — Read-only",
+      "watermark": "Read-only shared view",
+      "sharedBy": "Chia sẻ bởi {name} ngày {date}",
+      "expiresIn": "Hết hạn: {remaining}",
+      "loading": "Đang tải shared view…",
+      "section": {
+        "dashboard": "Tổng quan run",
+        "topMua": "Top MUA"
+      },
+      "invalid": {
+        "title": "Link không hợp lệ",
+        "body": "Link này không tồn tại hoặc đã bị thu hồi."
+      },
+      "expired": {
+        "title": "Link đã hết hạn",
+        "body": "Link chia sẻ này đã quá thời hạn 7 ngày."
+      }
+    }
+  },
+  "telegram": {
+    "toggle": "Bật gửi tin Telegram",
+    "botToken": "Bot Token",
+    "showToken": "Hiện token",
+    "hideToken": "Ẩn token",
+    "chatId": "Chat ID",
+    "topN": {
+      "label": "Top N mã MUA gửi đi",
+      "3": "Top 3 mã",
+      "5": "Top 5 mã"
+    },
+    "testButton": "Gửi tin thử",
+    "test": {
+      "success": "Đã gửi tin thử",
+      "error": "Gửi tin thử thất bại"
+    },
+    "save": {
+      "button": "Lưu cấu hình Telegram",
+      "success": "Đã lưu cấu hình Telegram",
+      "error": "Lưu cấu hình Telegram thất bại"
+    },
+    "info": {
+      "runComplete": "Tin sẽ được gửi sau mỗi lần Chạy thành công.",
+      "format": "Định dạng: counts MUA/GIỮ/BÁN + Top {n} mã MUA. {n} = giá trị ở mục Top N bên trên."
+    },
+    "error": {
+      "chatIdRequired": "Bật Telegram cần điền chat_id.",
+      "tokenRequired": "Bật Telegram cần điền bot token."
+    }
+  },
+  "common": {
+    "disclaimer": "Công cụ chỉ hỗ trợ phân tích, KHÔNG phải khuyến nghị đầu tư chính thức. Mọi quyết định là trách nhiệm của người dùng.",
+    "loading": "Đang tải…",
+    "comingSoon": {
+      "title": "Tính năng đang phát triển",
+      "body": "Tính năng này sẽ có trong Cluster {cluster}."
+    },
+    "placeholder": {
+      "cluster2": "Tính năng này sẽ có trong Cluster 2.",
+      "cluster3": "Tính năng này sẽ có trong Cluster 3.",
+      "cluster4": "Tính năng này sẽ có trong Cluster 4.",
+      "cluster5": "Tính năng này sẽ có trong Cluster 5.",
+      "cluster6": "Tính năng này sẽ có trong Cluster 6."
+    }
+  }
+}

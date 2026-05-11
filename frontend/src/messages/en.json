@@ -1,0 +1,868 @@
+{
+  "app": {
+    "brand": {
+      "name": "Ngô Minh Tú",
+      "tagline": "Navigation data, the decision is yours"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access VN Real Estate AI Screener",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "error": "Sign-in failed. Please try again."
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "topMua": "Top BUY",
+    "redFlags": "Red Flags",
+    "stockDetail": "Stock Detail",
+    "priceBoard": "Price Board",
+    "news": "News",
+    "portfolio": "Portfolio",
+    "runHistory": "Run History",
+    "settings": "Settings"
+  },
+  "header": {
+    "themeAria": "Select theme",
+    "logout": "Sign out"
+  },
+  "run": {
+    "button": {
+      "label": "Run",
+      "starting": "Initializing…",
+      "running": "Running…"
+    },
+    "modal": {
+      "capital": {
+        "title": "Total capital for this run",
+        "description": "Capital allocated across BUY recommendations. Skip to score only.",
+        "label": "Total capital",
+        "placeholder": "e.g. 500000000",
+        "skipAllocation": "Skip allocation — score only",
+        "submit": "Run",
+        "cancel": "Cancel",
+        "close": "Close",
+        "errorInvalid": "Please enter a positive number."
+      }
+    },
+    "card": {
+      "initializing": "Initializing run…",
+      "warningsCount": "{count} warnings",
+      "cancel": "Cancel",
+      "cancelDisabled": "Cancel not supported in MVP",
+      "close": "Dismiss"
+    },
+    "status": {
+      "PENDING": "PENDING",
+      "CHECKING_DATA": "CHECKING DATA",
+      "SCREENING": "SCREENING",
+      "SCORING": "SCORING",
+      "COMPLETED": "COMPLETED",
+      "COMPLETED_WITH_WARNINGS": "COMPLETED (WARNINGS)",
+      "FAILED": "FAILED"
+    }
+  },
+  "recommendation": {
+    "MUA": "BUY",
+    "GIU": "HOLD",
+    "BAN": "SELL"
+  },
+  "entry": {
+    "signal": {
+      "BUY_STRONG": "Strong Buy",
+      "BUY_NOW": "Buy Now",
+      "WAIT_FOR_BREAKOUT": "Wait for Breakout",
+      "WAIT_FOR_PULLBACK": "Wait for Pullback",
+      "WAIT_FOR_CONFIRMATION": "Wait for Confirmation",
+      "NO_ENTRY": "No Entry",
+      "INSUFFICIENT_DATA": "Insufficient Data"
+    }
+  },
+  "warning": {
+    "HIGH_DEBT": "High Debt",
+    "NEGATIVE_OCF": "Negative OCF",
+    "LEGAL_RISK": "Legal Risk",
+    "HIGH_INVENTORY": "High Inventory"
+  },
+  "dashboard": {
+    "loading": "Loading dashboard…",
+    "errorLoad": "Could not load dashboard. Please retry.",
+    "runId": "Run: {id}",
+    "empty": {
+      "message": "No data yet — press Run to start your first screening."
+    },
+    "kpi": {
+      "totalScored": "Total scored",
+      "muaCount": "BUY count",
+      "holdCount": "HOLD count",
+      "sellCount": "SELL count",
+      "alpha": "Alpha vs VN-Index",
+      "topUpside": "Top: {ticker} +{pct}%"
+    },
+    "chart": {
+      "treemap": {
+        "title": "Market Treemap",
+        "subtitle": "Size = market cap · Color = recommendation"
+      },
+      "pie": {
+        "title": "Recommendation breakdown",
+        "subtitle": "BUY / HOLD / SELL"
+      },
+      "line": {
+        "title": "VN-Index & Real Estate trend",
+        "subtitle": "Last 6 months"
+      },
+      "bar": {
+        "title": "Top 10 by AI Score",
+        "subtitle": "Sorted descending"
+      },
+      "radar": {
+        "title": "5-group feature radar",
+        "subtitle": "Sector average"
+      }
+    },
+    "runSelector": {
+      "label": "Run"
+    }
+  },
+  "topMua": {
+    "loading": "Loading results…",
+    "noRun": "No runs yet — press Run to start.",
+    "searchPlaceholder": "Search ticker or name…",
+    "noMatch": "No tickers match the filter.",
+    "exportPdfTopMua": "Export Top BUY PDF",
+    "empty": {
+      "title": "No BUY recommendations in this run",
+      "hint": "Try lowering the BUY threshold in Settings (Cluster 6)."
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "aiScore": "AI Score",
+      "recommendation": "Reco",
+      "confidence": "Confidence",
+      "upside": "Upside",
+      "entry": "Entry",
+      "warnings": "Warnings"
+    },
+    "expand": {
+      "reasons": "Reasons (3-5)",
+      "riskAndAllocation": "Risk & Allocation",
+      "buyPrice": "Reference buy price",
+      "stopLoss": "Stop loss",
+      "allocation": "Allocation",
+      "confidence": "Confidence raw − penalty",
+      "warnings": "Warnings",
+      "noWarnings": "No warnings.",
+      "viewDetail": "View detail"
+    }
+  },
+  "redFlags": {
+    "loading": "Loading…",
+    "noRun": "No runs yet.",
+    "filter": {
+      "all": "All",
+      "round": "Round",
+      "reason": "Reason",
+      "badge": "Badge"
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "round": "Excluded round",
+      "reasonCode": "Reason code",
+      "reasonText": "Detail",
+      "aiScore": "AI Score",
+      "recommendation": "Reco",
+      "badges": "Badges",
+      "penalty": "Penalty"
+    },
+    "section": {
+      "excluded": {
+        "title": "Excluded stocks",
+        "description": "Filtered out across 4 rounds — not scored.",
+        "empty": "No excluded stocks in this run.",
+        "count": "{n}/{total} stocks"
+      },
+      "warnings": {
+        "title": "Stocks with warnings",
+        "description": "Scored but with ≥1 warning badge → confidence penalised.",
+        "empty": "No warning badges in this run.",
+        "count": "{n} stocks"
+      }
+    }
+  },
+  "stockDetail": {
+    "loading": "Loading stock detail…",
+    "errorTitle": "Failed to load stock detail",
+    "errorBody": "Ticker not in this run or was excluded.",
+    "noRun": "No runs yet — press \"Run\" in the header to start an analysis.",
+    "missingTicker": "URL is missing a ticker. Open Top MUA and click \"View detail\" to land here with the right context.",
+    "header": {
+      "aiScore": "AI Score",
+      "runSelector": "Runs that scored this ticker"
+    },
+    "candlestick": {
+      "title": "Candlestick chart",
+      "subtitle": "Per-session OHLCV · Overlay S/R + Stop loss + Target",
+      "loading": "Loading prices…",
+      "reset": "Reset zoom",
+      "intervalGroup": "Candle interval",
+      "lookbackGroup": "Lookback range",
+      "lookbackUnavailable": "Range too short for this interval",
+      "interval": {
+        "D": "D",
+        "W": "W",
+        "M": "M"
+      },
+      "lookback": {
+        "1T": "1M",
+        "3T": "3M",
+        "6T": "6M",
+        "1N": "1Y",
+        "3N": "3Y",
+        "YTD": "YTD",
+        "All": "All"
+      },
+      "maGroup": "Moving averages",
+      "maToggleShow": "Show this line",
+      "maToggleHide": "Hide this line",
+      "ma": {
+        "ma20": "MA20",
+        "ma50": "MA50",
+        "ma200": "MA200",
+        "ma_volume_20": "Vol MA20"
+      },
+      "overlay": {
+        "support": "Support",
+        "resistance": "Resistance",
+        "stopLoss": "Stop loss",
+        "target": "Target 3M"
+      }
+    },
+    "breakdown": {
+      "title": "Score breakdown",
+      "subtitle": "5-axis radar · {availability}/38 features available",
+      "showFeatures": "Show 38 features",
+      "hideFeatures": "Hide 38 features",
+      "legend": {
+        "ticker": "{ticker}",
+        "industry": "Industry avg"
+      }
+    },
+    "feature": {
+      "features": "features",
+      "imputedTooltip": "Imputed value, lowers confidence",
+      "column": {
+        "id": "ID",
+        "name": "Feature",
+        "value": "Value",
+        "direction": "Good direction"
+      },
+      "group": {
+        "fundamental": "Fundamental",
+        "technical": "Technical",
+        "macro": "Macro",
+        "realestate": "Real estate",
+        "sentiment": "Sentiment"
+      }
+    },
+    "entry": {
+      "title": "Entry signal",
+      "subtitle": "Per SRS-03 priority order · Priority {priority}",
+      "reasonCodeLabel": "Reason code",
+      "srBar": {
+        "title": "Current price between support and resistance"
+      },
+      "indicators": "Raw indicators used",
+      "insufficientNote": "This ticker is missing the required raw technical indicators (≥2). The system will not guess an entry signal — wait for full data."
+    },
+    "risk": {
+      "title": "Risk management",
+      "subtitle": "Stop loss · Allocation · Confidence",
+      "insufficientNote": "Not enough data to compute reliable allocation and stop loss.",
+      "stopLoss": {
+        "title": "Stop loss",
+        "calc": {
+          "buyPrice": "= Buy price × 0.90",
+          "currentPrice": "= Current price × 0.90 (no buy price yet)"
+        },
+        "distance": "{pct}% away from current price"
+      },
+      "allocation": {
+        "title": "Capital allocation",
+        "skipped": "Allocation skipped — no total capital entered for this run.",
+        "weight": "{pct}% weight across MUA tickers",
+        "basedOn": "Based on total capital {total} VND entered when running"
+      },
+      "confidence": {
+        "title": "Confidence",
+        "raw": "Raw",
+        "penalty": "Penalty",
+        "final": "Final",
+        "warningsLabel": "Penalty-driving warnings",
+        "noWarnings": "No warnings.",
+        "penaltyTooltip": "Penalty −{points}pp from warning badges (PRD §7.7)"
+      }
+    }
+  },
+  "priceBoard": {
+    "loading": "Loading price board…",
+    "errorLoad": "Could not load the price board. Please retry.",
+    "subtitle": "{count} tickers · mock refreshes per page reload",
+    "search": {
+      "placeholder": "Search ticker (VHM, KDH…)"
+    },
+    "filter": {
+      "title": "Filters",
+      "exchange": "Exchange",
+      "sector": "Sector",
+      "sectorAll": "All sectors",
+      "newlyListedOnly": "Newly listed only",
+      "reset": "Clear filters"
+    },
+    "newlyBadge": "New",
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "sector": "Sector",
+      "exchange": "Exch.",
+      "reference": "Ref",
+      "ceiling": "Ceil",
+      "floor": "Floor",
+      "open": "Open",
+      "high": "High",
+      "low": "Low",
+      "close": "Close",
+      "change": "+/-",
+      "changePct": "%",
+      "volume": "Vol",
+      "newly": "Listing"
+    },
+    "empty": {
+      "title": "No matching tickers",
+      "hint": "Try clearing some filters or the search box."
+    },
+    "perfNote": "{count} tickers · client-side sort / filter"
+  },
+  "news": {
+    "loading": "Loading news…",
+    "errorLoad": "Could not load news. Please retry.",
+    "filter": {
+      "title": "News filters",
+      "open": "Open filters",
+      "close": "Close filters",
+      "source": "Source",
+      "sentiment": "Sentiment",
+      "ticker": "Related ticker",
+      "tickerPlaceholder": "Pick a ticker (VHM…)",
+      "tickerClear": "Clear",
+      "dateRange": "Time range",
+      "reset": "Clear filters",
+      "mockFailure": "Simulate source error (dev)"
+    },
+    "source": {
+      "CAFEF": "CafeF",
+      "VNEXPRESS": "VnExpress",
+      "VIETSTOCK": "Vietstock",
+      "BATDONGSAN": "Batdongsan",
+      "THANHNIEN": "Thanh Niên"
+    },
+    "sentiment": {
+      "all": "All",
+      "POSITIVE": "Positive",
+      "NEUTRAL": "Neutral",
+      "NEGATIVE": "Negative"
+    },
+    "dateRange": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "all": "All"
+    },
+    "card": {
+      "openExternal": "Open article (new tab)",
+      "tickers": "Related tickers",
+      "scoreTooltip": "Score: {score} ({label})"
+    },
+    "empty": {
+      "30days": "No news in the last 30 days matching your filters.",
+      "filtered": "No news matches the current filters."
+    },
+    "sourceError": "Source {source} is temporarily unavailable. Showing remaining sources.",
+    "summary": {
+      "title": "Sentiment for {ticker} (30 days)",
+      "count": "{n} articles",
+      "scoreAvg": "Avg score",
+      "noData": "No articles in 30 days — sentiment = NEUTRAL (GUARD-08).",
+      "sourceBreakdown": "By source"
+    },
+    "load": {
+      "more": "Load more",
+      "loading": "Loading more…",
+      "end": "End of feed."
+    },
+    "time": {
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago",
+      "justNow": "just now"
+    }
+  },
+  "portfolio": {
+    "loading": "Loading portfolio…",
+    "errorLoad": "Could not load portfolio. Please retry.",
+    "subtitle": "Track holdings + unrealized P&L. Current price comes from the latest session.",
+    "addButton": "Add holding",
+    "kpi": {
+      "totalCost": "Total cost",
+      "currentValue": "Current value",
+      "totalPnl": "P&L",
+      "holdingCount": "Holdings"
+    },
+    "column": {
+      "ticker": "Ticker",
+      "name": "Name",
+      "quantity": "Qty",
+      "buyPrice": "Buy",
+      "buyDate": "Bought",
+      "currentPrice": "Current",
+      "costBasis": "Cost basis",
+      "marketValue": "Market value",
+      "pnl": "P&L",
+      "pnlPct": "P&L %",
+      "notes": "Notes",
+      "action": "Actions"
+    },
+    "action": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "modal": {
+      "add": {
+        "title": "Add a holding"
+      },
+      "edit": {
+        "title": "Edit holding"
+      },
+      "field": {
+        "ticker": "Ticker (whitelist only)",
+        "quantity": "Quantity",
+        "buyPrice": "Buy price (thousand VND)",
+        "priceUnit": "k đ",
+        "buyDate": "Buy date",
+        "notes": "Notes",
+        "notesPlaceholder": "Optional — e.g. cut loss below 19"
+      },
+      "error": {
+        "tickerRequired": "Ticker is required.",
+        "tickerNotInList": "Ticker not in the whitelist.",
+        "quantityInvalid": "Quantity must be a positive integer.",
+        "priceInvalid": "Buy price must be a positive number.",
+        "dateRequired": "Pick a buy date.",
+        "dateFuture": "Buy date cannot be in the future.",
+        "serverError": "Server error. Please retry."
+      },
+      "add": "Add",
+      "save": "Save",
+      "cancel": "Cancel",
+      "submitting": "Saving…",
+      "close": "Close"
+    },
+    "delete": {
+      "title": "Remove from portfolio",
+      "confirm": "Remove {ticker} from your portfolio? This cannot be undone in the prototype.",
+      "delete": "Remove",
+      "deleting": "Removing…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "serverError": "Server error during delete."
+    },
+    "empty": {
+      "title": "No holdings yet",
+      "hint": "Add your first holding to start tracking P&L. Current price is fetched automatically.",
+      "action": "Add first holding"
+    },
+    "toast": {
+      "addSuccess": {
+        "title": "Holding added",
+        "body": "{ticker} is now in your portfolio."
+      },
+      "editSuccess": {
+        "title": "Holding updated",
+        "body": "{ticker} has been updated."
+      },
+      "deleteSuccess": {
+        "title": "Holding removed",
+        "body": "{ticker} was removed from your portfolio."
+      }
+    }
+  },
+  "runHistory": {
+    "loading": "Loading history…",
+    "errorLoad": "Could not load run history. Please retry.",
+    "subtitle": "Last 10 runs — historical seeds + new runs.",
+    "backtestDisabledNoRun": "At least one completed run is required to backtest.",
+    "kpi": {
+      "totalRuns": "Total runs",
+      "lastRun": "Last run",
+      "avgAccuracy": "Latest backtest accuracy",
+      "avgAccuracyHint": "Run a backtest to see accuracy."
+    },
+    "column": {
+      "runId": "Run ID",
+      "runAt": "When",
+      "status": "Status",
+      "modelVersion": "Model",
+      "settingsVersion": "Settings",
+      "scoredCount": "Scored",
+      "breakdown": "BUY / HOLD / SELL",
+      "totalCapital": "Capital",
+      "duration": "Duration",
+      "warnings": "Warn.",
+      "action": "Actions"
+    },
+    "action": {
+      "view": "Open this run on the Dashboard",
+      "compare": "Toggle compare selection",
+      "exportPdf": "Download PDF for this run",
+      "delete": "Delete this run"
+    },
+    "compare": {
+      "panelTitle": "Compare 2 runs",
+      "panelSubtitle": "{a} vs {b}",
+      "hintNeedAB": "Pick the compare icon on 2 rows to see the diff.",
+      "hintNeedB": "Run A picked. Pick the compare icon on a second run to set Run B.",
+      "loading": "Diffing runs…",
+      "error": "Could not compute diff between the runs.",
+      "clear": "Clear selection",
+      "summary": "1) Summary diff",
+      "changes": "2) Recommendation changes",
+      "changesEmpty": "No tickers changed recommendation between the runs.",
+      "newRemoved": "3) New / removed entries",
+      "distribution": "4) AI Score distribution",
+      "distributionSubtitle": "6 score buckets · A vs B",
+      "legend": "Green row = upgrade (SELL→HOLD, HOLD→BUY, SELL→BUY) · Red row = downgrade",
+      "metric": {
+        "totalScored": "Total scored",
+        "buyCount": "BUY count",
+        "holdCount": "HOLD count",
+        "sellCount": "SELL count",
+        "avgScore": "Avg AI Score",
+        "duration": "Duration"
+      },
+      "header": {
+        "metric": "Metric",
+        "runA": "Run A",
+        "runB": "Run B"
+      },
+      "changesColumn": {
+        "ticker": "Ticker",
+        "recA": "Run A",
+        "recB": "Run B",
+        "scoreA": "Score A",
+        "scoreB": "Score B"
+      },
+      "newEntries": {
+        "title": "New entries ({count})",
+        "empty": "No new entries."
+      },
+      "removed": {
+        "title": "Removed ({count})",
+        "empty": "No removed entries."
+      },
+      "histogram": {
+        "runA": "Run A",
+        "runB": "Run B"
+      }
+    },
+    "delete": {
+      "title": "Delete run",
+      "confirm": "Delete run {runId}?",
+      "warning": "All data for this run (results, dashboard) will be wiped. Cannot be undone in the prototype.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "serverError": "Server error during delete."
+    },
+    "empty": {
+      "title": "No runs yet",
+      "hint": "Press Run in the header to start your first run."
+    },
+    "toast": {
+      "deleteSuccess": {
+        "title": "Run deleted",
+        "body": "Run {runId} was removed from history."
+      }
+    }
+  },
+  "backtest": {
+    "modal": {
+      "title": "Run a backtest",
+      "description": "Pick a window. The system compares predictions with actual 3-month returns.",
+      "periodFrom": "From",
+      "periodTo": "To",
+      "submit": "Run backtest",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "error": {
+        "range": "Start date must be before end date.",
+        "serverError": "Server error during backtest."
+      }
+    },
+    "button": {
+      "start": "Run Backtest",
+      "running": "Backtesting…"
+    },
+    "section": {
+      "title": "Backtest result"
+    },
+    "metric": {
+      "accuracy": "Recommendation accuracy",
+      "priceError": "Avg price error",
+      "portfolioRoi": "Portfolio ROI",
+      "vnindexRoi": "VN-Index ROI",
+      "alpha": "Alpha (Portfolio − VN-Index)"
+    },
+    "card": {
+      "title": "Backtest #{id}",
+      "range": "From {from} to {to} · {correct}/{total} predictions correct",
+      "accuracyHint": "Minimum threshold {threshold}%",
+      "alphaHint": "Outperformance vs the index",
+      "chartTitle": "Cumulative ROI",
+      "chartSubtitle": "Portfolio vs VN-Index, weekly",
+      "showDetail": "Show detail ({count} tickers)",
+      "hideDetail": "Hide detail"
+    },
+    "chart": {
+      "portfolio": "Portfolio (BUY)",
+      "vnindex": "VN-Index"
+    },
+    "detail": {
+      "column": {
+        "ticker": "Ticker",
+        "predicted": "Predicted",
+        "actualReturn": "Actual 3M return",
+        "predictedPrice": "Predicted price",
+        "actualPrice": "Actual price",
+        "error": "Error",
+        "correct": "Correct?"
+      }
+    },
+    "failed": "Backtest failed. Please retry.",
+    "toast": {
+      "startTitle": "Backtest started",
+      "startBody": "Window {from} → {to}. Results will appear when ready."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "loading": "Loading settings…",
+    "errorLoad": "Couldn't load settings. Please try again.",
+    "section": {
+      "appearance": "Appearance",
+      "threshold": "Recommendation thresholds",
+      "sources": "News sources",
+      "telegram": "Telegram",
+      "security": "Security",
+      "share": "Share management"
+    },
+    "theme": {
+      "label": "Theme",
+      "description": "Choose one of four theme states. Applied instantly.",
+      "options": {
+        "classic-dark": "Classic — Dark",
+        "classic-light": "Classic — Light",
+        "light": "Light",
+        "oled": "OLED"
+      }
+    },
+    "language": {
+      "label": "Language",
+      "description": "Choose display language. Applied instantly.",
+      "options": {
+        "vi": "Tiếng Việt (VIE)",
+        "en": "English (ENG)"
+      }
+    },
+    "mockOutcome": {
+      "label": "UX test outcome (dev only)",
+      "description": "Force the next run's outcome to test all 4 UX branches (success/warnings/failed/conflict) without a real backend.",
+      "hint": "Applies to next run.",
+      "options": {
+        "success": "Success",
+        "warnings": "With warnings",
+        "failed": "Failed",
+        "conflict": "409 CONFLICT"
+      }
+    },
+    "threshold": {
+      "description": "Customize the minimum scores that classify BUY/HOLD/SELL. Auto-saves after 0.5s.",
+      "buy": "BUY minimum (50–95)",
+      "hold": "HOLD minimum (20–70)",
+      "preview": "Now: ≥{buy} = BUY · {holdLow}–{holdHigh} = HOLD · <{holdLow} = SELL",
+      "error": {
+        "invalid": "BUY threshold must be greater than HOLD threshold."
+      },
+      "save": {
+        "success": "Thresholds saved"
+      },
+      "saving": "Saving…"
+    },
+    "sources": {
+      "description": "Toggle which news sources contribute to sentiment analysis. Auto-saves on change.",
+      "save": {
+        "success": "News sources updated"
+      }
+    },
+    "telegram": {
+      "description": "Send the run summary to Telegram after each successful Run."
+    },
+    "password": {
+      "description": "Change account password. The session token is refreshed after a successful change.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "hint": "Min 8 characters.",
+      "submit": "Save new password",
+      "success": "Password changed",
+      "reLoginNote": "Session token refreshed.",
+      "error": {
+        "currentRequired": "Please enter your current password.",
+        "tooShort": "New password must be at least 8 characters.",
+        "mismatch": "Passwords do not match.",
+        "serverError": "Server error. Please try again."
+      }
+    },
+    "share": {
+      "description": "Active share links you can revoke at any time.",
+      "management": {
+        "loading": "Loading links…",
+        "empty": "No active share links yet.",
+        "column": {
+          "token": "Token",
+          "runId": "Run ID",
+          "createdAt": "Created at",
+          "expiresAt": "Expires",
+          "action": "Actions"
+        },
+        "revoke": {
+          "button": "Revoke",
+          "confirm": "Revoke link {token}? Recipients will see a 404 page.",
+          "success": "Link revoked",
+          "error": "Couldn't revoke link."
+        }
+      }
+    },
+    "comingSoon": {
+      "title": "Other sections",
+      "body": "BUY/HOLD/SELL thresholds, news sources, Telegram, password — coming in Cluster 6."
+    }
+  },
+  "export": {
+    "button": "Export PDF",
+    "loading": "Generating PDF…",
+    "success": "PDF downloaded",
+    "close": "Close",
+    "preview": {
+      "title": "PDF preview",
+      "download": "Download"
+    },
+    "error": {
+      "title": "Export failed"
+    }
+  },
+  "share": {
+    "button": "Share",
+    "modal": {
+      "title": "Create share link",
+      "creating": "Creating link…",
+      "close": "Close"
+    },
+    "url": {
+      "label": "Share URL"
+    },
+    "copy": {
+      "button": "Copy",
+      "aria": "Copy share URL",
+      "success": "Link copied",
+      "fail": "Couldn't copy link"
+    },
+    "expires": "Expires in: {remaining}",
+    "regenerate": "Regenerate",
+    "note": {
+      "basicAuth": "In production this link is protected by Basic Auth (system password). The prototype only checks the token."
+    },
+    "view": {
+      "header": "VN RE AI Screener — Read-only",
+      "watermark": "Read-only shared view",
+      "sharedBy": "Shared by {name} on {date}",
+      "expiresIn": "Expires: {remaining}",
+      "loading": "Loading shared view…",
+      "section": {
+        "dashboard": "Run overview",
+        "topMua": "Top BUY"
+      },
+      "invalid": {
+        "title": "Invalid link",
+        "body": "This link does not exist or has been revoked."
+      },
+      "expired": {
+        "title": "Link expired",
+        "body": "This share link is past its 7-day window."
+      }
+    }
+  },
+  "telegram": {
+    "toggle": "Enable Telegram notifications",
+    "botToken": "Bot Token",
+    "showToken": "Show token",
+    "hideToken": "Hide token",
+    "chatId": "Chat ID",
+    "topN": {
+      "label": "Top N BUY tickers to send",
+      "3": "Top 3",
+      "5": "Top 5"
+    },
+    "testButton": "Send test message",
+    "test": {
+      "success": "Test message sent",
+      "error": "Test message failed"
+    },
+    "save": {
+      "button": "Save Telegram config",
+      "success": "Telegram config saved",
+      "error": "Couldn't save Telegram config"
+    },
+    "info": {
+      "runComplete": "Sent after each successful Run.",
+      "format": "Format: BUY/HOLD/SELL counts + Top {n} BUY tickers. {n} = the Top N value above."
+    },
+    "error": {
+      "chatIdRequired": "Telegram chat_id is required when enabled.",
+      "tokenRequired": "Telegram bot token is required when enabled."
+    }
+  },
+  "common": {
+    "disclaimer": "This tool only supports analysis, it is NOT formal investment advice. All decisions are the user's responsibility.",
+    "loading": "Loading…",
+    "comingSoon": {
+      "title": "Feature in development",
+      "body": "This feature will arrive in Cluster {cluster}."
+    },
+    "placeholder": {
+      "cluster2": "This feature will arrive in Cluster 2.",
+      "cluster3": "This feature will arrive in Cluster 3.",
+      "cluster4": "This feature will arrive in Cluster 4.",
+      "cluster5": "This feature will arrive in Cluster 5.",
+      "cluster6": "This feature will arrive in Cluster 6."
+    }
+  }
+}
