@@ -43,7 +43,7 @@ Subagent-driven AC coverage audit của 17 SRS files vs backend implementation:
 | f16 | Authentication | ⚠️ **DRIFT** | **FE/BE schema mismatch on PUT /auth/password** — FIXED Phase 10 (§3 Bug-1) |
 | f17 | Theme & i18n | ✅ Full | Settings persists prefs; FE applies — no backend logic |
 | g01 | Errors & Validation | ✅ Full | Envelope error shape `{success:false, error:{code, message, detail?}}` consistent |
-| g02 | Non-functional | ✅ Full | 41 endpoints implemented per registry; CORS allow-origin verified Phase 9 |
+| g02 | Non-functional | ✅ Full | 39 endpoints implemented per registry; CORS allow-origin verified Phase 9 |
 | g03 | Enums & Constants | ✅ Full | RunStatus 7-state, Recommendation, EntrySignal, NewsSource all in constants/enums.py |
 
 **Bug-1 (FIXED Phase 10):** `PUT /api/auth/password` request shape drift.
@@ -199,7 +199,7 @@ Phase 11 (README.md — 0.5d) sẽ:
 - FE swap section: `.env.local` + `NEXT_PUBLIC_ENABLE_MSW=false`
 
 Đã sẵn sàng cho README:
-- 41 endpoints stable (no drift open)
+- 39 endpoints stable (no drift open)
 - 232 backend tests pass
 - FE build clean (14 routes)
 - All envelopes consistent

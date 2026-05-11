@@ -3,7 +3,7 @@
 **Done:** 2026-05-11 (~3h, estimate 1d — under-run vì Phase 9 đã clear hầu hết drift; chỉ còn 1 bug tích lũy)
 **SUMMARY:** [./SUMMARY.md](./SUMMARY.md)
 
-Retrospective focus: Test state pollution surprise (34 ERROR ≠ 34 bug), low yield bug count (1/41 endpoints có drift) gợi ý FE/BE swap đã làm tốt từ Phase 9, nhưng tier-2 endpoints (less-tested) vẫn drift được. Subagent audit shape — không phải behavior.
+Retrospective focus: Test state pollution surprise (34 ERROR ≠ 34 bug), low yield bug count (1/39 endpoints có drift) gợi ý FE/BE swap đã làm tốt từ Phase 9, nhưng tier-2 endpoints (less-tested) vẫn drift được. Subagent audit shape — không phải behavior.
 
 ## Surprises / non-obvious
 

@@ -177,7 +177,7 @@ Phase 10 (Integration QA + bug fixes — 1d) sẽ:
 - Generate `report/mvp-build-summary.md` document drift / TODO post-MVP
 
 Đã sẵn sàng:
-- 41 backend endpoints (Phase 0-8) — full TAD g02 §1 registry covered
+- 39 backend endpoints (Phase 0-8) — full TAD g02 §1 registry covered
 - All envelopes consistent
 - DELETE 200+envelope across portfolio/runs/share
 - Public route `/share/{token}` bypass auth

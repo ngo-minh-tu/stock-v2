@@ -77,7 +77,7 @@ curl http://localhost:8000/api/health
 
 ## 4. Endpoint examples (curl)
 
-Backend serve 41 endpoints theo TAD g02 §1. Quy ước envelope:
+Backend serve 39 endpoints theo TAD g02 §1. Quy ước envelope:
 - Success: `{"success": true, "data": {...}}`
 - Error: `{"success": false, "error": {"code": "ERR-XX-XX", "message": "..."}}`
 

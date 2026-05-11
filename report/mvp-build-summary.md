@@ -10,7 +10,7 @@
 
 | Layer | Artifact | Status |
 |---|---|---|
-| Backend | [mvp/code/](../mvp/code/) FastAPI + SQLite + uv | ✅ 232/232 pytest pass · 41 endpoints stable |
+| Backend | [mvp/code/](../mvp/code/) FastAPI + SQLite + uv | ✅ 232/232 pytest pass · 39 endpoints stable |
 | Frontend | [frontend/](../frontend/) Next.js 14 app router | ✅ tsc clean · 14 routes build · MSW opt-in fallback |
 | DB | 16 tables · alembic 0001 initial schema | ✅ seeded 81 stocks + 150 news + 1 user + default settings |
 | Infra | Dockerfile multi-stage uv | ✅ entrypoint.sh wires `alembic upgrade head` before uvicorn |
@@ -41,7 +41,7 @@ Phase 11 (README) chưa start — deferred theo PLAN convention.
 
 ---
 
-## 3. 41 endpoints implemented (TAD g02 §1 registry)
+## 3. 39 endpoints implemented (TAD g02 §1 registry)
 
 ### Auth (2)
 - `POST /api/auth/login` · `PUT /api/auth/password` ✓ (Phase 10 fix)
@@ -55,7 +55,7 @@ Phase 11 (README) chưa start — deferred theo PLAN convention.
 ### Refresh (3)
 - `POST /api/refresh/all` · `POST /api/refresh/prices` · `GET /api/refresh/{id}/status`
 
-### Screening (4)
+### Screening (5)
 - `POST /api/run` · `GET /api/runs` · `GET /api/runs/{id}` · `GET /api/runs/{id}/status` · `DELETE /api/run/{id}`
 
 ### Results (5)
@@ -196,7 +196,7 @@ Documented in [mvp/phases/phase-10-integration-qa/SUMMARY.md §7](../mvp/phases/
 
 - [x] 232 backend tests pass
 - [x] FE tsc clean + build succeeds (14 routes)
-- [x] All 41 endpoints exercised via curl smoke
+- [x] All 39 endpoints exercised via curl smoke
 - [x] CORS verified `localhost:3000` ↔ `localhost:8000`
 - [x] Public route `/api/share/{token}` bypass auth verified
 - [x] DELETE 200+envelope across portfolio + runs + share

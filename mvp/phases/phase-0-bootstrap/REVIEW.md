@@ -20,5 +20,5 @@ Retrospective focus: insights *non-obvious* không có trong SUMMARY — surpris
 
 ## To revisit
 
-- Phase 11 README cần curl examples đầy đủ cho 41 endpoints + env vars table.
+- Phase 11 README cần curl examples đầy đủ cho 39 endpoints + env vars table.
 - Docker image deploy chưa test ngoài local — Phase 10 nếu cần.
