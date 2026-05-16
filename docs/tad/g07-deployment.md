@@ -112,7 +112,7 @@ ngrok http 3000
 1. Đổi DATABASE_URL sang PostgreSQL
 2. Alembic auto-generate migration
 3. TEXT → VARCHAR, *_json → JSONB
-4. Add connection pooling (asyncpg)
+4. Add connection pooling (psycopg2/psycopg — ORM hiện đang sync, không dùng asyncpg)
 5. SQLAlchemy 2.0 tương thích — không sửa ORM code
 
 ---

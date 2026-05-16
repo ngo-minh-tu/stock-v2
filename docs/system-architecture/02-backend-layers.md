@@ -72,7 +72,7 @@ flowchart TB
 
     subgraph Persistence["5️⃣ Persistence"]
         direction LR
-        sqla[("SQLAlchemy 2.0<br/>async ORM")]
+        sqla[("SQLAlchemy 2.0<br/>sync ORM (threadpool)")]
         sqlite[("SQLite<br/>WAL + foreign_keys=ON<br/>busy_timeout=30s")]
     end
 
