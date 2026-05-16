@@ -75,8 +75,16 @@ def _load_settings_thresholds(db) -> tuple[int, int, int]:
 
 
 def _data_from_cache(db) -> bool:
-    """True nếu vnstock_price hoặc vnstock_financial đang STALE → run dùng cache cũ."""
-    return cache_manager.is_stale(db, VNSTOCK_PRICE.key) or cache_manager.is_stale(db, VNSTOCK_FINANCIAL.key)
+    """True nếu vnstock_price hoặc vnstock_financial KHÔNG usable (stale OR status≠FRESH).
+
+    Dùng `is_usable()` (status-aware) thay vì `is_stale()` thuần TTL: financial cache
+    có thể mang status="STUB" (Phase 9 — crawler chưa có thật), TTL chưa hết hạn mà
+    vẫn không phải dữ liệu thật. Treat-as-cache đảm bảo warning DATA_FROM_CACHE
+    được set đúng để FE bật badge.
+    """
+    return (not cache_manager.is_usable(db, VNSTOCK_PRICE.key)) or (
+        not cache_manager.is_usable(db, VNSTOCK_FINANCIAL.key)
+    )
 
 
 def _update_progress(run_id: str, *, status: str, step: str, percent: int, message: str = "") -> None:

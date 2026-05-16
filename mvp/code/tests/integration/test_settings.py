@@ -19,7 +19,7 @@ def test_get_settings_returns_full_state(client, auth_headers):
     assert data["classic_mode"] == "DARK"
     assert data["language"] == "VIE"
     assert data["telegram_enabled"] is False
-    assert "version" in data
+    assert "settings_version" in data
     assert "updated_at" in data
     # password_hash KHÔNG được trả
     assert "password_hash" not in data
@@ -31,12 +31,12 @@ def test_put_settings_requires_auth(client):
 
 
 def test_put_settings_single_field_bumps_version(client, auth_headers, restore_settings):
-    before = client.get("/api/settings", headers=auth_headers).json()["data"]["version"]
+    before = client.get("/api/settings", headers=auth_headers).json()["data"]["settings_version"]
     r = client.put("/api/settings", json={"language": "ENG"}, headers=auth_headers)
     assert r.status_code == 200
     after = r.json()["data"]
     assert after["language"] == "ENG"
-    assert after["version"] == before + 1
+    assert after["settings_version"] == before + 1
 
 
 def test_put_settings_threshold_violation_400(client, auth_headers, restore_settings):

@@ -220,3 +220,28 @@ Phase 9 (FE swap full) sẽ:
 ## 9. Post-phase fixes
 
 *(append entry mỗi khi user request fix Phase 8 sau khi phase đã đóng)*
+
+### 2026-05-16 — Backtest `terminal_status` pattern (reviewer round 2)
+
+**Bug:** `run_backtest()` [backtest_service.py:223-225](../../code/app/services/backtest_service.py#L223-L225) hard-code
+`job_lock.release(job_key, status="COMPLETED")` trong `finally`. Hai nhánh
+early-return không raise — (a) `scored` rỗng [line 182-185](../../code/app/services/backtest_service.py#L182-L185) và (b) `row is None`
+[line 178-180](../../code/app/services/backtest_service.py#L178-L180) — đều mark DB row FAILED rồi return, nhưng finally vẫn release
+job_lock COMPLETED → state mismatch: GET /backtest/{id}/status (DB) trả FAILED,
+GET /jobs/{id} (job_lock) trả COMPLETED → UI inconsistency.
+
+**Fix:** Refactor sang `terminal_status: str = "COMPLETED"` + `error_msg: str | None`
+biến mutable. Mỗi nhánh thất bại set 2 biến này trước khi `return`, finally release
+một lần duy nhất với giá trị đúng. Loại bỏ `job_lock.release(... FAILED ...)` cũ
+trong `except` (chuyển vào finally) → single source of release, không còn risk
+double-release.
+
+**Tests ([test_backtest.py](../../code/tests/integration/test_backtest.py)):** Thêm 3 test:
+- `test_post_backtest_returns_409_when_job_lock_held` — pre-acquire lock, POST trả
+  409 ERR-JOB-CONFLICT (đối xứng với POST /run).
+- `test_run_backtest_releases_lock_failed_when_no_scored_rows` — call run_backtest
+  trực tiếp với baseline_run_id không có results → assert job_lock FAILED + DB FAILED.
+- `test_run_backtest_releases_lock_failed_on_exception` — monkeypatch
+  `_generate_results` raise → assert job_lock FAILED với error truyền qua.
+
+**Files:** [backtest_service.py](../../code/app/services/backtest_service.py) +12 / -7 LOC; [test_backtest.py](../../code/tests/integration/test_backtest.py) +110 LOC.

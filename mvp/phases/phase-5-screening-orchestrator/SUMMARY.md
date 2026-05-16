@@ -157,3 +157,22 @@ Phase 6 (Read APIs) sẽ wire:
 ## 9. Post-phase fixes
 
 *(append entry mỗi khi user request fix Phase 5 sau khi phase đã đóng)*
+
+### 2026-05-16 — `_data_from_cache()` chuyển sang `is_usable()` (reviewer round 2)
+
+**Bug:** Sau khi refresh_service Phase 9 mark financial cache `status="STUB"`,
+`_data_from_cache()` ở [screening_service.py:79](../../code/app/services/screening_service.py#L79) vẫn dùng `is_stale()` thuần TTL → trả
+False cho STUB-within-TTL → run không bật warning DATA_FROM_CACHE → FE silent leak.
+
+**Fix:** Đổi sang `not is_usable(...)` (helper mới ở [cache_manager.py](../../code/app/crawlers/cache_manager.py) — xem
+Phase 3 SUMMARY §9). 1 dòng đổi, scope minimal. Cả 2 nguồn (price + financial)
+đều route qua usable gate; bất kỳ source nào status≠FRESH hoặc TTL hết hạn đều
+gây `data_from_cache=True`.
+
+**Tests:** Lifecycle test [test_run_lifecycle.py](../../code/tests/integration/test_run_lifecycle.py) vẫn pass — không regression. STUB
+freshness coverage nằm ở unit test cache_manager (Phase 3 §9). Thêm
+`test_get_run_status_includes_warnings_field` để guard FE contract khỏi việc field
+`warnings` bị remove silently (FE RunContext/RunHistoryTable/ConfidenceCard/
+RedFlagsBadgesTable đều consume).
+
+**Files:** [screening_service.py](../../code/app/services/screening_service.py) +6 LOC; [test_run_lifecycle.py](../../code/tests/integration/test_run_lifecycle.py) +21 LOC.

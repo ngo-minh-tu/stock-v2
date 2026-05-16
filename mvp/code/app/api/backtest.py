@@ -8,14 +8,16 @@ GET  /api/backtest/{id}/results     → 200 {results[]}
 
 from __future__ import annotations
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Path, status
 
-from app.constants.error_codes import ERR_NOT_FOUND
+from app.constants.error_codes import ERR_JOB_CONFLICT, ERR_NOT_FOUND
 from app.core.envelope import success
 from app.core.errors import AppError
 from app.dependencies import CurrentUser, DbSession
+from app.job_lock import job_lock
 from app.repositories import backtest_repo, screening_repo
 from app.schemas.backtest import BacktestStartRequest
 from app.services import backtest_service
@@ -30,16 +32,31 @@ def start_backtest(
     db: DbSession,
     _user: CurrentUser,
 ) -> dict:
-    backtest_id = backtest_service.start_backtest(
-        db,
-        period_from=body.period_from,
-        period_to=body.period_to,
-    )
+    # Acquire lock TRƯỚC khi tạo row → conflict trả 409 đối xứng với POST /run.
+    job_key = f"backtest_{uuid.uuid4().hex[:8]}"
+    if not job_lock.try_acquire(job_key, "backtest"):
+        raise AppError(
+            ERR_JOB_CONFLICT,
+            f"Đang có tác vụ chạy: {job_lock.active_type}. Vui lòng đợi hoàn thành.",
+            http_status=409,
+        )
+
+    try:
+        backtest_id = backtest_service.start_backtest(
+            db,
+            period_from=body.period_from,
+            period_to=body.period_to,
+        )
+    except Exception:
+        job_lock.release(job_key, status="FAILED", error="start_failed")
+        raise
+
     baseline_run = screening_repo.latest_completed(db)
     bg.add_task(
         backtest_service.run_backtest,
         backtest_id,
         baseline_run_id=baseline_run.run_id,
+        job_key=job_key,
     )
     return success({"backtest_id": backtest_id, "status": "PENDING"})
 

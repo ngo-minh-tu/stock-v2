@@ -44,7 +44,12 @@ def run_refresh_prices(job_id: str) -> None:
                     rows = client.fetch_prices(ticker, days=365)
                     if rows:
                         price_repo.bulk_upsert(db, rows)
-                    success += 1
+                        success += 1
+                    else:
+                        # Empty payload = không có dữ liệu mới ↛ KHÔNG tính success.
+                        # Tránh trường hợp 81 ticker đều rỗng vẫn mark cache FRESH.
+                        fail += 1
+                        logger.warning("[%s] price empty %s", job_id, ticker)
                 except VnstockUnavailable as e:
                     fail += 1
                     logger.warning("[%s] price fail %s: %s", job_id, ticker, e)
@@ -96,7 +101,9 @@ def run_refresh_all(job_id: str) -> None:
                     rows = client.fetch_prices(ticker, days=365)
                     if rows:
                         price_repo.bulk_upsert(db, rows)
-                    success_p += 1
+                        success_p += 1
+                    else:
+                        logger.warning("[%s] price empty %s", job_id, ticker)
                 except (VnstockUnavailable, Exception) as e:  # noqa: BLE001 — log mọi lỗi, continue
                     logger.warning("[%s] price fail %s: %s", job_id, ticker, e)
                 if (i + 1) % 5 == 0 or (i + 1) == total:
@@ -129,7 +136,11 @@ def run_refresh_all(job_id: str) -> None:
                         progress=50 + int((i + 1) / total * 50),
                         message=f"BCTC {i + 1}/{total}",
                     )
-            cache_manager.mark_refreshed(db, VNSTOCK_FINANCIAL.key)
+            # Financial crawler hiện là stub (fetch_financials returns []) — không
+            # mark FRESH để tránh lừa downstream. Status STUB cho biết cache đã chạm
+            # nhưng dữ liệu chưa thực. Real crawler post-MVP sẽ pass status="FRESH".
+            cache_manager.mark_refreshed(db, VNSTOCK_FINANCIAL.key, status="STUB")
+            logger.warning("[%s] financial crawler is STUB — cache marked STUB, not FRESH", job_id)
             db.commit()
 
         if success_p == 0:

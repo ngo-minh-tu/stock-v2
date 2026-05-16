@@ -26,6 +26,15 @@ class RunAcceptedResponse(BaseModel):
     status: str
 
 
+class RunWarning(BaseModel):
+    """Warning entry trên status/summary — TAD g05."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: str  # lowercase: data_from_cache | imputed_features | telegram_error | partial_news
+    message: str
+
+
 class RunStatusResponse(BaseModel):
     """GET /api/runs/{run_id}/status — TAD g01 §2.2 polling shape."""
 
@@ -35,6 +44,8 @@ class RunStatusResponse(BaseModel):
     status: str  # RunStatus enum value
     progress_percent: int
     current_step: str | None
+    message: str | None  # supplementary progress text (mirror current_step trong MVP)
+    warnings: list[RunWarning]  # empty cho non-terminal; populated khi COMPLETED*/FAILED
     started_at: str  # ISO
     completed_at: str | None
     duration_seconds: float | None  # live cho active, recalc khi terminal (TAD g02 §8.4)

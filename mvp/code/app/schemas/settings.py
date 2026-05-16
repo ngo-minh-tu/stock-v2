@@ -2,15 +2,19 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SettingsResponse(BaseModel):
-    """GET /settings — full state. password_hash KHÔNG include (security)."""
+    """GET /settings — full state. password_hash KHÔNG include (security).
+
+    Field `settings_version` đọc từ ORM column `version` (DB-side giữ tên gọn,
+    response/FE dùng `settings_version` đồng bộ với RunSummary.settings_version).
+    """
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")
 
-    version: int
+    settings_version: int = Field(alias="version")
 
     buy_threshold: int
     hold_min_threshold: int

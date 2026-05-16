@@ -159,16 +159,16 @@ def start_backtest(
     return int(row.id)
 
 
-def run_backtest(backtest_id: int, *, baseline_run_id: str) -> None:
-    """Background task — mock state machine + compute + persist."""
-    job_key = f"backtest_{backtest_id}"
-    if not job_lock.try_acquire(job_key, "backtest"):
-        # Another job has lock — mark FAILED and exit
-        with SessionLocal() as db:
-            backtest_repo.mark_failed(db, backtest_id, completed_at=datetime.now(UTC).replace(tzinfo=None))
-            db.commit()
-        return
+def run_backtest(backtest_id: int, *, baseline_run_id: str, job_key: str) -> None:
+    """Background task — mock state machine + compute + persist.
 
+    job_lock đã được acquire ở API boundary (`POST /backtest`). Release một lần duy nhất
+    ở finally với `terminal_status` đã được set theo nhánh thực thi — KHÔNG hard-code
+    COMPLETED nữa (bug cũ: nhánh early-return scored-rỗng / row-None vẫn release
+    COMPLETED trong khi DB row đã mark FAILED → job_lock và DB lệch trạng thái).
+    """
+    terminal_status = "COMPLETED"
+    error_msg: str | None = None
     try:
         # Stage RUNNING — simulated work
         with SessionLocal() as db:
@@ -181,11 +181,15 @@ def run_backtest(backtest_id: int, *, baseline_run_id: str) -> None:
         with SessionLocal() as db:
             row = backtest_repo.get(db, backtest_id)
             if row is None:
+                terminal_status = "FAILED"
+                error_msg = "backtest row missing"
                 return
             scored = results_repo.list_by_run(db, baseline_run_id)
             if not scored:
                 backtest_repo.mark_failed(db, backtest_id, completed_at=datetime.now(UTC).replace(tzinfo=None))
                 db.commit()
+                terminal_status = "FAILED"
+                error_msg = "baseline run has no scored rows"
                 return
 
             mock_rows = _generate_results(scored, seed=backtest_id)
@@ -222,11 +226,11 @@ def run_backtest(backtest_id: int, *, baseline_run_id: str) -> None:
         with SessionLocal() as db:
             backtest_repo.mark_failed(db, backtest_id, completed_at=datetime.now(UTC).replace(tzinfo=None))
             db.commit()
-        job_lock.release(job_key, status="FAILED", error=str(exc))
-        return
+        terminal_status = "FAILED"
+        error_msg = str(exc)
     finally:
         if job_lock.active_job == job_key:
-            job_lock.release(job_key, status="COMPLETED")
+            job_lock.release(job_key, status=terminal_status, error=error_msg)
 
 
 def get_metrics(db: Session, row, results: list[dict]) -> dict:

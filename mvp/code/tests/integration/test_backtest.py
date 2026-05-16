@@ -1,11 +1,17 @@
 """Backtest endpoints — TAD g02 §8.5-8.6 + SRS f12 UC-12-03 AC-12-17..26.
 
-Coverage: 4 endpoints (POST start + 3 GET) + period validation + heuristic correctness.
+Coverage: 4 endpoints (POST start + 3 GET) + period validation + heuristic correctness
++ job_lock conflict (409) + terminal status correctness on early-return paths.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
+
+from app.db.session import SessionLocal
+from app.job_lock import job_lock
+from app.repositories import backtest_repo
+from app.services import backtest_service
 
 
 def _yesterday() -> str:
@@ -203,3 +209,120 @@ def test_heuristic_correctness_per_recommendation(client, auth_headers, complete
             else False
         )
         assert r["recommendation_correct"] is expected, f"{r['ticker']} rec={rec} ret={ret}"
+
+
+# ---------------------------------------------------------------------------
+# Job lock — 409 conflict + terminal status correctness
+# ---------------------------------------------------------------------------
+
+
+def test_post_backtest_returns_409_when_job_lock_held(client, auth_headers, completed_run):
+    """POST /api/backtest must reject with 409 ERR-JOB-CONFLICT when another heavy
+    job already holds the lock — symmetric with POST /api/run conflict path."""
+    job_lock.reset()
+    assert job_lock.try_acquire("manual_test_lock", "refresh") is True
+    try:
+        r = client.post(
+            "/api/backtest",
+            json={"period_from": _3mo_ago(), "period_to": _yesterday()},
+            headers=auth_headers,
+        )
+        assert r.status_code == 409, r.text
+        assert r.json()["error"]["code"] == "ERR-JOB-CONFLICT"
+    finally:
+        job_lock.reset()
+
+
+def test_run_backtest_releases_lock_failed_when_no_scored_rows(screening_data):
+    """Regression: run_backtest() with baseline that has 0 scored results must release
+    job_lock as FAILED (not COMPLETED). Bug history: finally hard-coded COMPLETED →
+    DB row marked FAILED but lock said COMPLETED → UI poll inconsistency.
+    """
+    job_lock.reset()
+
+    # Create backtest row directly (skip API to isolate run_backtest logic)
+    with SessionLocal() as db:
+        bt = backtest_repo.create_run(
+            db,
+            period_from=date(2025, 1, 1),
+            period_to=date(2025, 4, 1),
+            started_at=datetime.now(UTC).replace(tzinfo=None),
+            status="PENDING",
+        )
+        db.commit()
+        backtest_id = int(bt.id)
+
+    job_key = "backtest_test_empty_scored"
+    assert job_lock.try_acquire(job_key, "backtest") is True
+
+    try:
+        # Pass a baseline_run_id that has no results → list_by_run returns [].
+        backtest_service.run_backtest(
+            backtest_id,
+            baseline_run_id="run_does_not_exist",
+            job_key=job_key,
+        )
+
+        entry = job_lock.get(job_key)
+        assert entry is not None
+        assert entry["status"] == "FAILED", f"Expected FAILED, got {entry['status']}"
+        assert entry["error"] is not None
+        assert job_lock.active_job is None
+
+        with SessionLocal() as db:
+            row = backtest_repo.get(db, backtest_id)
+            assert row.status == "FAILED"
+    finally:
+        with SessionLocal() as db:
+            row = backtest_repo.get(db, backtest_id)
+            if row is not None:
+                db.delete(row)
+                db.commit()
+        job_lock.reset()
+
+
+def test_run_backtest_releases_lock_failed_on_exception(monkeypatch, screening_data, completed_run):
+    """Regression: exception during compute must release lock as FAILED."""
+    job_lock.reset()
+
+    with SessionLocal() as db:
+        bt = backtest_repo.create_run(
+            db,
+            period_from=date(2025, 1, 1),
+            period_to=date(2025, 4, 1),
+            started_at=datetime.now(UTC).replace(tzinfo=None),
+            status="PENDING",
+        )
+        db.commit()
+        backtest_id = int(bt.id)
+
+    job_key = "backtest_test_exception"
+    assert job_lock.try_acquire(job_key, "backtest") is True
+
+    def _explode(*_args, **_kwargs):
+        raise RuntimeError("synthetic compute failure")
+
+    monkeypatch.setattr(backtest_service, "_generate_results", _explode)
+
+    try:
+        backtest_service.run_backtest(
+            backtest_id,
+            baseline_run_id=completed_run,
+            job_key=job_key,
+        )
+
+        entry = job_lock.get(job_key)
+        assert entry is not None
+        assert entry["status"] == "FAILED"
+        assert "synthetic compute failure" in (entry["error"] or "")
+
+        with SessionLocal() as db:
+            row = backtest_repo.get(db, backtest_id)
+            assert row.status == "FAILED"
+    finally:
+        with SessionLocal() as db:
+            row = backtest_repo.get(db, backtest_id)
+            if row is not None:
+                db.delete(row)
+                db.commit()
+        job_lock.reset()

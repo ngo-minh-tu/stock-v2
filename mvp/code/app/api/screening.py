@@ -49,6 +49,26 @@ def _load_settings_version(db: Session) -> int:
     return int(s.version) if s else 1
 
 
+_WARNING_FE_MAP: dict[str, tuple[str, str]] = {
+    "DATA_FROM_CACHE": ("data_from_cache", "Dữ liệu lấy từ cache, có thể chưa mới nhất"),
+    "IMPUTED_FEATURES": ("imputed_features", "Một số chỉ số được suy luận do thiếu dữ liệu nguồn"),
+    "TELEGRAM_FAILED": ("telegram_error", "Gửi cảnh báo Telegram thất bại"),
+    "PARTIAL_NEWS": ("partial_news", "Một số nguồn tin không tải được"),
+    "STUB_FINANCIAL": ("imputed_features", "BCTC dùng stub (chưa wire real crawler)"),
+}
+
+
+def _map_warnings(codes: list[str]) -> list[dict]:
+    out: list[dict] = []
+    for code in codes:
+        mapped = _WARNING_FE_MAP.get(code)
+        if mapped is None:
+            out.append({"code": code.lower(), "message": code.replace("_", " ").lower()})
+        else:
+            out.append({"code": mapped[0], "message": mapped[1]})
+    return out
+
+
 def _load_thresholds_json(db: Session) -> str:
     from app.models import Settings as SettingsRow
 
@@ -122,12 +142,16 @@ def get_run_status(
     else:
         duration = None
 
+    raw_warnings: list[str] = json.loads(row.warnings_json) if row.warnings_json else []
+
     return success(
         {
             "run_id": row.run_id,
             "status": row.status,
             "progress_percent": int(row.progress_percent or 0),
             "current_step": row.current_step,
+            "message": row.current_step,
+            "warnings": _map_warnings(raw_warnings),
             "started_at": started_at,
             "completed_at": completed_at,
             "duration_seconds": duration,

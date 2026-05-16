@@ -239,3 +239,26 @@ def test_delete_run_cascade(client, auth_headers, screening_data):
             .where(ScreeningResult.run_id == run_id)
         )
         assert (after_results or 0) == 0
+
+
+# ---------------------------------------------------------------------------
+# FE contract — status response always carries `warnings` (≥ [])
+# ---------------------------------------------------------------------------
+
+
+def test_get_run_status_includes_warnings_field(client, auth_headers, screening_data):
+    """RunStatusResponse.warnings (extra='forbid') is consumed by FE RunContext +
+    RunHistoryTable + ConfidenceCard + RedFlagsBadgesTable. Guard against silent
+    field removal that would crash FE on parse.
+    """
+    r = client.post("/api/run", json={"total_capital": 0}, headers=auth_headers)
+    run_id = r.json()["data"]["run_id"]
+
+    rs = client.get(f"/api/runs/{run_id}/status", headers=auth_headers)
+    assert rs.status_code == 200
+    data = rs.json()["data"]
+    assert "warnings" in data, "RunStatusResponse must always include `warnings` field"
+    assert isinstance(data["warnings"], list)
+    for w in data["warnings"]:
+        # Shape per RunWarning schema: {code, message}
+        assert {"code", "message"} <= set(w.keys())

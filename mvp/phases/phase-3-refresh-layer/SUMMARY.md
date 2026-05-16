@@ -138,3 +138,23 @@ Phase 4 (Engines + Features + Risk) sẽ thêm:
 ## 9. Post-phase fixes
 
 *(append entry mỗi khi user request fix Phase 3 sau khi phase đã đóng)*
+
+### 2026-05-16 — Cache STUB usability gate (reviewer round 2)
+
+**Bug:** `cache_manager.is_stale()` chỉ check `last_refreshed_at + ttl_hours`, bỏ qua
+`meta.status`. `refresh_service` mark financial cache `status="STUB"` (crawler chưa
+thật), nhưng TTL vẫn hợp lệ nên downstream `_data_from_cache()` ở screening trả
+False → FE không bật badge DATA_FROM_CACHE → user "bị lừa fresh".
+
+**Fix ([cache_manager.py](../../code/app/crawlers/cache_manager.py)):** Thêm `is_usable(db, source_key, *, now=None)` riêng — trả
+True iff (meta exists) AND (last_refreshed_at exists) AND (status == "FRESH") AND
+(TTL còn hợp lệ). Giữ nguyên `is_stale()` TTL-only để refresh job KHÔNG tự re-trigger
+vô tận sau khi mark STUB (just-STUB → not FRESH → "stale" → fetch lại = infinite
+loop). Downstream gate (screening, UI badges) → `is_usable()`. Refresh gate →
+`is_stale()`.
+
+**Tests:** [test_cache_manager.py](../../code/tests/unit/test_cache_manager.py) +7 cases cho `is_usable()`:
+missing meta, no refreshed_at, fresh within TTL, expired TTL, STUB-within-TTL (key
+regression), arbitrary non-FRESH status, explicit `now`.
+
+**Files:** [cache_manager.py](../../code/app/crawlers/cache_manager.py) +14 LOC; [test_cache_manager.py](../../code/tests/unit/test_cache_manager.py) +60 LOC.
