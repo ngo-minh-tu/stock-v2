@@ -2,7 +2,7 @@
 
 **Author:** Ngô Minh Tú · **Drafted:** 2026-05-10
 **Spec base:** PRD v0.5A · SRS v1.4 · TAD v1.5 (post-prototype reconciliation 6/6)
-**Folder code backend:** `mvp/code/` (cạnh `mvp/PLAN.md`, `mvp/phases/`). Layout: `mvp/{PLAN.md, phases/, code/}` — `code/` chứa toàn bộ Python source + Dockerfile + tests + lockfile; `phases/` chứa summary mỗi phase.
+**Folder code backend:** `mvp/code/` (cạnh `mvp/phases/`). Plan file đã move sang `plan/PLAN.md`. Layout: `plan/PLAN.md` + `mvp/{phases/, code/}` — `code/` chứa toàn bộ Python source + Dockerfile + tests + lockfile; `phases/` chứa summary mỗi phase.
 
 > Quy tắc: **Build code MVP trước, README.md viết SAU CÙNG** (Phase 11). README chỉ chốt lại sau khi toàn bộ stack chạy được — tránh maintenance drift trong lúc build.
 >

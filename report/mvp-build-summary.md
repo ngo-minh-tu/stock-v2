@@ -1,7 +1,7 @@
 # MVP Build Summary — VN Real Estate AI Screener
 
 **Author:** Ngô Minh Tú · **Drafted:** 2026-05-11
-**Phase scope:** 0 → 10 (post-prototype build pack) · **Source:** [mvp/PLAN.md](../mvp/PLAN.md)
+**Phase scope:** 0 → 10 (post-prototype build pack) · **Source:** [plan/PLAN.md](../plan/PLAN.md)
 **Status:** ✅ Ready cho Phase 11 (README.md) + production handoff
 
 ---
@@ -131,7 +131,7 @@ Phase 11 (README) chưa start — deferred theo PLAN convention.
 
 ## 5. Out-of-MVP backlog (PRD/TAD intentional defers)
 
-From [mvp/PLAN.md §6](../mvp/PLAN.md):
+From [plan/PLAN.md §6](../plan/PLAN.md):
 
 - **XGBoost training pipeline + scoring_xgboost real** — baseline ships, ABC interface ready
 - **LSTM training + price_lstm real** — naive trend price_baseline ships
