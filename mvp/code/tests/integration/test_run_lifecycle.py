@@ -74,7 +74,7 @@ def test_run_lifecycle_completes_with_results(client, auth_headers, screening_da
     rsum = client.get(f"/api/runs/{run_id}", headers=auth_headers)
     assert rsum.status_code == 200
     summ = rsum.json()["data"]
-    assert summ["total_input"] == 81
+    assert summ["total_input"] == 26
     assert summ["scored_count"] > 0
     # AC-01-10: buy + hold + sell == scored_count
     assert summ["buy_count"] + summ["hold_count"] + summ["sell_count"] == summ["scored_count"]

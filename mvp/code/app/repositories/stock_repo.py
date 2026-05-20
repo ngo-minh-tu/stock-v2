@@ -9,7 +9,16 @@ from app.models import Stock
 
 
 def list_active_tickers(db: Session) -> list[str]:
-    return list(db.scalars(select(Stock.ticker).where(Stock.status == "ACTIVE")))
+    # Exclude MOCK* seed fillers from refresh universe; they would otherwise dominate
+    # failed_tickers stats and block cache=FRESH on real-data refresh.
+    return list(
+        db.scalars(
+            select(Stock.ticker).where(
+                Stock.status == "ACTIVE",
+                ~Stock.ticker.like("MOCK%"),
+            )
+        )
+    )
 
 
 def list_all_stocks(db: Session) -> list[Stock]:
