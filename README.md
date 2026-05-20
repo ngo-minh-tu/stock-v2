@@ -4,7 +4,7 @@
 
 AI-assisted screener cho cổ phiếu bất động sản niêm yết Việt Nam. Single-user MVP — frontend Next.js + backend FastAPI + SQLite.
 
-**Status (2026-05-11):** MVP Phase 0-11 đã ship. Sẵn sàng integration testing với production data.
+**Status (2026-05-20):** MVP Phase 0-18 đã ship. Mốc 1 (demo stability), Mốc 2 (production-data hardening + closure thật) và Mốc 3 steps 1-7 (financial source fallback + release hardening) đã đóng. Prod DB scored_count=17 với real vnstock data; `vnstock_price=FRESH` + `vnstock_financial=FRESH`. Mốc 3 step 8 (Playwright critical-path smoke) carry sang Phase 19.
 
 ---
 
@@ -14,14 +14,16 @@ AI-assisted screener cho cổ phiếu bất động sản niêm yết Việt Nam
 |---|---|
 | Chạy backend local | [mvp/README.md](mvp/README.md) — uv sync + alembic + seed + uvicorn (5 phút) |
 | Chạy frontend local | [frontend/README.md](frontend/README.md) — npm install + .env.local + npm run dev |
-| Xem build history + drift register | [report/mvp-build-summary.md](report/mvp-build-summary.md) |
+| Xem build history + drift register | [report/mvp-build/SUMMARY.md](report/mvp-build/SUMMARY.md) |
 | Đọc spec (PRD/SRS/TAD) | [docs/](docs/) |
-| Audit từng phase | [mvp/phases/](mvp/phases/) — 11 SUMMARY.md per phase |
+| Audit từng phase | [mvp/phases/](mvp/phases/) — SUMMARY.md per phase |
 
 Quick start full stack:
 ```bash
-# Terminal 1 — backend
-cd mvp/code && uv sync && uv run alembic upgrade head && uv run python -m app.db.seed
+# Terminal 1 — backend demo ổn định
+cd mvp/code && uv sync
+cp env.demo.example .env
+uv run python -m app.db.demo_seed
 uv run uvicorn app.main:app --port 8000
 
 # Terminal 2 — frontend
@@ -41,9 +43,8 @@ stock-v2/
 ├── README.md             # ← bạn đang đọc
 ├── mvp/                  # Backend FastAPI (active)
 │   ├── README.md
-│   ├── PLAN.md           # 11-phase build plan
-│   ├── code/             # source backend + tests + Dockerfile
-│   └── phases/           # SUMMARY.md per phase
+│   ├── code/             # source backend + tests + Dockerfile + 4 env templates
+│   └── phases/           # SUMMARY.md per phase (0-18)
 ├── frontend/             # Frontend Next.js 14 (active, post-Phase 9 swap)
 │   ├── README.md
 │   └── src/              # app router + components + lib
@@ -54,10 +55,12 @@ stock-v2/
 │   ├── tad/              # g01-g09 + c01-c08
 │   ├── design.md
 │   └── system-architecture/
-├── report/               # Build summaries
-│   ├── mvp-build-summary.md
-│   └── cluster-{1..6}-summary.md
-├── script/               # Helper bash (run-prototype, run-ngrok)
+├── plan/                 # PLAN.md (18+ phase build plan, promoted from mvp/ 2026-05-16)
+├── report/               # Báo cáo theo folder chủ đề
+│   ├── cluster-prompts/  # cluster-{1..6}-summary.md
+│   ├── mvp-build/        # SUMMARY.md
+│   └── phase-mvp/        # phase-12 ... phase-18
+├── script/               # Bash helpers (run-prototype, run-ngrok, backup-db, restore-db, cron-refresh)
 └── prompts/              # Cluster build prompts
 ```
 
@@ -97,17 +100,25 @@ stock-v2/
 | 9 | FE swap MSW → real | ✅ |
 | 10 | Integration QA + bug fixes | ✅ |
 | 11 | README | ✅ |
+| 12 | Production-data QA | ✅ |
+| 13 | Demo stability / DB isolation | ✅ |
+| 14 | Production Data Hardening (Mốc 2 prices code) | ✅ |
+| 15 | Financial Data Ingestion (Mốc 2 BCTC code) | ✅ |
+| 16 | MVP Data Readiness Closure (Mốc 2 thật) | ✅ |
+| 17 | Financial Source Fallback (Mốc 3 step 1, VCI→KBS) | ✅ |
+| 18 | MVP Release Hardening (Mốc 3 steps 2-7) | ✅ |
+| 19 | Playwright critical-path smoke (Mốc 3 step 8) | ⏭ next |
 
-Chi tiết drift register + post-MVP backlog: [report/mvp-build-summary.md](report/mvp-build-summary.md).
+Chi tiết drift register + post-MVP backlog: [report/mvp-build/SUMMARY.md](report/mvp-build/SUMMARY.md). Phase 16-18 deliverables: [mvp/phases/phase-16-mvp-data-readiness-closure/](mvp/phases/phase-16-mvp-data-readiness-closure/), [phase-17-financial-source-fallback/](mvp/phases/phase-17-financial-source-fallback/), [phase-18-mvp-release-hardening/](mvp/phases/phase-18-mvp-release-hardening/).
 
 ---
 
 ## 5. License & author
 
-- **Author:** Ngô Minh Tú (Business-Analyst: Claude AI)
+- **Author:** Ngô Minh Tú (Business-Analyst: Claude AI-OpenAI Codex)
 - **License:** Private — chưa cấp phép phân phối công khai.
 - **Disclaimer:** Tool hỗ trợ phân tích, KHÔNG phải khuyến nghị đầu tư. Người dùng tự chịu trách nhiệm quyết định.
 
 ---
 
-*Cập nhật 2026-05-11 (Phase 11 MVP).*
+*Cập nhật 2026-05-20 (Phase 18 release hardening đã đóng — Mốc 1+2+Mốc 3 steps 1-7).*

@@ -4,7 +4,7 @@
 
 Next.js 14 App Router frontend cho VN RE AI Screener. Fork từ [prototype/](../prototype/) ngày 2026-05-09; Phase 9 đã swap MSW → backend FastAPI thực ([mvp/](../mvp/)).
 
-**Status (2026-05-11):** Phase 9 complete + Phase 10 bug fix integrated. Cluster 1-6 UI features hoàn chỉnh.
+**Status (2026-05-20):** Phase 9 complete + Phase 10 bug fix integrated. Cluster 1-6 UI features hoàn chỉnh. Backend đã ship qua Phase 18 (Mốc 2 + Mốc 3 steps 1-7) với prod-screener.db real data; FE chưa cần thay đổi cho phần đó. ⚠️ Phase 18 audit phát hiện 3 FE vulns (1 critical `next` + 2 moderate `next-intl`/`postcss`) — cần Next 16 breaking upgrade trong cycle riêng (Phase 19+). Playwright critical-path smoke Phase 19 sẽ chạy ở đây.
 
 ---
 
@@ -12,7 +12,7 @@ Next.js 14 App Router frontend cho VN RE AI Screener. Fork từ [prototype/](../
 
 - Node 20+ (Next 14 không hỗ trợ Node 17 cũ)
 - npm 10+ (đi kèm Node 20)
-- Backend MVP chạy ở `http://localhost:8000` (xem [mvp/README.md](../mvp/README.md))
+- Backend MVP chạy ở `http://localhost:8000` (xem [mvp/README.md](../mvp/README.md)). Với demo ổn định, backend nên dùng `mvp/code/env.demo.example` + `app.db.demo_seed`.
 
 ---
 
@@ -33,7 +33,7 @@ npm run dev
 # Login: password = ChangeMe123! (mặc định seed)
 ```
 
-Sau khi login, sẽ vào dashboard. Nếu chưa có run nào COMPLETED thì 8 page sẽ empty — chạy 1 lần `POST /api/run` từ backend trước hoặc bấm nút "Chạy run" (cluster 2 UI).
+Sau khi login, sẽ vào dashboard. Nếu backend đã chạy `uv run python -m app.db.demo_seed`, DB demo có sẵn `run_demo_latest` nên dashboard/results/top MUA/stock detail có dữ liệu ngay.
 
 ---
 
@@ -133,7 +133,7 @@ frontend/src/
 
 Sau Phase 9, schema canonical = backend ([mvp/code/app/schemas/](../mvp/code/app/schemas/)). FE [`lib/types.ts`](src/lib/types.ts) mirror Pydantic — khi backend đổi shape, FE adapt.
 
-Reconciles đã làm trong Phase 9 + Phase 10 (xem [report/mvp-build-summary.md §4.A](../report/mvp-build-summary.md)):
+Reconciles đã làm trong Phase 9 + Phase 10 (xem [report/mvp-build/SUMMARY.md §4.A](../report/mvp-build/SUMMARY.md)):
 - `reason_text` (excluded list)
 - `SharedViewResponse {token, run_id, expires_at, data: {summary, dashboard, top_mua}}`
 - `BacktestStatusResponse` không có `progress_percent` / `current_step`
@@ -180,15 +180,26 @@ npx tsc --noEmit   # xem full error
 npm run lint        # eslint errors
 ```
 
+### Known security vulns (Phase 18 audit — defer)
+`npm audit --production` cho 3 vulns, tất cả qua Next 16 breaking upgrade nên defer sang cycle riêng:
+
+| Package | Severity | Fix |
+|---|---|---|
+| `next` < 16.3.0-canary.5 | CRITICAL | Upgrade `next@16.2.6` (breaking) |
+| `next-intl` ≤ 4.9.1 | MODERATE | Open redirect + prototype pollution. Upgrade `next-intl@4.12.0` (breaking) |
+| `postcss` < 8.5.10 | MODERATE | XSS via unescaped `</style>`. Auto-fix qua Next upgrade |
+
+Tham khảo Phase 18 SUMMARY [report/phase-mvp/phase-18-mvp-release-hardening/SUMMARY.md](../report/phase-mvp/phase-18-mvp-release-hardening/SUMMARY.md) §6.
+
 ---
 
 ## 11. Liên kết
 
 - Backend setup: [mvp/README.md](../mvp/README.md)
-- Build history + drift register: [report/mvp-build-summary.md](../report/mvp-build-summary.md)
+- Build history + drift register: [report/mvp-build/SUMMARY.md](../report/mvp-build/SUMMARY.md)
 - Phase 9 swap details: [mvp/phases/phase-9-fe-swap/SUMMARY.md](../mvp/phases/phase-9-fe-swap/SUMMARY.md)
 - Frozen prototype: [prototype/](../prototype/) (FE reference, KHÔNG develop tiếp)
 
 ---
 
-*Cập nhật 2026-05-11 (Phase 11) · Replace previous cluster-1-era README post Phase 9 swap.*
+*Cập nhật 2026-05-20 (Phase 18 release hardening đã đóng — backend side; FE security upgrade defer Phase 19+).*
