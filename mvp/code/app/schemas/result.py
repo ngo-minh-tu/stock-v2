@@ -145,29 +145,52 @@ class TopByScore(BaseModel):
 
 class IndexTrendPoint(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    week: str  # ISO yyyy-Www
+    date: str  # ISO yyyy-mm-dd (week-aligned)
     vnindex: float
-    realestate_index: float
+    sector: float
 
 
-class DashboardKpis(BaseModel):
+class TopUpsideRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    ticker: str
+    upside_pct: float
+
+
+class DashboardKpi(BaseModel):
     model_config = ConfigDict(extra="forbid")
     scored_count: int
     buy_count: int
     hold_count: int
     sell_count: int
-    alpha_pct: float  # avg upside MUA - VN-Index 3M proxy
+    avg_buy_score: float
+    top_upside: TopUpsideRef | None
+    alpha_vs_vnindex_pct: float  # avg upside MUA - VN-Index 3M proxy
+
+
+class PieSlice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    recommendation: str
+    count: int
+
+
+class DashboardLineSeries(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    points: list[IndexTrendPoint]
 
 
 class DashboardResponse(BaseModel):
-    """GET /api/runs/{run_id}/dashboard — SRS f04 + Cluster 2 layout."""
+    """GET /api/runs/{run_id}/dashboard — SRS f04 + Cluster 2 layout.
+
+    Field names align with the FE `DashboardResponse` type so apiFetch can
+    surface the payload directly (no adapter layer).
+    """
 
     model_config = ConfigDict(extra="forbid")
     run_id: str
     run_at: str
-    kpis: DashboardKpis
-    treemap: list[TreemapCell]  # all scored
-    pie: dict[str, int]  # {MUA, GIU, BAN}
-    radar_avg: dict[str, float]  # 5 group means của tất cả scored
-    index_trend: list[IndexTrendPoint]  # 26 weekly points
-    top_by_score: list[TopByScore]  # top 10
+    kpi: DashboardKpi
+    treemap: list[TreemapCell]
+    pie: list[PieSlice]
+    radar: dict[str, float]  # 5 group means
+    line: DashboardLineSeries  # 26 weekly points
+    bar: list[TopByScore]  # top 10

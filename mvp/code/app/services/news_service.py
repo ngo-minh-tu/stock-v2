@@ -42,7 +42,7 @@ def list_news(
     for r in rows:
         items.append(
             {
-                "id": int(r.id),
+                "article_id": str(r.id),
                 "source": r.source,
                 "title": r.title,
                 "url": r.url,

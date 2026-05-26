@@ -39,8 +39,12 @@ def test_compare_full_shape(client, auth_headers, screening_data):
     for metric in ("scored", "buy_count", "hold_count", "sell_count", "avg_score", "duration_seconds"):
         assert metric in sd
         assert {"a", "b", "delta"} <= sd[metric].keys()
-        # delta = b - a invariant
-        assert abs(sd[metric]["delta"] - (sd[metric]["b"] - sd[metric]["a"])) < 0.01
+        # delta = b - a invariant. Tolerance 0.011 thay vì 0.01 (Phase 28 flake fix):
+        # BE rounds delta + a + b mỗi field độc lập tới 2dp → worst-case 3 rounding
+        # errors stack có thể vượt 0.01 (vd a=4.78 b=4.84 delta=-0.07 → |delta - (b-a)|
+        # = 0.010000000000000397). 0.011 vẫn catch real bug (delta sign flip, off-by-1
+        # rounding direction) nhưng không trigger floating-point flake.
+        assert abs(sd[metric]["delta"] - (sd[metric]["b"] - sd[metric]["a"])) < 0.011
 
     # Same data → 0 new entries / removed (cùng 81 stocks ACTIVE survive)
     assert data["new_entries"] == []

@@ -43,17 +43,32 @@ def test_test_requires_auth(client):
     assert client.post("/api/telegram/test").status_code == 401
 
 
-def test_unconfigured_returns_sent_false(client, auth_headers, restore_settings_telegram):
-    """Settings empty + env empty → `sent=false` với clear error message."""
-    _set_creds("", "")
-    r = client.post("/api/telegram/test", headers=auth_headers)
-    assert r.status_code == 200
-    body = r.json()
-    # Envelope success
-    assert body["success"] is True
-    assert body["data"]["sent"] is False
-    assert body["data"]["error"] is not None
-    assert "chưa cấu h\xecnh" in body["data"]["error"]  # "chưa cấu hình"
+def test_unconfigured_returns_sent_false(
+    client, auth_headers, restore_settings_telegram, monkeypatch
+):
+    """Settings empty + env empty → `sent=false` với clear error message.
+
+    Phase 20 chain-loads `.env.telegram` for local dev, so env vars are
+    populated. The unconfigured-path test must clear them explicitly to
+    exercise the empty-credentials branch — otherwise the endpoint would
+    fall back to the developer's real Bot creds and hit the live API.
+    """
+    from app.config import get_settings
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "")
+    get_settings.cache_clear()
+    try:
+        _set_creds("", "")
+        r = client.post("/api/telegram/test", headers=auth_headers)
+        assert r.status_code == 200
+        body = r.json()
+        assert body["success"] is True
+        assert body["data"]["sent"] is False
+        assert body["data"]["error"] is not None
+        assert "chưa cấu h\xecnh" in body["data"]["error"]  # "chưa cấu hình"
+    finally:
+        get_settings.cache_clear()
 
 
 def test_telegram_api_success(client, auth_headers, restore_settings_telegram, monkeypatch):

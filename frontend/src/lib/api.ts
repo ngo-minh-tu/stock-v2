@@ -1,12 +1,12 @@
 // fetch wrapper. Auto-attaches JWT (Bearer), parses {success,data}|{success,error} envelope (g05 §3).
 // 401 → clear token + redirect /login. 409 → throw JobConflictError (cluster 2 will use it).
 //
-// Phase 9 (FE swap MSW → real backend):
-// - Path argument starts with `/api/...` (cluster pattern unchanged).
-// - When `NEXT_PUBLIC_API_BASE_URL` is set (e.g. `http://localhost:8000`), it is prepended.
-// - When unset/empty, the path stays relative — MSW worker (if registered) intercepts, OR
-//   the request hits the same Next origin (no-op if no proxy). Default Phase 9 deployment
-//   sets the env var to the FastAPI host so MSW is bypassed entirely.
+// Base URL resolution:
+// - Path argument starts with `/api/...`.
+// - `NEXT_PUBLIC_API_BASE_URL` empty (default) → relative path → hit same Next origin →
+//   Next.js rewrite (next.config.js) proxy `/api/*` sang BE FastAPI. Hợp với ngrok single-tunnel.
+// - `NEXT_PUBLIC_API_BASE_URL` set → prepend (bypass proxy, gọi BE trực tiếp; cần CORS ở BE).
+// - MSW worker (nếu `NEXT_PUBLIC_ENABLE_MSW=true`) intercept trước khi ra network.
 
 import { STORAGE_KEYS } from './constants';
 import type { ApiEnvelope } from './types';
@@ -14,7 +14,7 @@ import type { ApiEnvelope } from './types';
 // Strip trailing slash to keep `${BASE}${path}` clean (path always has leading `/`).
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
 
-function resolveUrl(path: string): string {
+export function resolveUrl(path: string): string {
   if (!BASE_URL) return path;
   // Absolute URL passes through unchanged (e.g. external resource).
   if (/^https?:\/\//i.test(path)) return path;

@@ -93,15 +93,13 @@ export function buildPriceBoardItems(): StockListItem[] {
     const fromRun = computedByTicker.get(seed.ticker);
     const fallback = 12 + (seed.seed % 80) + Number(((seed.seed * 7) % 100) / 100); // 12..92, 2dp
     const anchoredClose = fromRun ?? r2(fallback);
-    const latest_price = computeLatestPrice({ seed, anchoredClose });
+    const latest = computeLatestPrice({ seed, anchoredClose });
     return {
       ticker: seed.ticker,
       name: seed.name,
       exchange: seed.exchange,
       sector: seed.sector,
-      current_price: latest_price.close,
-      reference_price: latest_price.reference,
-      latest_price,
+      latest,
       newly_listed: NEWLY_LISTED_INDEXES.has(i),
     } satisfies StockListItem;
   });

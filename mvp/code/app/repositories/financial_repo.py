@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
@@ -28,15 +28,28 @@ _UPSERT_FIELDS = (
     "audit_opinion",
 )
 
+# `year` + `quarter` always come together and are non-null on every upsert row
+# (the validator below enforces that). Everything else may be sparse — the fallback
+# source might fill in a single missing column, so we don't want a sparser row
+# to wipe out a richer one. Phase 21 — Codex Phase 17/18 finding.
+_NO_DOWNGRADE_FIELDS = tuple(f for f in _UPSERT_FIELDS if f not in ("year", "quarter"))
+
 
 def bulk_upsert(db: Session, rows: list[dict]) -> int:
     """Upsert quarterly financial rows by (ticker, period). Skip incomplete rows.
 
-    Normalizes each row to the same key set (`ticker`, `period`, plus all `_UPSERT_FIELDS`)
-    with `None` for missing fields. SQLAlchemy's bulk INSERT fails on heterogeneous keys
-    when a missing column has no Python-side default.
+    Phase 21 changes:
+    - **No-downgrade upsert**: when a new row carries `None` for a field, keep the
+      existing DB value (`COALESCE(excluded.field, FinancialReport.field)`). The
+      fallback source (KBS) often returns sparse rows; without this guard a sparse
+      KBS upsert could overwrite a richer VCI row for the same `(ticker, period)`.
+    - Year/quarter still hard-overwrite (they index the period and are always present
+      on every row we accept).
     """
-    valid = [r for r in rows if r.get("ticker") and r.get("period") and r.get("year") and r.get("quarter")]
+    valid = [
+        r for r in rows
+        if r.get("ticker") and r.get("period") and r.get("year") and r.get("quarter")
+    ]
     if not valid:
         return 0
 
@@ -45,10 +58,13 @@ def bulk_upsert(db: Session, rows: list[dict]) -> int:
         for r in valid
     ]
     stmt = sqlite_insert(FinancialReport).values(normalized)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=["ticker", "period"],
-        set_={field: getattr(stmt.excluded, field) for field in _UPSERT_FIELDS},
-    )
+    set_map: dict = {"year": stmt.excluded.year, "quarter": stmt.excluded.quarter}
+    for field in _NO_DOWNGRADE_FIELDS:
+        set_map[field] = func.coalesce(
+            getattr(stmt.excluded, field),
+            getattr(FinancialReport, field),
+        )
+    stmt = stmt.on_conflict_do_update(index_elements=["ticker", "period"], set_=set_map)
     db.execute(stmt)
     return len(normalized)
 

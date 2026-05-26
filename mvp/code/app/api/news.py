@@ -9,7 +9,7 @@ from fastapi import APIRouter, Path, Query
 
 from app.core.envelope import success
 from app.dependencies import CurrentUser, DbSession
-from app.services import news_service
+from app.services import news_crawl_service, news_service
 
 router = APIRouter(tags=["news"])
 
@@ -66,3 +66,13 @@ def get_news_sentiment(
     days: Annotated[int, Query(ge=1, le=365)] = 30,
 ) -> dict:
     return success(news_service.sentiment_summary(db, ticker=ticker.upper(), days=days))
+
+
+@router.post("/news/refresh")
+def refresh_news(_user: CurrentUser, db: DbSession) -> dict:
+    """Crawl 5 nguồn (CafeF/VnExpress/Vietstock/Batdongsan/ThanhNien) → classify → upsert.
+
+    SRS f10 AC-10-01: source down → skip + source_errors[]. Response 200 OK.
+    TAD c04 §1: RSS first → HTML fallback → skip if blocked.
+    """
+    return success(news_crawl_service.refresh_news(db))

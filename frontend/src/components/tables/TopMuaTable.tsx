@@ -19,11 +19,16 @@ import { Fragment, useMemo, useState } from 'react';
 import { EntrySignalChip } from '@/components/badges/EntrySignalChip';
 import { RecommendationBadge } from '@/components/badges/RecommendationBadge';
 import { WarningBadge } from '@/components/badges/WarningBadge';
+import type { Recommendation } from '@/lib/constants';
 import type { ScreeningResult } from '@/lib/types';
 
 interface Props {
   results: ScreeningResult[];
   runId: string;
+  recommendation?: Recommendation;
+  limit?: number;
+  showTitle?: boolean;
+  tickerAction?: 'expand' | 'detail';
   /** Cluster 6 §4.3 — public Shared View hides the expander + "Xem chi tiết" link. */
   readOnly?: boolean;
 }
@@ -33,9 +38,20 @@ function formatVnd(amount: number | undefined): string {
   return amount.toLocaleString('fr-FR') + ' VND';
 }
 
+function formatPriceK(price: number | undefined): string {
+  if (typeof price !== 'number') return '—';
+  return `${price.toFixed(2)}k`;
+}
+
 function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
   const t = useTranslations('topMua.expand');
   const router = useRouter();
+  const reasons = row.reasons ?? [];
+  const warningBadges = row.warning_badges ?? [];
+  const confidenceRaw = typeof row.confidence_raw === 'number' ? row.confidence_raw : '—';
+  const confidencePenalty =
+    typeof row.confidence_penalty === 'number' ? row.confidence_penalty : 0;
+
   return (
     <div
       className="px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"
@@ -45,14 +61,22 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
         <div className="font-medium mb-1" style={{ color: 'var(--color-theme-text-tertiary)' }}>
           {t('reasons')}
         </div>
-        <ul className="list-disc list-inside space-y-0.5">
-          {row.reasons.map((r, i) => (
-            <li key={i}>
-              {r.text}{' '}
-              <span style={{ color: 'var(--color-theme-text-secondary)' }}>({r.feature_id})</span>
-            </li>
-          ))}
-        </ul>
+        {reasons.length > 0 ? (
+          <ul className="list-disc list-inside space-y-0.5">
+            {reasons.map((r, i) => (
+              <li key={`${r.feature_id}-${i}`}>
+                {r.text}{' '}
+                <span style={{ color: 'var(--color-theme-text-secondary)' }}>
+                  ({r.feature_id})
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <span style={{ color: 'var(--color-theme-text-secondary)' }}>
+            {t('noReasons')}
+          </span>
+        )}
       </div>
 
       <div>
@@ -62,11 +86,11 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
         <ul className="space-y-1">
           <li>
             {t('buyPrice')}:{' '}
-            <span style={{ color: 'var(--ssi-up)' }}>{row.buy_price?.toFixed(2)}k</span>
+            <span style={{ color: 'var(--ssi-up)' }}>{formatPriceK(row.buy_price)}</span>
           </li>
           <li>
             {t('stopLoss')}:{' '}
-            <span style={{ color: 'var(--ssi-down)' }}>{row.stop_loss_price?.toFixed(2)}k</span>
+            <span style={{ color: 'var(--ssi-down)' }}>{formatPriceK(row.stop_loss_price)}</span>
           </li>
           <li>
             {t('allocation')}: {formatVnd(row.allocation_amount)}
@@ -78,11 +102,11 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
             )}
           </li>
           <li>
-            {t('confidence')}: {row.confidence_raw}
-            {row.confidence_penalty > 0 && (
+            {t('confidence')}: {confidenceRaw}
+            {confidencePenalty > 0 && typeof row.confidence === 'number' && (
               <>
                 {' '}
-                − {row.confidence_penalty} ={' '}
+                − {confidencePenalty} ={' '}
                 <span style={{ color: 'var(--color-theme-text-tertiary)' }}>{row.confidence}</span>
               </>
             )}
@@ -91,7 +115,7 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        {row.warning_badges.length > 0 ? (
+        {warningBadges.length > 0 ? (
           <>
             <div
               className="font-medium"
@@ -100,7 +124,7 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
               {t('warnings')}
             </div>
             <div className="flex flex-wrap gap-1">
-              {row.warning_badges.map((b) => (
+              {warningBadges.map((b) => (
                 <WarningBadge key={b} value={b} size="sm" />
               ))}
             </div>
@@ -127,16 +151,31 @@ function ExpandRow({ row, runId }: { row: ScreeningResult; runId: string }) {
   );
 }
 
-export function TopMuaTable({ results, runId, readOnly = false }: Props) {
+export function TopMuaTable({
+  results,
+  runId,
+  recommendation = 'MUA',
+  limit = 10,
+  showTitle = false,
+  tickerAction = 'expand',
+  readOnly = false,
+}: Props) {
   const t = useTranslations('topMua');
   const tCol = useTranslations('topMua.column');
+  const tRecommendation = useTranslations('recommendation');
+  const router = useRouter();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'ai_score', desc: true }]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [globalFilter, setGlobalFilter] = useState('');
 
-  const buys = useMemo(
-    () => results.filter((r) => r.recommendation === 'MUA'),
-    [results],
+  const recommendationLabel = tRecommendation(recommendation);
+  const rows = useMemo(
+    () =>
+      results
+        .filter((r) => r.recommendation === recommendation)
+        .sort((a, b) => b.ai_score - a.ai_score)
+        .slice(0, limit),
+    [limit, recommendation, results],
   );
 
   const columns = useMemo<ColumnDef<ScreeningResult>[]>(
@@ -174,7 +213,15 @@ export function TopMuaTable({ results, runId, readOnly = false }: Props) {
             <button
               type="button"
               className="font-bold underline-offset-2 hover:underline"
-              onClick={() => row.toggleExpanded()}
+              onClick={() => {
+                if (tickerAction === 'detail') {
+                  router.push(
+                    `/stock-detail?run_id=${encodeURIComponent(runId)}&ticker=${encodeURIComponent(row.original.ticker)}`,
+                  );
+                  return;
+                }
+                row.toggleExpanded();
+              }}
             >
               {row.original.ticker}
             </button>
@@ -202,13 +249,15 @@ export function TopMuaTable({ results, runId, readOnly = false }: Props) {
       {
         accessorKey: 'confidence',
         header: () => tCol('confidence'),
-        cell: ({ row }) => `${row.original.confidence}%`,
+        cell: ({ row }) =>
+          typeof row.original.confidence === 'number' ? `${row.original.confidence}%` : '—',
       },
       {
         accessorKey: 'upside_pct',
         header: () => tCol('upside'),
         cell: ({ row }) => {
           const u = row.original.upside_pct;
+          if (typeof u !== 'number') return <span className="opacity-50">—</span>;
           const color = u > 0 ? 'var(--ssi-up)' : u < 0 ? 'var(--ssi-down)' : 'var(--ssi-stable)';
           return <span style={{ color }}>{u > 0 ? '+' : ''}{u.toFixed(1)}%</span>;
         },
@@ -216,28 +265,35 @@ export function TopMuaTable({ results, runId, readOnly = false }: Props) {
       {
         accessorKey: 'entry_signal',
         header: () => tCol('entry'),
-        cell: ({ row }) => <EntrySignalChip value={row.original.entry_signal} />,
+        cell: ({ row }) =>
+          row.original.entry_signal ? (
+            <EntrySignalChip value={row.original.entry_signal} />
+          ) : (
+            <span className="opacity-50">—</span>
+          ),
       },
       {
         id: 'warnings',
         header: () => tCol('warnings'),
-        cell: ({ row }) =>
-          row.original.warning_badges.length > 0 ? (
+        cell: ({ row }) => {
+          const warningBadges = row.original.warning_badges ?? [];
+          return warningBadges.length > 0 ? (
             <div className="flex flex-wrap gap-1">
-              {row.original.warning_badges.map((b) => (
+              {warningBadges.map((b) => (
                 <WarningBadge key={b} value={b} size="sm" />
               ))}
             </div>
           ) : (
             <span className="opacity-50">—</span>
-          ),
+          );
+        },
       },
     ],
-    [tCol, readOnly],
+    [readOnly, router, runId, tCol, tickerAction],
   );
 
   const table = useReactTable({
-    data: buys,
+    data: rows,
     columns,
     state: { sorting, expanded, globalFilter },
     onSortingChange: setSorting,
@@ -254,19 +310,47 @@ export function TopMuaTable({ results, runId, readOnly = false }: Props) {
     },
   });
 
-  if (buys.length === 0) {
+  if (rows.length === 0) {
     return (
-      <div className="card p-6 text-center text-sm">
-        <p>{t('empty.title')}</p>
-        <p className="text-2xs mt-1" style={{ color: 'var(--color-theme-text-secondary)' }}>
-          {t('empty.hint')}
-        </p>
+      <div className="flex flex-col gap-3">
+        {showTitle && (
+          <header>
+            <h3
+              className="text-sm font-medium"
+              style={{ color: 'var(--color-theme-text-tertiary)' }}
+            >
+              {t('sectionTitle', { recommendation: recommendationLabel })}
+            </h3>
+          </header>
+        )}
+        <div
+          className="card p-3 text-sm"
+          style={{
+            borderColor: 'var(--ssi-ref)',
+            color: 'var(--color-theme-text-tertiary)',
+          }}
+        >
+          {t('empty.notice', { recommendation: recommendationLabel })}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {showTitle && (
+        <header>
+          <h3
+            className="text-sm font-medium"
+            style={{ color: 'var(--color-theme-text-tertiary)' }}
+          >
+            {t('sectionTitle', { recommendation: recommendationLabel })}
+          </h3>
+          <p className="text-2xs mt-0.5" style={{ color: 'var(--color-theme-text-secondary)' }}>
+            {t('sectionSubtitle', { count: rows.length })}
+          </p>
+        </header>
+      )}
       <label className="flex items-center gap-2 max-w-xs">
         <Search size={14} aria-hidden="true" />
         <input

@@ -1,22 +1,46 @@
 'use client';
 
 // Cluster 6 §3 — fetch the PDF blob, trigger a browser download via temporary anchor.
-// Also exposes `previewHtml` for PdfPreviewModal so we can render the same body inline.
+//
+// Phase 27 refactor (Phase 19 REVIEW Low carry):
+//   Trước: `await blob.text()` decode UTF-16 → reconstruct Blob → corrupt non-UTF8
+//   bytes nếu BE serve WeasyPrint binary PDF (real `%PDF-1.7` header).
+//   Sau: giữ NGUYÊN raw Blob từ fetch; preview HTML chỉ decode khi BE trả html_mock
+//   mode (detected qua magic bytes). `confirmDownload` dùng raw blob cached.
 
 import { useCallback, useState } from 'react';
 
-import { ApiError } from '@/lib/api';
+import { ApiError, resolveUrl } from '@/lib/api';
+import { STORAGE_KEYS } from '@/lib/constants';
 
 interface State {
   loading: boolean;
   error: string | null;
+  /** Decoded HTML cho preview iframe — null khi BE serve binary PDF (WeasyPrint mode). */
   previewHtml: string | null;
+  /** Object URL cho binary PDF preview iframe — null in html_mock mode. */
+  previewUrl: string | null;
+  /** Cached raw blob từ fetch; reused bởi `confirmDownload` — KHÔNG reconstruct. */
+  previewBlob: Blob | null;
   /** Last fetched run id, so the modal can show "Run X" without prop-drilling. */
   previewRunId: string | null;
 }
 
-async function fetchPdf(runId: string): Promise<{ blob: Blob; html: string }> {
-  const res = await fetch(`/api/export/pdf/${encodeURIComponent(runId)}`);
+const PDF_MAGIC = '%PDF';
+
+async function inspectBlobType(blob: Blob): Promise<{ isBinaryPdf: boolean }> {
+  const head = await blob.slice(0, 4).arrayBuffer();
+  const magic = new TextDecoder('ascii').decode(head);
+  return { isBinaryPdf: magic === PDF_MAGIC };
+}
+
+async function fetchPdf(runId: string): Promise<{ blob: Blob; previewHtml: string | null }> {
+  const token = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEYS.token) : null;
+  const url = resolveUrl(`/api/export/pdf/${encodeURIComponent(runId)}?_=${Date.now()}`);
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    cache: 'no-store',
+  });
   if (!res.ok) {
     // The handler returns JSON envelope on 4xx/5xx — try to extract it.
     let detail = `HTTP ${res.status}`;
@@ -29,11 +53,11 @@ async function fetchPdf(runId: string): Promise<{ blob: Blob; html: string }> {
     throw new ApiError('EXPORT_FAILED', detail, res.status);
   }
   const blob = await res.blob();
-  // We also keep the HTML (decoded from blob) so the preview iframe can show it.
-  const html = await blob.text();
-  // Re-create blob with same MIME to be safe (text() consumes — original was already cloned by fetch).
-  const downloadBlob = new Blob([html], { type: 'application/pdf' });
-  return { blob: downloadBlob, html };
+  const { isBinaryPdf } = await inspectBlobType(blob);
+  // html_mock mode → decode để render iframe preview. WeasyPrint binary → previewHtml=null
+  // (iframe sẽ hiển thị fallback message, nút Download vẫn dùng blob gốc).
+  const previewHtml = isBinaryPdf ? null : await blob.text();
+  return { blob, previewHtml };
 }
 
 function triggerDownload(blob: Blob, filename: string) {
@@ -54,6 +78,8 @@ export function useExportPdf() {
     loading: false,
     error: null,
     previewHtml: null,
+    previewUrl: null,
+    previewBlob: null,
     previewRunId: null,
   });
 
@@ -74,36 +100,72 @@ export function useExportPdf() {
 
   /** Fetch only — caller renders the preview iframe and triggers download via `confirmDownload`. */
   const loadPreview = useCallback(async (runId: string): Promise<boolean> => {
-    setState({ loading: true, error: null, previewHtml: null, previewRunId: runId });
+    setState((s) => {
+      if (s.previewUrl) URL.revokeObjectURL(s.previewUrl);
+      return {
+        loading: true,
+        error: null,
+        previewHtml: null,
+        previewUrl: null,
+        previewBlob: null,
+        previewRunId: runId,
+      };
+    });
     try {
-      const { html } = await fetchPdf(runId);
-      setState({ loading: false, error: null, previewHtml: html, previewRunId: runId });
+      const { blob, previewHtml } = await fetchPdf(runId);
+      const previewUrl = previewHtml ? null : URL.createObjectURL(blob);
+      setState({
+        loading: false,
+        error: null,
+        previewHtml,
+        previewUrl,
+        previewBlob: blob,
+        previewRunId: runId,
+      });
       return true;
     } catch (e) {
       const message = e instanceof ApiError ? e.message : 'Không thể xuất PDF.';
-      setState({ loading: false, error: message, previewHtml: null, previewRunId: runId });
+      setState({
+        loading: false,
+        error: message,
+        previewHtml: null,
+        previewUrl: null,
+        previewBlob: null,
+        previewRunId: runId,
+      });
       return false;
     }
   }, []);
 
-  /** Use the cached preview HTML to trigger the actual download. */
+  /** Use the cached raw blob to trigger the actual download. */
   const confirmDownload = useCallback(() => {
     setState((s) => {
-      if (!s.previewHtml || !s.previewRunId) return s;
-      const blob = new Blob([s.previewHtml], { type: 'application/pdf' });
-      triggerDownload(blob, `run-${s.previewRunId}.pdf`);
+      if (!s.previewBlob || !s.previewRunId) return s;
+      triggerDownload(s.previewBlob, `run-${s.previewRunId}.pdf`);
       return s;
     });
   }, []);
 
   const closePreview = useCallback(() => {
-    setState({ loading: false, error: null, previewHtml: null, previewRunId: null });
+    setState((s) => {
+      if (s.previewUrl) URL.revokeObjectURL(s.previewUrl);
+      return {
+        loading: false,
+        error: null,
+        previewHtml: null,
+        previewUrl: null,
+        previewBlob: null,
+        previewRunId: null,
+      };
+    });
   }, []);
 
   return {
     loading: state.loading,
     error: state.error,
     previewHtml: state.previewHtml,
+    previewUrl: state.previewUrl,
+    canDownload: Boolean(state.previewBlob),
     previewRunId: state.previewRunId,
     downloadDirect,
     loadPreview,

@@ -1,10 +1,12 @@
 'use client';
 
-import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
+import { Treemap, Tooltip } from 'recharts';
+import { useTranslations } from 'next-intl';
 
 import type { Recommendation } from '@/lib/constants';
 
 import { recommendationColor } from './ChartCard';
+import { ResponsiveChart } from './ResponsiveChart';
 
 interface Datum {
   ticker: string;
@@ -76,6 +78,7 @@ function TooltipContent({
   active?: boolean;
   payload?: { payload?: Datum }[];
 }) {
+  const tRecommendation = useTranslations('recommendation');
   if (!active || !payload || payload.length === 0) return null;
   const d = payload[0].payload;
   if (!d) return null;
@@ -92,7 +95,7 @@ function TooltipContent({
     >
       <div className="font-bold text-sm">{d.ticker}</div>
       <div>
-        {d.recommendation} · {d.ai_score}
+        {tRecommendation(d.recommendation)} · {d.ai_score}
       </div>
       <div style={{ opacity: 0.85 }}>
         Vốn hóa: {d.market_cap.toLocaleString('fr-FR')} tỷ
@@ -109,7 +112,7 @@ export function TreemapChart({ data }: { data: Datum[] }) {
     name: d.ticker,
   }));
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveChart>
       <Treemap
         data={items}
         dataKey="size"
@@ -120,6 +123,6 @@ export function TreemapChart({ data }: { data: Datum[] }) {
       >
         <Tooltip content={<TooltipContent />} />
       </Treemap>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { InfoBanner } from '@/components/common/InfoBanner';
 import { DashboardGrid } from '@/components/dashboard/DashboardGrid';
 import { ExportPdfButton } from '@/components/export/ExportPdfButton';
 import { RunButton } from '@/components/run/RunButton';
@@ -12,7 +13,7 @@ import { RunSelector } from '@/components/run/RunSelector';
 import { ShareButton } from '@/components/share/ShareButton';
 import { useRun } from '@/contexts/RunContext';
 import { useApiResource } from '@/lib/hooks/useApiResource';
-import type { DashboardResponse, RunsListResponse } from '@/lib/types';
+import type { DashboardResponse, RunResultsResponse, RunsListResponse } from '@/lib/types';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
@@ -41,6 +42,10 @@ export default function DashboardPage() {
 
   const dashboardRes = useApiResource<DashboardResponse>(
     selectedRunId ? `/api/runs/${selectedRunId}/dashboard` : null,
+    runsReloadKey,
+  );
+  const resultsRes = useApiResource<RunResultsResponse>(
+    selectedRunId ? `/api/runs/${selectedRunId}/results` : null,
     runsReloadKey,
   );
 
@@ -93,6 +98,12 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      <InfoBanner
+        testId="dashboard-disclaimer"
+        storageKey="dashboard-disclaimer-v1"
+        text={t('disclaimer')}
+      />
+
       {dashboardRes.loading && (
         <div
           className="flex items-center gap-2 text-sm"
@@ -109,7 +120,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {dashboardRes.data && <DashboardGrid data={dashboardRes.data} />}
+      {dashboardRes.data && (
+        <DashboardGrid data={dashboardRes.data} results={resultsRes.data?.results} />
+      )}
     </div>
   );
 }

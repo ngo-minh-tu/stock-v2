@@ -33,9 +33,10 @@ def _parse_radar(radar_json: str | None) -> dict[str, float]:
 
 
 def _vnindex_proxy_curve() -> list[dict]:
-    """26 tuần proxy — chưa wire historical VN-Index. Smooth sin curve quanh 1100.
+    """26 weekly proxy points — sin curve placeholder (Phase 8 backtest replaces with actual).
 
-    Phase 8 backtest sẽ replace bằng historical actual.
+    Output shape aligns with the frontend `LineChart`:
+    `[{date: ISO, vnindex: float, sector: float}, ...]`.
     """
     base = 1100.0
     re_base = 1050.0
@@ -44,11 +45,9 @@ def _vnindex_proxy_curve() -> list[dict]:
     for i in range(26):
         week_offset = 25 - i
         week_date = today - timedelta(weeks=week_offset)
-        iso = week_date.strftime("%Y-W%V")
-        # Sine wobble ±5% cho VN-Index, ±7% cho RE Index
         vn = round(base * (1.0 + 0.05 * math.sin(i * 0.4)), 2)
         re = round(re_base * (1.0 + 0.07 * math.sin(i * 0.3 + 1.0)), 2)
-        out.append({"week": iso, "vnindex": vn, "realestate_index": re})
+        out.append({"date": week_date.isoformat(), "vnindex": vn, "sector": re})
     return out
 
 
@@ -61,9 +60,22 @@ def build_dashboard(db: Session, run: ScreeningRun) -> dict:
     hold = sum(1 for r in rows if r.recommendation == "GIU")
     sell = sum(1 for r in rows if r.recommendation == "BAN")
 
-    buy_upsides = [float(r.upside_pct) for r in rows if r.recommendation == "MUA" and r.upside_pct is not None]
+    buy_rows = [r for r in rows if r.recommendation == "MUA"]
+    buy_upsides = [float(r.upside_pct) for r in buy_rows if r.upside_pct is not None]
     avg_buy_upside = _safe_avg(buy_upsides)
     alpha_pct = round(avg_buy_upside - DASHBOARD_VNINDEX_3M_PROXY_PCT, 1)
+    buy_scores = [float(r.ai_score) for r in buy_rows if r.ai_score is not None]
+    avg_buy_score = round(_safe_avg(buy_scores), 1) if buy_scores else 0.0
+    top_upside_row = max(
+        (r for r in buy_rows if r.upside_pct is not None),
+        key=lambda r: float(r.upside_pct),
+        default=None,
+    )
+    top_upside = (
+        {"ticker": top_upside_row.ticker, "upside_pct": round(float(top_upside_row.upside_pct), 1)}
+        if top_upside_row
+        else None
+    )
 
     # Treemap: all scored, market_cap proxy = ai_score × 10 (chưa có shares_outstanding column)
     treemap = []
@@ -81,7 +93,11 @@ def build_dashboard(db: Session, run: ScreeningRun) -> dict:
             }
         )
 
-    pie = {"MUA": buy, "GIU": hold, "BAN": sell}
+    pie = [
+        {"recommendation": "MUA", "count": buy},
+        {"recommendation": "GIU", "count": hold},
+        {"recommendation": "BAN", "count": sell},
+    ]
 
     # Radar avg 5 axes — mean across all scored
     radar_keys = ("fundamental", "technical", "macro", "realestate", "sentiment")
@@ -111,18 +127,20 @@ def build_dashboard(db: Session, run: ScreeningRun) -> dict:
     return {
         "run_id": run.run_id,
         "run_at": run.run_at.isoformat() if run.run_at else None,
-        "kpis": {
+        "kpi": {
             "scored_count": scored,
             "buy_count": buy,
             "hold_count": hold,
             "sell_count": sell,
-            "alpha_pct": alpha_pct,
+            "avg_buy_score": avg_buy_score,
+            "top_upside": top_upside,
+            "alpha_vs_vnindex_pct": alpha_pct,
         },
         "treemap": treemap,
         "pie": pie,
-        "radar_avg": radar_avg,
-        "index_trend": index_trend,
-        "top_by_score": top10,
+        "radar": radar_avg,
+        "line": {"points": index_trend},
+        "bar": top10,
     }
 
 

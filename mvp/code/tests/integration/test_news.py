@@ -47,6 +47,14 @@ def test_news_filter_sentiment(client, auth_headers):
     assert all(item["sentiment_label"] == "POSITIVE" for item in items)
 
 
+def test_news_filter_ticker_returns_only_exact_related_ticker(client, auth_headers):
+    r = client.get("/api/news?ticker=VHM&limit=100", headers=auth_headers)
+    assert r.status_code == 200
+    items = r.json()["data"]["items"]
+    assert items
+    assert all("VHM" in item["related_tickers"] for item in items)
+
+
 def test_news_mock_failure_echoes_in_errors(client, auth_headers):
     r = client.get("/api/news?mock_news_failure=CAFEF&limit=5", headers=auth_headers)
     assert r.status_code == 200
@@ -54,7 +62,7 @@ def test_news_mock_failure_echoes_in_errors(client, auth_headers):
 
 
 def test_news_sentiment_summary_with_data(client, auth_headers):
-    """1 ticker từ news fixture nên có rollup. News fixture seed random tickers từ 81 mã."""
+    """1 ticker từ news fixture nên có rollup. News fixture seed random tickers thật."""
     r = client.get("/api/news/sentiment/VHM", headers=auth_headers)
     assert r.status_code == 200
     data = r.json()["data"]
@@ -73,6 +81,7 @@ def test_news_sentiment_empty_for_unknown_ticker(client, auth_headers):
     # Verify shape consistent dù empty hay không.
     assert isinstance(data["score_avg"], (int, float))
     assert data["label_counts"] == data["label_counts"]  # well-formed
+    assert data["total"] == 0
     if data["total"] == 0:
         assert data["score_avg"] == 0.0
         assert data["source_breakdown"] == {}

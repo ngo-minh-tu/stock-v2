@@ -54,9 +54,16 @@ def list_stocks_with_prices(
     """`current_price` ưu tiên từ run mới nhất terminal (TAD g02 §7.1 anchor logic),
     fallback sang StockPrice.close mới nhất.
     """
-    stmt = select(Stock).order_by(Stock.ticker).limit(limit).offset(offset)
+    tradable_universe = ~Stock.ticker.like("MOCK%")
+    stmt = (
+        select(Stock)
+        .where(tradable_universe)
+        .order_by(Stock.ticker)
+        .limit(limit)
+        .offset(offset)
+    )
     stocks = list(db.scalars(stmt))
-    total = db.scalar(select(func.count()).select_from(Stock)) or 0
+    total = db.scalar(select(func.count()).select_from(Stock).where(tradable_universe)) or 0
 
     latest_prices = price_repo.latest_per_ticker(db)
     latest_run = screening_repo.latest_completed(db)
@@ -179,6 +186,30 @@ def _aggregate(bars: list[StockPrice], interval: str) -> list[dict]:
     return out
 
 
+def _sma(values: list[float], window: int) -> list[float | None]:
+    """Simple moving average aligned 1-to-1 với input. null khi i < window-1."""
+    out: list[float | None] = []
+    running = 0.0
+    for i, v in enumerate(values):
+        running += v
+        if i >= window:
+            running -= values[i - window]
+        out.append(round(running / window, 4) if i >= window - 1 else None)
+    return out
+
+
+def _compute_indicators(bars: list[dict]) -> dict:
+    """MA20/50/200 trên close + MA20 trên volume. Aligned 1-to-1 với bars."""
+    closes = [float(b["close"]) for b in bars]
+    volumes = [float(b["volume"]) for b in bars]
+    return {
+        "ma20": _sma(closes, 20),
+        "ma50": _sma(closes, 50),
+        "ma200": _sma(closes, 200),
+        "ma_volume_20": _sma(volumes, 20),
+    }
+
+
 def get_price_history(
     db: Session,
     *,
@@ -199,6 +230,7 @@ def get_price_history(
         "interval": interval,
         "lookback": lookback,
         "bars": aggregated,
+        "indicators": _compute_indicators(aggregated),
     }
 
 

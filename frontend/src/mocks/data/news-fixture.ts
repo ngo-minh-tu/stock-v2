@@ -7,6 +7,8 @@ import type { NewsArticle } from '@/lib/types';
 
 import { STOCK_FIXTURE } from './stocks-fixture';
 
+const NEWS_TICKER_FIXTURE = STOCK_FIXTURE.filter((s) => !s.ticker.startsWith('MOCK'));
+
 // Mulberry32 — same family as cluster 3's prices fixture for deterministic per-seed PRNG.
 function mulberry32(seed: number): () => number {
   let s = seed >>> 0;
@@ -113,7 +115,7 @@ function pickRelatedTickers(rng: () => number): string[] {
   const n = 1 + Math.floor(rng() * 3); // 1..3
   const picks = new Set<string>();
   while (picks.size < n) {
-    picks.add(STOCK_FIXTURE[Math.floor(rng() * STOCK_FIXTURE.length)].ticker);
+    picks.add(NEWS_TICKER_FIXTURE[Math.floor(rng() * NEWS_TICKER_FIXTURE.length)].ticker);
   }
   return [...picks];
 }
@@ -144,7 +146,8 @@ function buildCorpus(): NewsArticle[] {
     const score = scoreFromLabel(label, rng);
     const tpl = pickTemplate(tone, rng);
     const tickers = pickRelatedTickers(rng);
-    const titleTicker = tickers[0] ?? STOCK_FIXTURE[Math.floor(rng() * STOCK_FIXTURE.length)].ticker;
+    const titleTicker =
+      tickers[0] ?? NEWS_TICKER_FIXTURE[Math.floor(rng() * NEWS_TICKER_FIXTURE.length)].ticker;
     const n = 5 + Math.floor(rng() * 30);
     const title = tpl.tpl.replace('{T}', titleTicker).replace('{n}', String(n));
     const snippetPool = SNIPPET_TEMPLATES[tone];
@@ -174,7 +177,7 @@ function buildCorpus(): NewsArticle[] {
     });
   }
   // Sort newest-first so default list order matches user expectation.
-  out.sort((a, b) => (a.published_at < b.published_at ? 1 : -1));
+  out.sort((a, b) => ((a.published_at ?? '') < (b.published_at ?? '') ? 1 : -1));
   return out;
 }
 
@@ -199,8 +202,8 @@ export function filterArticles(filter: NewsFilter): NewsArticle[] {
     if (filter.source?.length && !filter.source.includes(a.source)) return false;
     if (filter.sentiment?.length && !filter.sentiment.includes(a.sentiment_label)) return false;
     if (filter.ticker && !a.related_tickers.includes(filter.ticker.toUpperCase())) return false;
-    if (filter.fromIso && a.published_at < filter.fromIso) return false;
-    if (filter.toIso && a.published_at > filter.toIso) return false;
+    if (filter.fromIso && (!a.published_at || a.published_at < filter.fromIso)) return false;
+    if (filter.toIso && (!a.published_at || a.published_at > filter.toIso)) return false;
     return true;
   });
 }

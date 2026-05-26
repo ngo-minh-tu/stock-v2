@@ -13,7 +13,6 @@ import type {
   SentimentSummaryResponse,
   StocksListResponse,
 } from '@/lib/types';
-import { FIXTURE_NOW_MS } from '@/mocks/data/news-fixture';
 
 import { useApiResource } from './useApiResource';
 
@@ -36,9 +35,9 @@ export interface NewsFilterParams {
 function isoFromDateRange(range: NewsDateRange): string | null {
   if (range === 'all') return null;
   const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
-  // Anchor to the news fixture's "now" so the UI window matches the corpus dates, regardless
-  // of wall-clock date when the user runs the app.
-  const ms = FIXTURE_NOW_MS - days * 24 * 60 * 60 * 1000;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const ms = today.getTime() - days * 24 * 60 * 60 * 1000;
   return new Date(ms).toISOString();
 }
 
@@ -46,7 +45,7 @@ export function buildNewsPath(p: NewsFilterParams): string {
   const params = new URLSearchParams();
   params.set('limit', String(p.limit));
   params.set('offset', String(p.offset));
-  for (const s of p.sources) params.append('source', s);
+  if (p.sources.length > 0) params.set('source', p.sources.join(','));
   for (const s of p.sentiments) params.append('sentiment', s);
   if (p.ticker) params.set('ticker', p.ticker);
   const fromIso = isoFromDateRange(p.dateRange);

@@ -35,10 +35,13 @@ export default function PortfolioPage() {
 
     return holdings.map((h) => {
       const stock = stockMap.get(h.ticker);
-      const current_price = stock?.latest_price.close ?? h.buy_price;
-      const ceiling = stock?.latest_price.ceiling ?? current_price * 1.07;
-      const floor = stock?.latest_price.floor ?? current_price * 0.93;
-      const reference = stock?.latest_price.reference ?? current_price;
+      // BE returns `latest: LatestPrice | null` (Phase 25 schema rename — sync với
+      // BE truth `StockListItem.latest`). Null khi ticker chưa có price snapshot
+      // → fall through to buy_price.
+      const current_price = stock?.latest?.close ?? h.buy_price;
+      const ceiling = stock?.latest?.ceiling ?? current_price * 1.07;
+      const floor = stock?.latest?.floor ?? current_price * 0.93;
+      const reference = stock?.latest?.reference ?? current_price;
       // Convert ngàn đồng → VND for cost / value (×1000).
       const cost_basis = Math.round(h.quantity * h.buy_price * 1000);
       const market_value = Math.round(h.quantity * current_price * 1000);

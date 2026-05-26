@@ -8,10 +8,15 @@ import {
   PriceBoardFilters,
   type PriceBoardFilterState,
 } from '@/components/price-board/PriceBoardFilters';
+import { InfoBanner } from '@/components/common/InfoBanner';
 import { PriceBoardTable } from '@/components/price-board/PriceBoardTable';
 import { useStocks } from '@/lib/hooks/useStocks';
-import type { StockListItem } from '@/lib/types';
+import type { LatestPrice, StockListItem } from '@/lib/types';
 import { EXCHANGES } from '@/lib/constants';
+
+// Phase 25: Narrow row type — page filter ensures `latest !== null` for all rows
+// passed to PriceBoardTable, matching its `PriceBoardRow` prop constraint.
+type RowWithPrice = StockListItem & { latest: LatestPrice };
 
 const DEFAULT_FILTER: PriceBoardFilterState = {
   exchanges: new Set(EXCHANGES),
@@ -36,15 +41,30 @@ export default function PriceBoardPage() {
     return [...set].sort();
   }, [data]);
 
-  const filteredRows = useMemo<StockListItem[]>(() => {
+  const filteredRows = useMemo<RowWithPrice[]>(() => {
     if (!data) return [];
-    return data.items.filter((row) => {
+    return data.items.filter((row): row is RowWithPrice => {
+      // Phase 25 schema rename: BE serves `latest: LatestPrice | null`. Hide
+      // ticker chưa có price snapshot — TTCK board hiển thị row trống sẽ gây
+      // hiểu lầm (giá 0 không phải floor).
+      if (!row.latest) return false;
       if (!filter.exchanges.has(row.exchange)) return false;
       if (filter.sector !== 'ALL' && row.sector !== filter.sector) return false;
       if (filter.newlyListedOnly && !row.newly_listed) return false;
       return true;
     });
   }, [data, filter]);
+
+  // Phase 27 — count ticker bị ẩn vì null-latest để hiển thị placeholder
+  // ("Còn N mã chưa có dữ liệu giá — chạy /refresh/all để cập nhật").
+  // Tránh trader hiểu lầm "thiếu mã trên TTCK board".
+  const missingPriceCount = useMemo(() => {
+    if (!data) return 0;
+    return data.items.reduce(
+      (n, row) => (row.latest === null ? n + 1 : n),
+      0,
+    );
+  }, [data]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,6 +103,13 @@ export default function PriceBoardPage() {
             onChange={setFilter}
             onReset={() => setFilter({ ...DEFAULT_FILTER, exchanges: new Set(EXCHANGES) })}
           />
+          {missingPriceCount > 0 && (
+            <InfoBanner
+              testId="price-board-missing-data"
+              storageKey="price-board-missing-data-v1"
+              text={t('missingData', { count: missingPriceCount })}
+            />
+          )}
           <PriceBoardTable
             rows={filteredRows}
             searchPlaceholder={t('search.placeholder')}

@@ -1,17 +1,17 @@
 /** @type {import('next').NextConfig} */
+// Proxy `/api/*` sang FastAPI BE để browser chỉ thấy same-origin (ngrok URL).
+// BE target lấy từ `BACKEND_INTERNAL_URL` (server-side env), fallback localhost:8000.
+const BACKEND_INTERNAL_URL = process.env.BACKEND_INTERNAL_URL ?? 'http://localhost:8000';
+
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config, { isServer }) => {
-    // msw/browser package exports declare `"node": null`, which the server
-    // resolution refuses. Alias it to false on the server bundle — only the
-    // client ever runs the MSW worker (see src/components/common/MswBootstrap.tsx).
-    if (isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'msw/browser': false,
-      };
-    }
-    return config;
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${BACKEND_INTERNAL_URL}/api/:path*`,
+      },
+    ];
   },
 };
 

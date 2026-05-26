@@ -1,0 +1,94 @@
+# Phase 27 — Production deploy template (post-MVP, optional).
+#
+# Single-host docker-compose cho production-like deploy 1 trader test. Bao gồm:
+#   - `backend` service: FastAPI + alembic migrate + uvicorn (Dockerfile Phase 18)
+#   - `frontend` service: Next 16 production server (build SAU clone, không bake vào image)
+#   - `nginx` service: HTTPS reverse proxy + serve FE static + proxy /api/* to backend
+#   - Volume `data` cho prod-screener.db (persist qua container restart)
+#
+# Operator setup:
+#   1. Clone repo on production host.
+#   2. `cp mvp/code/env.production.example mvp/code/.env.production` và edit
+#      JWT_SECRET (openssl rand -hex 32), INITIAL_USER_PASSWORD, FRONTEND_ORIGIN,
+#      TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. KHÔNG commit `.env.production`.
+#   3. `cd frontend && npm install && npm run build` (one-time on host).
+#   4. `docker compose up -d` — BE migrate + serve port 8000; nginx proxy 443→8000+FE.
+#   5. `docker compose exec backend python -m app.db.seed` lần đầu.
+#   6. (Optional) systemd timer chạy `script/cron-refresh.sh` daily 16:30 ICT.
+#
+# KHÔNG production-ready out-of-box: cần SSL cert (Let's Encrypt qua certbot),
+# secret manager integration (1Password / vault), firewall rules. Đây là minimal
+# baseline cho ngrok-replacement deploy 1 trader.
+
+services:
+  backend:
+    build:
+      context: ./mvp/code
+      dockerfile: Dockerfile
+    image: vn-re-screener-backend:phase-27
+    container_name: vn-re-backend
+    restart: unless-stopped
+    env_file:
+      # Secrets file (gitignored). Chứa JWT_SECRET, TELEGRAM_BOT_TOKEN, chat_id.
+      - ./mvp/code/.env.production
+    environment:
+      # Hardcoded inside container — không cần lặp trong .env.production.
+      DB_PATH: /app/data/prod-screener.db
+      APP_ENV: production
+    volumes:
+      - prod-data:/app/data
+      # Optional: bind logs ra host cho log rotation.
+      # - ./logs/backend:/app/logs
+    ports:
+      # Expose ONLY trong docker network (nginx proxy 443 → 8000). Local debug:
+      # uncomment để curl trực tiếp.
+      # - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health').read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    image: node:20-alpine
+    container_name: vn-re-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: ["sh", "-c", "npm install --omit=dev && npm start"]
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_BASE_URL: ""  # same-origin via nginx proxy
+      NEXT_PUBLIC_ENABLE_MSW: "false"
+      PORT: "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: vn-re-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./script/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Operator mount SSL cert qua Let's Encrypt certbot hoặc copy thủ công.
+      - ./script/ssl:/etc/nginx/ssl:ro
+
+volumes:
+  prod-data:
+    driver: local

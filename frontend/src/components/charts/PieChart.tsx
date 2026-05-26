@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Cell, Legend, Pie, PieChart as RPieChart, ResponsiveContainer } from 'recharts';
+import { Cell, Legend, Pie, PieChart as RPieChart } from 'recharts';
 
 import type { Recommendation } from '@/lib/constants';
 
 import { recommendationColor } from './ChartCard';
+import { ResponsiveChart } from './ResponsiveChart';
 
 interface Datum {
   recommendation: Recommendation;
@@ -64,7 +65,7 @@ export function PieChart({ data }: { data: Datum[] }) {
 
   return (
     <div className="relative w-full h-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveChart>
         <RPieChart>
           <Pie
             data={items}
@@ -96,7 +97,7 @@ export function PieChart({ data }: { data: Datum[] }) {
             )}
           />
         </RPieChart>
-      </ResponsiveContainer>
+      </ResponsiveChart>
 
       {/* Center label — sits inside the donut hole. Replaces the recharts Tooltip
           popup (which used to overlap the colored ring on hover). pointer-events-none

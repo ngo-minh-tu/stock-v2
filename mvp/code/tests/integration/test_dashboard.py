@@ -13,40 +13,54 @@ def test_dashboard_404_unknown_run(client, auth_headers):
 
 
 def test_dashboard_full_shape(client, auth_headers, completed_run):
+    """Phase 19 — shape aligned with FE `DashboardResponse` after schema reconcile.
+
+    Top-level keys renamed: `kpis→kpi`, `radar_avg→radar`, `index_trend→line.points`,
+    `top_by_score→bar`. KPI gains `avg_buy_score`, `top_upside`,
+    `alpha_vs_vnindex_pct` (was `alpha_pct`). Pie becomes a list of
+    `{recommendation, count}` slices.
+    """
     r = client.get(f"/api/runs/{completed_run}/dashboard", headers=auth_headers)
     assert r.status_code == 200
     data = r.json()["data"]
 
-    # 5 sections per SRS f04 + KPIs
-    for key in ("run_id", "run_at", "kpis", "treemap", "pie", "radar_avg", "index_trend", "top_by_score"):
+    for key in ("run_id", "run_at", "kpi", "treemap", "pie", "radar", "line", "bar"):
         assert key in data, f"Missing {key}"
 
-    kpis = data["kpis"]
-    for k in ("scored_count", "buy_count", "hold_count", "sell_count", "alpha_pct"):
-        assert k in kpis
-    # AC-01-10 mirror: buy + hold + sell == scored
-    assert kpis["buy_count"] + kpis["hold_count"] + kpis["sell_count"] == kpis["scored_count"]
+    kpi = data["kpi"]
+    for k in (
+        "scored_count",
+        "buy_count",
+        "hold_count",
+        "sell_count",
+        "avg_buy_score",
+        "top_upside",
+        "alpha_vs_vnindex_pct",
+    ):
+        assert k in kpi, f"Missing kpi.{k}"
+    assert kpi["buy_count"] + kpi["hold_count"] + kpi["sell_count"] == kpi["scored_count"]
+    if kpi["top_upside"] is not None:
+        assert {"ticker", "upside_pct"} <= set(kpi["top_upside"].keys())
 
     pie = data["pie"]
-    assert pie["MUA"] == kpis["buy_count"]
-    assert pie["GIU"] == kpis["hold_count"]
-    assert pie["BAN"] == kpis["sell_count"]
+    assert isinstance(pie, list) and len(pie) == 3
+    by_rec = {slice["recommendation"]: slice["count"] for slice in pie}
+    assert by_rec["MUA"] == kpi["buy_count"]
+    assert by_rec["GIU"] == kpi["hold_count"]
+    assert by_rec["BAN"] == kpi["sell_count"]
 
-    # Treemap = scored count
-    assert len(data["treemap"]) == kpis["scored_count"]
+    assert len(data["treemap"]) == kpi["scored_count"]
 
-    # Radar 5 axes
-    assert set(data["radar_avg"].keys()) == {"fundamental", "technical", "macro", "realestate", "sentiment"}
-    for v in data["radar_avg"].values():
+    assert set(data["radar"].keys()) == {"fundamental", "technical", "macro", "realestate", "sentiment"}
+    for v in data["radar"].values():
         assert 0 <= v <= 100
 
-    # Index trend 26 weeks
-    assert len(data["index_trend"]) == 26
-    for pt in data["index_trend"]:
-        assert "week" in pt and "vnindex" in pt and "realestate_index" in pt
+    line_points = data["line"]["points"]
+    assert len(line_points) == 26
+    for pt in line_points:
+        assert {"date", "vnindex", "sector"} <= set(pt.keys())
 
-    # Top 10 max
-    assert len(data["top_by_score"]) <= 10
-    if data["top_by_score"]:
-        scores = [t["ai_score"] for t in data["top_by_score"]]
+    assert len(data["bar"]) <= 10
+    if data["bar"]:
+        scores = [t["ai_score"] for t in data["bar"]]
         assert scores == sorted(scores, reverse=True)

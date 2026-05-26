@@ -10,6 +10,8 @@ import { useEffect } from 'react';
 interface Props {
   open: boolean;
   html: string | null;
+  pdfUrl: string | null;
+  canDownload: boolean;
   loading: boolean;
   error: string | null;
   runId: string | null;
@@ -20,6 +22,8 @@ interface Props {
 export function PdfPreviewModal({
   open,
   html,
+  pdfUrl,
+  canDownload,
   loading,
   error,
   runId,
@@ -90,7 +94,15 @@ export function PdfPreviewModal({
               {error}
             </div>
           )}
-          {!loading && !error && html && (
+          {!loading && !error && pdfUrl && (
+            <iframe
+              title="PDF preview"
+              src={pdfUrl}
+              className="w-full h-full"
+              style={{ border: 0, minHeight: '60vh' }}
+            />
+          )}
+          {!loading && !error && !pdfUrl && html && (
             <iframe
               title="PDF preview"
               srcDoc={html}
@@ -98,6 +110,11 @@ export function PdfPreviewModal({
               className="w-full h-full"
               style={{ border: 0, minHeight: '60vh' }}
             />
+          )}
+          {!loading && !error && !pdfUrl && !html && canDownload && (
+            <div className="h-full flex items-center justify-center text-sm px-6 text-center" style={{ color: '#1e2329' }}>
+              {t('binaryReady')}
+            </div>
           )}
         </div>
 
@@ -109,7 +126,7 @@ export function PdfPreviewModal({
             type="button"
             className="btn btn-primary"
             onClick={onConfirm}
-            disabled={loading || !html}
+            disabled={loading || !canDownload}
           >
             <Download size={14} aria-hidden="true" />
             {t('download')}

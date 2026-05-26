@@ -5,11 +5,12 @@ import {
   Legend,
   Line,
   LineChart as RLineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
+
+import { ResponsiveChart } from './ResponsiveChart';
 
 interface Point {
   date: string;
@@ -19,7 +20,7 @@ interface Point {
 
 export function LineChart({ data }: { data: Point[] }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveChart>
       <RLineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-theme-charcoal)" opacity={0.4} />
         <XAxis
@@ -66,6 +67,6 @@ export function LineChart({ data }: { data: Point[] }) {
           dot={false}
         />
       </RLineChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

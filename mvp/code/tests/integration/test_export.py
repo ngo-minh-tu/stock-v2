@@ -77,5 +77,7 @@ def test_export_content_html_mock_mode(client, auth_headers, completed_run, monk
     body = r.content
     assert body.startswith(b"<!doctype html>"), f"Expected HTML mock, got: {body[:50]}"
     # Sanity: should mention the run_id and Vietnamese disclaimer
-    assert b"VN RE AI Screener" in body
+    assert b"Vietnam Real Estate Equity Screening Report" in body
+    assert "越南房地产股票智能筛选报告".encode() in body
+    assert "Hướng dẫn đọc báo cáo".encode() in body
     assert b"khuy\xe1\xba\xbfn ngh\xe1\xbb\x8b" in body  # "khuyến nghị"

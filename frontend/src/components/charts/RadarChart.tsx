@@ -7,15 +7,17 @@ import {
   PolarRadiusAxis,
   Radar,
   RadarChart as RRadarChart,
-  ResponsiveContainer,
 } from 'recharts';
 
+import { ResponsiveChart } from './ResponsiveChart';
 import {
   createOutwardTick,
   createRadarHoverDot,
   RadarHoverTooltip,
   type RadarHoverState,
 } from './radar-tooltip';
+
+const RADAR_TICKS = [0, 25, 50, 75, 100];
 
 interface Datum {
   fundamental: number;
@@ -41,17 +43,26 @@ export function RadarChart({ data }: { data: Datum }) {
     axes,
     color: 'var(--ssi-up)',
     onHover: setHover,
+    values: points.map((p) => p.value),
+    valueKey: 'value',
   });
 
   return (
     <div className="relative w-full h-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <RRadarChart data={points} outerRadius="72%">
-          <PolarGrid stroke="var(--color-theme-charcoal)" />
+      <ResponsiveChart>
+        <RRadarChart data={points} outerRadius="72%" cx="50%" cy="50%">
+          <PolarGrid
+            gridType="polygon"
+            stroke="var(--color-theme-charcoal)"
+          />
           <PolarAngleAxis dataKey="axis" tick={createOutwardTick(axes, 6)} />
           <PolarRadiusAxis
+            type="number"
             angle={45}
             domain={[0, 100]}
+            ticks={RADAR_TICKS as never}
+            tickCount={RADAR_TICKS.length}
+            allowDataOverflow={false}
             tick={{ fill: 'var(--color-theme-text-secondary)', fontSize: 9 }}
             stroke="var(--color-theme-charcoal)"
           />
@@ -65,8 +76,8 @@ export function RadarChart({ data }: { data: Datum }) {
             activeDot={false}
           />
         </RRadarChart>
-      </ResponsiveContainer>
-      <RadarHoverTooltip state={hover} />
+      </ResponsiveChart>
+      <RadarHoverTooltip state={hover} valueLabel="Score" />
     </div>
   );
 }

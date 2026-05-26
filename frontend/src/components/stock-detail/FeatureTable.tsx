@@ -45,7 +45,7 @@ export function FeatureTable({ detail }: Props) {
     sentiment: false,
   });
 
-  const imputedSet = new Set(detail.imputed_features);
+  const imputedSet = new Set(detail.imputed_features ?? []);
 
   return (
     <div className="flex flex-col gap-2 text-xs">
@@ -100,6 +100,7 @@ export function FeatureTable({ detail }: Props) {
                       return (
                         <tr
                           key={f.id}
+                          id={`feature-${f.id}`}
                           style={{
                             borderTop: '1px solid var(--color-theme-table-border)',
                             backgroundColor: c.bg,

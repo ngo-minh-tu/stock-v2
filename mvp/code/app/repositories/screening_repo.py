@@ -104,6 +104,21 @@ def update_counts(
         row.warnings_json = warnings_json
 
 
+def update_telegram_status(
+    db: Session,
+    run_id: str,
+    *,
+    sent: bool,
+    error: str | None,
+) -> None:
+    """Phase 23 — persist Telegram broadcast outcome on screening_runs."""
+    row = db.get(ScreeningRun, run_id)
+    if row is None:
+        return
+    row.telegram_sent = bool(sent)
+    row.telegram_error = error
+
+
 def mark_completed(
     db: Session,
     run_id: str,

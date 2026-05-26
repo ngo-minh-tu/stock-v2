@@ -54,6 +54,7 @@ export function RiskPanel({ detail, totalCapital }: Props) {
           allocationAmount={detail.risk.allocation_amount}
           allocationWeight={detail.risk.allocation_weight}
           totalCapital={totalCapital}
+          recommendation={detail.scoring.recommendation}
         />
         <ConfidenceCard
           confidenceRaw={detail.scoring.confidence_raw}

@@ -19,6 +19,8 @@ dependencies = [
     "python-telegram-bot>=21.0",
     "pandas>=2.2",
     "numpy>=1.26",
+    "feedparser>=6.0.12",
+    "selectolax>=0.4.9",
 ]
 
 [dependency-groups]

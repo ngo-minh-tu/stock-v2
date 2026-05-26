@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { SENTIMENT_BORDER_TINT, SentimentChip } from '@/components/news/SentimentChip';
 import { SourceLogo } from '@/components/common/SourceLogo';
 import type { NewsArticle } from '@/lib/types';
-import { FIXTURE_NOW_MS } from '@/mocks/data/news-fixture';
 
 interface Props {
   article: NewsArticle;
@@ -15,11 +14,11 @@ interface Props {
 
 type TimeT = (key: string, values?: Record<string, number>) => string;
 
-function relativeTime(iso: string, t: TimeT): string {
+function relativeTime(iso: string | null, t: TimeT): string {
+  if (!iso) return t('unknown');
   const then = new Date(iso).getTime();
-  // Anchor relative time to the fixture's "now" (2026-05-07), not wall-clock — otherwise
-  // every article would show "X months ago" when wall-clock != fixture date.
-  const diffMs = FIXTURE_NOW_MS - then;
+  if (!Number.isFinite(then)) return t('unknown');
+  const diffMs = Math.max(0, Date.now() - then);
   const minutes = Math.floor(diffMs / 60_000);
   const hours = Math.floor(diffMs / 3_600_000);
   const days = Math.floor(diffMs / 86_400_000);
@@ -50,7 +49,7 @@ export function NewsCard({ article }: Props) {
           ·
         </span>
         <time
-          dateTime={article.published_at}
+          dateTime={article.published_at ?? undefined}
           style={{ color: 'var(--color-theme-text-secondary)' }}
         >
           {relativeTime(article.published_at, tTime as TimeT)}

@@ -1,8 +1,7 @@
-"""Verify seed produces expected counts. Idempotent re-run safe.
+"""Verify seed produces expected counts.
 
-Test runs against shared dev DB ở `./data/screener.db`. Đảm bảo:
-- alembic upgrade head đã chạy
-- seed.run() đã chạy ít nhất 1 lần (CI workflow chạy trước test)
+Phase 13 moved pytest to an isolated `./data/test-screener.db`; these tests must
+never depend on or mutate the local demo database.
 """
 
 from app.db.seed import run as run_seed
@@ -31,8 +30,10 @@ def test_seed_produces_expected_counts():
         assert db.scalar(select(func.count()).select_from(NewsArticle)) == 150
         # 9 cache sources: 2 vnstock + 2 macro + 5 news (TAD g04)
         assert db.scalar(select(func.count()).select_from(CacheMetadata)) == 9
-        # 5 macro indicators (M01-M05) — Phase 5 wired
-        assert db.scalar(select(func.count()).select_from(MacroData)) == 5
+        # 5 macro indicators (M01-M05). Macro refresh may add newer periods, so
+        # assert indicator coverage instead of total row count.
+        assert db.scalar(select(func.count()).select_from(MacroData)) >= 5
+        assert db.scalar(select(func.count(func.distinct(MacroData.indicator)))) == 5
 
 
 def test_seed_anchor_mocks_present():

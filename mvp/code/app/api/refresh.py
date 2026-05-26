@@ -13,6 +13,7 @@ from app.core.envelope import success
 from app.core.errors import AppError
 from app.dependencies import CurrentUser
 from app.job_lock import job_lock
+from app.schemas.refresh import RefreshPricesRequest
 from app.services import refresh_service
 
 router = APIRouter(prefix="/refresh", tags=["refresh"])
@@ -40,11 +41,21 @@ def post_refresh_all(bg: BackgroundTasks, _user: CurrentUser) -> dict:
 
 
 @router.post("/prices", status_code=status.HTTP_202_ACCEPTED)
-def post_refresh_prices(bg: BackgroundTasks, _user: CurrentUser) -> dict:
+def post_refresh_prices(
+    bg: BackgroundTasks,
+    _user: CurrentUser,
+    body: RefreshPricesRequest | None = None,
+) -> dict:
     refresh_id = _new_refresh_id()
     if not job_lock.try_acquire(refresh_id, "refresh"):
         raise _conflict()
-    bg.add_task(refresh_service.run_refresh_prices, refresh_id)
+    req = body or RefreshPricesRequest()
+    bg.add_task(
+        refresh_service.run_refresh_prices,
+        refresh_id,
+        tickers=req.tickers,
+        resume_failed=req.resume_failed,
+    )
     return success({"refresh_id": refresh_id, "status": RefreshStatus.PENDING.value})
 
 
@@ -66,5 +77,6 @@ def get_refresh_status(
             "started_at": job["started_at"],
             "finished_at": job["finished_at"],
             "error": job["error"],
+            "stats": job.get("stats", {}),
         }
     )

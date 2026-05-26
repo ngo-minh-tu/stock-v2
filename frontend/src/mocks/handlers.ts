@@ -385,7 +385,7 @@ export const handlers = [
     const url = new URL(request.url);
     const limit = Math.max(1, Math.min(500, Number(url.searchParams.get('limit') ?? 100)));
     const offset = Math.max(0, Number(url.searchParams.get('offset') ?? 0));
-    const all = buildPriceBoardItems();
+    const all = buildPriceBoardItems().filter((row) => !row.ticker.startsWith('MOCK'));
     const items = all.slice(offset, offset + limit);
     const data: StocksListResponse = { items, total: all.length, limit, offset };
     return HttpResponse.json(ok(data));
@@ -408,6 +408,7 @@ export const handlers = [
     const failureParam = (url.searchParams.get('mock_news_failure') ?? '').toUpperCase();
 
     const sources = sourceParams
+      .flatMap((s) => s.split(','))
       .map((s) => s.toUpperCase() as NewsSourceKey)
       .filter((s): s is NewsSourceKey => NEWS_SOURCES.includes(s));
     const sentiments = sentimentParams
@@ -452,7 +453,7 @@ export const handlers = [
     // `published_at` is ISO so string compare with sinceIso is safe.
     const sinceIso = new Date(sinceMs).toISOString();
     const articles = NEWS_CORPUS.filter(
-      (a) => a.related_tickers.includes(ticker) && a.published_at >= sinceIso,
+      (a) => a.related_tickers.includes(ticker) && !!a.published_at && a.published_at >= sinceIso,
     );
 
     if (articles.length === 0) {
@@ -719,14 +720,16 @@ export const handlers = [
       dashboard,
       results: r.computed.results,
       excluded: r.computed.excluded,
-      brand: 'Ngô Minh Tú — VN RE AI Screener',
-      tagline: 'Dữ liệu dẫn đường, quyết định thuộc về bạn',
+      brand: 'Vietnam Real Estate Equity Screening Report',
+      tagline: 'Founder: Ngô Minh Tú — Dữ liệu dẫn đường, quyết định thuộc về bạn!',
     });
     return new HttpResponse(html, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="run-${run_id}.pdf"`,
+        'Cache-Control': 'no-store, max-age=0',
+        Pragma: 'no-cache',
       },
     });
   }),

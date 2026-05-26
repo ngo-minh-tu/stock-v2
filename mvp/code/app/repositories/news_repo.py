@@ -25,8 +25,8 @@ def list_paginated(
 ) -> tuple[list[NewsArticle], int]:
     """Filtered paginated news. Trả về (rows, total).
 
-    `ticker` filter: SQLite không có JSON-array contains; dùng `LIKE %"ticker"%`
-    trên `related_tickers_json` (lưu dạng JSON string mảng).
+    `ticker` filter parse JSON in Python so membership is exact (e.g. VIC only
+    matches ["VIC"], never an incidental substring).
     """
     base = select(NewsArticle)
     if sources:
@@ -35,20 +35,26 @@ def list_paginated(
             base = base.where(NewsArticle.source.in_(src_list))
     if sentiment:
         base = base.where(NewsArticle.sentiment_label == sentiment)
-    if ticker:
-        # related_tickers_json = '["VHM","KDH"]' → tìm `"VHM"`
-        base = base.where(NewsArticle.related_tickers_json.like(f'%"{ticker}"%'))
     if from_date is not None:
         base = base.where(NewsArticle.published_at >= from_date)
     if to_date is not None:
         base = base.where(NewsArticle.published_at <= to_date)
 
-    total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
-    rows = list(
-        db.scalars(
-            base.order_by(desc(NewsArticle.published_at)).limit(limit).offset(offset)
-        )
+    ordered = base.order_by(
+        NewsArticle.published_at.is_(None),
+        desc(NewsArticle.published_at),
+        desc(NewsArticle.id),
     )
+    if ticker:
+        matching = [
+            row
+            for row in db.scalars(ordered)
+            if ticker in parse_related_tickers(row.related_tickers_json)
+        ]
+        return matching[offset : offset + limit], len(matching)
+
+    total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
+    rows = list(db.scalars(ordered.limit(limit).offset(offset)))
     return rows, int(total)
 
 
@@ -67,13 +73,13 @@ def sentiment_summary(
         now = datetime.utcnow()
     cutoff = now - timedelta(days=days)
 
-    rows = db.scalars(
-        select(NewsArticle)
-        .where(
-            NewsArticle.published_at >= cutoff,
-            NewsArticle.related_tickers_json.like(f'%"{ticker}"%'),
+    rows = [
+        row
+        for row in db.scalars(
+            select(NewsArticle).where(NewsArticle.published_at >= cutoff)
         )
-    ).all()
+        if ticker in parse_related_tickers(row.related_tickers_json)
+    ]
 
     label_counts = {"POSITIVE": 0, "NEUTRAL": 0, "NEGATIVE": 0}
     source_breakdown: dict[str, int] = {}

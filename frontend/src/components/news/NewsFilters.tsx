@@ -12,7 +12,6 @@ import {
   type NewsSourceKey,
   type SentimentLabelKey,
 } from '@/lib/constants';
-import { STOCK_FIXTURE } from '@/mocks/data/stocks-fixture';
 
 import { SENTIMENT_BORDER_TINT } from './SentimentChip';
 
@@ -26,11 +25,12 @@ export interface NewsFilterState {
 
 interface Props {
   state: NewsFilterState;
+  tickerOptions: { ticker: string; name: string }[];
   onChange: (next: NewsFilterState) => void;
   onReset: () => void;
 }
 
-export function NewsFilters({ state, onChange, onReset }: Props) {
+export function NewsFilters({ state, tickerOptions, onChange, onReset }: Props) {
   const t = useTranslations('news.filter');
   const tSource = useTranslations('news.source');
   const tSent = useTranslations('news.sentiment');
@@ -129,7 +129,7 @@ export function NewsFilters({ state, onChange, onReset }: Props) {
           )}
         </div>
         <datalist id="news-ticker-list">
-          {STOCK_FIXTURE.map((s) => (
+          {tickerOptions.map((s) => (
             <option key={s.ticker} value={s.ticker}>
               {s.name}
             </option>

@@ -37,8 +37,28 @@ const SOURCE_TINT: Record<NewsSourceKey, string> = {
   THANHNIEN: '#5d4037',
 };
 
-function buildConic(summary: SentimentSummaryResponse): string {
-  const total = summary.count;
+function normalizedSummary(summary: SentimentSummaryResponse) {
+  const total = summary.count ?? summary.total ?? 0;
+  const score = summary.score ?? summary.score_avg ?? 0;
+  const label: SentimentLabelKey =
+    summary.label ?? (score >= 0.2 ? 'POSITIVE' : score <= -0.2 ? 'NEGATIVE' : 'NEUTRAL');
+  const breakdown = summary.breakdown ?? SENTIMENT_LABELS.map((itemLabel) => ({
+    label: itemLabel,
+    count: summary.label_counts?.[itemLabel] ?? 0,
+  }));
+  const rawSourceBreakdown = summary.source_breakdown;
+  const source_breakdown = Array.isArray(rawSourceBreakdown)
+    ? rawSourceBreakdown
+    : NEWS_SOURCES.map((source) => ({
+        source,
+        count: rawSourceBreakdown[source] ?? 0,
+      }));
+
+  return { total, score, label, breakdown, source_breakdown };
+}
+
+function buildConic(summary: ReturnType<typeof normalizedSummary>): string {
+  const total = summary.total;
   if (total === 0) return `var(--ssi-stable)`;
   let acc = 0;
   const segments: string[] = [];
@@ -66,8 +86,9 @@ export function SentimentSummaryWidget({ ticker, summary, loading }: Props) {
     );
   }
 
-  const conic = buildConic(summary);
-  const noData = summary.count === 0;
+  const normalized = normalizedSummary(summary);
+  const conic = buildConic(normalized);
+  const noData = normalized.total === 0;
 
   return (
     <div className="card p-3 flex flex-col gap-3">
@@ -75,7 +96,7 @@ export function SentimentSummaryWidget({ ticker, summary, loading }: Props) {
         <h3 className="text-sm font-medium" style={{ color: 'var(--color-theme-text-tertiary)' }}>
           {t('title', { ticker })}
         </h3>
-        <SentimentChip label={summary.label} score={summary.score} size="md" />
+        <SentimentChip label={normalized.label} score={normalized.score} size="md" />
       </header>
 
       {noData ? (
@@ -100,8 +121,8 @@ export function SentimentSummaryWidget({ ticker, summary, loading }: Props) {
               style={{ backgroundColor: 'var(--color-theme-card-bg)' }}
             >
               <span className="text-md font-semibold" style={{ color: 'var(--color-theme-text-tertiary)' }}>
-                {summary.score >= 0 ? '+' : ''}
-                {summary.score.toFixed(2)}
+                {normalized.score >= 0 ? '+' : ''}
+                {normalized.score.toFixed(2)}
               </span>
               <span className="text-3xs" style={{ color: 'var(--color-theme-text-secondary)' }}>
                 {t('scoreAvg')}
@@ -112,10 +133,10 @@ export function SentimentSummaryWidget({ ticker, summary, loading }: Props) {
           {/* Legend + count */}
           <div className="flex flex-col gap-1 text-2xs">
             <span style={{ color: 'var(--color-theme-text-secondary)' }}>
-              {t('count', { n: summary.count })}
+              {t('count', { n: normalized.total })}
             </span>
             {SENTIMENT_LABELS.map((label) => {
-              const item = summary.breakdown.find((b) => b.label === label);
+              const item = normalized.breakdown.find((b) => b.label === label);
               const n = item?.count ?? 0;
               return (
                 <div key={label} className="flex items-center gap-2">
@@ -139,10 +160,10 @@ export function SentimentSummaryWidget({ ticker, summary, loading }: Props) {
           <span style={{ color: 'var(--color-theme-text-secondary)' }}>{t('sourceBreakdown')}</span>
           <div className="flex h-2 rounded overflow-hidden">
             {NEWS_SOURCES.map((s) => {
-              const item = summary.source_breakdown.find((b) => b.source === s);
+              const item = normalized.source_breakdown.find((b) => b.source === s);
               const n = item?.count ?? 0;
               if (n === 0) return null;
-              const pct = (n / summary.count) * 100;
+              const pct = (n / normalized.total) * 100;
               return (
                 <div
                   key={s}

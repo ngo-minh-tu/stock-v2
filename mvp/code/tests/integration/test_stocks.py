@@ -32,7 +32,7 @@ def test_stocks_list_no_price_data(client, auth_headers):
     assert r.status_code == 200
     data = r.json()["data"]
     assert {"items", "total", "limit", "offset"} <= data.keys()
-    assert data["total"] == 81  # seeded 81 mã
+    assert data["total"] == 26  # chỉ trả universe giao dịch thật, không tính MOCK seed
     assert data["limit"] == 10
     if data["items"]:
         item = data["items"][0]

@@ -356,6 +356,18 @@ wheels = [
 ]
 
 [[package]]
+name = "feedparser"
+version = "6.0.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sgmllib3k" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/79/db7edb5e77d6dfbc54d7d9df72828be4318275b2e580549ff45a962f6461/feedparser-6.0.12.tar.gz", hash = "sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228", size = 286579, upload-time = "2025-09-10T13:33:59.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/eb/c96d64137e29ae17d83ad2552470bafe3a7a915e85434d9942077d7fd011/feedparser-6.0.12-py3-none-any.whl", hash = "sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324", size = 81480, upload-time = "2025-09-10T13:33:58.022Z" },
+]
+
+[[package]]
 name = "fonttools"
 version = "4.62.1"
 source = { registry = "https://pypi.org/simple" }
@@ -966,6 +978,29 @@ wheels = [
 ]
 
 [[package]]
+name = "selectolax"
+version = "0.4.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/46/b2956203e943c6417ff7da9ad9bcb5860d60372de6e05934af1b3f0a4950/selectolax-0.4.9.tar.gz", hash = "sha256:15c3de54f75d0d13726fee140bbfec8805050a3d34d298f2e9c05c9da1b87e7a", size = 4879844, upload-time = "2026-05-15T08:59:12.802Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/10/cd0804678dddd218c061b6820325a8cd288a13d55db7c04c59cdc8c4c8d9/selectolax-0.4.9-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:aafcee3e53ee3cd7800826e26ba2af3e68370e6a1bd4c223fab27916623cc106", size = 2215675, upload-time = "2026-05-15T08:57:40.384Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/b0/bf89a8a737a38b41471e0bb52c630ef97c2d1fc889781463b735751411d3/selectolax-0.4.9-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d7d988d66a64153edd8db347ae55cb4e52a6157206c66c7f27c65046ad0f2b2d", size = 2269785, upload-time = "2026-05-15T08:57:41.821Z" },
+    { url = "https://files.pythonhosted.org/packages/49/a3/099895b5bc98ceaab564f6d3a799dd796290bb30ec846917055e9262a716/selectolax-0.4.9-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d5bbdd6cc28ae3279b4114b166447e83ecd8fc5aa397ca422645b654f25aff82", size = 2347279, upload-time = "2026-05-15T08:57:43.32Z" },
+    { url = "https://files.pythonhosted.org/packages/47/19/4115633e4ee916333eb7f16a611f7b18c69f818ecd3463a3adfb570922a0/selectolax-0.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d8ac4485bb49a0131bb8f612c3a04653184c2e304d4c4751ae0764439f3b6b76", size = 2399117, upload-time = "2026-05-15T08:57:45.274Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/c9/b48baffe1224d48e0410ac7078f4af04f4d9082b8c7d4f3fb693e165e474/selectolax-0.4.9-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:e3a42930b3eb3088d4ab11db698d3fa3a06c39b2a2d389652c12ecbda2586f89", size = 2352320, upload-time = "2026-05-15T08:57:47.11Z" },
+    { url = "https://files.pythonhosted.org/packages/df/d3/56fbc22ba7777f5f26eb3bbacaab5b5c6fbfcd03a530fd7c372652957f78/selectolax-0.4.9-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:c77f364e05d8bcf7a89cf57f6414cb0261f968cf60395b381f20ecce01bf8546", size = 2409385, upload-time = "2026-05-15T08:57:48.618Z" },
+    { url = "https://files.pythonhosted.org/packages/30/f9/3b29a9486aae0100a2184e756f4f215790ca0d8eac8057494e17d8bec43c/selectolax-0.4.9-cp311-cp311-win32.whl", hash = "sha256:c964592aee0cf73423718cfb4fdbfe99ea7b28f13589f2bfc0e0d45683e0a0bc", size = 1768203, upload-time = "2026-05-15T08:57:50.442Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/be/c0260cfdf71e4bff267c6b49d6e1e4550b48761ef6223d9d6de038e77b65/selectolax-0.4.9-cp311-cp311-win_amd64.whl", hash = "sha256:582d74f84ba02c756ed09a75b918a7dffbfec3683c082e7c7361d44aa7cd9f8f", size = 1865204, upload-time = "2026-05-15T08:57:52.272Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/53/188fede267d164ac066961ffc2f5961063c3aebae20f4abb0ccbd4da3f92/selectolax-0.4.9-cp311-cp311-win_arm64.whl", hash = "sha256:690bca07294e3bc635f44855d2d3a13ffe7085b72b9b4bed5016edfdad291f35", size = 1815940, upload-time = "2026-05-15T08:57:54.104Z" },
+]
+
+[[package]]
+name = "sgmllib3k"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz", hash = "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9", size = 5750, upload-time = "2010-08-24T14:33:52.445Z" }
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1152,6 +1187,7 @@ dependencies = [
     { name = "alembic" },
     { name = "bcrypt" },
     { name = "fastapi" },
+    { name = "feedparser" },
     { name = "httpx" },
     { name = "numpy" },
     { name = "pandas" },
@@ -1159,6 +1195,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "python-telegram-bot" },
+    { name = "selectolax" },
     { name = "sqlalchemy" },
     { name = "structlog" },
     { name = "uvicorn", extra = ["standard"] },
@@ -1177,6 +1214,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
     { name = "bcrypt", specifier = ">=4.0" },
     { name = "fastapi", specifier = ">=0.111" },
+    { name = "feedparser", specifier = ">=6.0.12" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.2" },
@@ -1184,6 +1222,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.3" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3" },
     { name = "python-telegram-bot", specifier = ">=21.0" },
+    { name = "selectolax", specifier = ">=0.4.9" },
     { name = "sqlalchemy", specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },

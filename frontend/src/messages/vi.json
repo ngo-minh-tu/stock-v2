@@ -1,8 +1,8 @@
 {
   "app": {
     "brand": {
-      "name": "Ngô Minh Tú",
-      "tagline": "Dữ liệu dẫn đường, quyết định thuộc về bạn"
+      "name": "Founder: Ngô Minh Tú",
+      "tagline": "Slogan: Dữ liệu dẫn đường, quyết định thuộc về bạn!"
     }
   },
   "auth": {
@@ -93,6 +93,7 @@
     "loading": "Đang tải dashboard…",
     "errorLoad": "Không tải được dashboard. Vui lòng thử lại.",
     "runId": "Run: {id}",
+    "disclaimer": "Dữ liệu vĩ mô (lãi suất, tín dụng, CPI, VN-Index) đang dùng hằng số Q2 2026. Alpha vs VN-Index dùng proxy heuristic (trung bình upside MUA − 5%). Crawler SBV/GSO + so sánh strict per-ticker với VN-Index là post-MVP.",
     "empty": {
       "message": "Chưa có dữ liệu — Bấm Chạy để bắt đầu run sàng lọc đầu tiên."
     },
@@ -111,19 +112,28 @@
       },
       "pie": {
         "title": "Tỷ lệ khuyến nghị",
-        "subtitle": "MUA / GIỮ / BÁN"
+        "subtitle": "MUA / GIỮ / BÁN",
+        "insight": "Nhận định chung: nhóm {leader} đang chiếm tỷ trọng lớn nhất với {leaderCount}/{total} mã. Cơ cấu hiện tại gồm {buy} mã MUA, {hold} mã GIỮ và {sell} mã BÁN; nếu tỷ trọng GIỮ/BÁN cao, thị trường đang nghiêng về trạng thái chờ xác nhận thay vì mở rộng vị thế mạnh.",
+        "insightEmpty": "Nhận định chung: chưa có đủ dữ liệu khuyến nghị để đánh giá cơ cấu MUA/GIỮ/BÁN."
       },
       "line": {
         "title": "Xu hướng VN-Index & ngành BĐS",
-        "subtitle": "6 tháng gần nhất"
+        "subtitle": "6 tháng gần nhất",
+        "insight": "Nhận định chung: trong giai đoạn hiển thị, VN-Index thay đổi {vnindex}, còn nhóm BĐS thay đổi {sector}. Chênh lệch tương đối của ngành so với thị trường là {spread}; nếu spread dương, dòng tiền ngành đang tốt hơn mặt bằng chung, ngược lại cần thận trọng với rủi ro suy yếu tương đối."
       },
       "bar": {
         "title": "Top 10 mã theo AI Score",
-        "subtitle": "Sắp xếp giảm dần"
+        "subtitle": "Sắp xếp giảm dần",
+        "insight": "Nhận định chung: {ticker} đang dẫn đầu với AI Score {topScore}; điểm trung bình của top {total} là {avgScore}. Trong nhóm này có {buyCount}/{total} mã MUA, phản ánh mức độ tập trung của cơ hội đầu tư chất lượng cao trong run hiện tại.",
+        "insightEmpty": "Nhận định chung: chưa có đủ dữ liệu top AI Score để đánh giá chất lượng nhóm dẫn đầu.",
+        "tooltip": {
+          "recommendation": "Khuyến nghị"
+        }
       },
       "radar": {
         "title": "Radar 5 nhóm features",
-        "subtitle": "Trung bình toàn ngành"
+        "subtitle": "Trung bình toàn ngành",
+        "insight": "Nhận định chung: Radar toàn run cho thấy Cơ bản đạt {fundamental}/100, Kỹ thuật {technical}/100, Vĩ mô {macro}/100, đặc thù BĐS {realestate}/100 và Sentiment {sentiment}/100. Nhóm đóng góp tích cực nhất là {strongest} ({strongestScore}/100), còn điểm nghẽn lớn nhất là {weakest} ({weakestScore}/100). Vì vậy, khi đọc các bảng bên dưới cần ưu tiên kiểm tra xem mã dẫn đầu đang mạnh nhờ nền tảng doanh nghiệp, bối cảnh vĩ mô/tín dụng hay chỉ nhờ tín hiệu giá ngắn hạn."
       }
     },
     "runSelector": {
@@ -136,9 +146,12 @@
     "searchPlaceholder": "Tìm theo mã hoặc tên…",
     "noMatch": "Không có mã nào khớp bộ lọc.",
     "exportPdfTopMua": "Xuất PDF Top MUA",
+    "sectionTitle": "Top {recommendation}",
+    "sectionSubtitle": "Top {count} mã theo AI Score",
     "empty": {
       "title": "Không có mã MUA trong run này",
-      "hint": "Thử hạ ngưỡng MUA trong Cài đặt khi Cluster 6 ra mắt."
+      "hint": "Thử hạ ngưỡng MUA trong Cài đặt khi Cluster 6 ra mắt.",
+      "notice": "Chú ý: Không có mã {recommendation} trong run này. Khi có khuyến nghị {recommendation}, bảng sẽ hiển thị tự động."
     },
     "column": {
       "ticker": "Mã",
@@ -158,6 +171,7 @@
       "allocation": "Phân bổ",
       "confidence": "Tin cậy raw − penalty",
       "warnings": "Cảnh báo",
+      "noReasons": "Chưa có lý do chi tiết cho mã này trong run hiện tại.",
       "noWarnings": "Không có cảnh báo nào.",
       "viewDetail": "Xem chi tiết"
     }
@@ -201,10 +215,13 @@
     "loading": "Đang tải chi tiết mã…",
     "errorTitle": "Không tải được chi tiết mã",
     "errorBody": "Mã không tồn tại trong run này hoặc đã bị loại.",
+    "excludedTitle": "Mã đã bị loại khỏi run",
+    "excludedBody": "Mã {ticker} đã bị loại ở vòng {round}: {reason} ({code}).",
     "noRun": "Chưa có run nào — bấm \"Chạy\" trên thanh đầu trang để bắt đầu phân tích.",
     "missingTicker": "URL thiếu tham số ticker. Vào Top MUA và bấm \"Xem chi tiết\" để mở trang này.",
     "header": {
       "aiScore": "AI Score",
+      "currentPrice": "Giá hiện tại",
       "runSelector": "Run đã chấm mã này"
     },
     "candlestick": {
@@ -248,11 +265,37 @@
     "breakdown": {
       "title": "Phân tích điểm số",
       "subtitle": "Radar 5 nhóm · {availability}/38 features có sẵn",
+      "scoreLabel": "Điểm",
       "showFeatures": "Hiển thị 38 features",
       "hideFeatures": "Ẩn 38 features",
       "legend": {
         "ticker": "{ticker}",
         "industry": "TB ngành"
+      },
+      "narrative": {
+        "title": "Luận điểm đầu tư",
+        "inputsTitle": "I. Phạm vi dữ liệu và phương pháp tổng hợp",
+        "inputsBody": "Mô hình đánh giá đồng thời năm nhóm biến: (1) BCTC/quý và chất lượng lợi nhuận; (2) cấu trúc vốn, đòn bẩy và dòng tiền hoạt động; (3) tín hiệu kỹ thuật và trạng thái thị trường; (4) vĩ mô, chính sách, lãi suất và tín dụng; (5) đặc thù doanh nghiệp bất động sản, tin tức và sentiment. Trong bộ dữ liệu hiện tại, nhóm có đóng góp thuận lợi nhất là {strongest} ({strongestScore}/100), trong khi nhóm hạn chế nhất là {weakest} ({weakestScore}/100).",
+        "evidenceTitle": "II. Bằng chứng định lượng có thể truy xuất",
+        "decisionTitle": "III. Kết luận định lượng: {recommendation}",
+        "decision": {
+          "positive": "Với điểm AI {score}/100, upside kỳ vọng {upside}% và độ tin cậy {confidence}%, kết luận MUA được hình thành khi nhóm {strongest} là trụ đỡ chính ({strongestScore}/100), điểm trung bình radar đạt {radarAverage}/100 và biên chênh giữa nhóm mạnh-yếu là {spread} điểm. Nhóm cần kiểm soát là {weakest} ({weakestScore}/100); hiện có {warnings} cảnh báo và {imputed} feature suy diễn, nên vị thế mua chỉ nên duy trì khi nhóm yếu không xấu thêm.",
+          "neutral": "Với điểm AI {score}/100, upside kỳ vọng {upside}% và độ tin cậy {confidence}%, kết luận GIỮ phản ánh trạng thái chưa đủ đồng thuận giữa các nhóm điểm. Nhóm {strongest} đang hỗ trợ mạnh nhất ({strongestScore}/100), nhưng {weakest} chỉ đạt {weakestScore}/100, tạo độ lệch {spread} điểm so với nhóm dẫn dắt. Điểm radar trung bình {radarAverage}/100, kèm {warnings} cảnh báo và {imputed} feature suy diễn, cho thấy nên ưu tiên quan sát thay vì nâng tỷ trọng.",
+          "negative": "Với điểm AI {score}/100, upside kỳ vọng {upside}% và độ tin cậy {confidence}%, kết luận BÁN xuất hiện khi tương quan lợi suất/rủi ro suy yếu và điểm radar trung bình chỉ đạt {radarAverage}/100. Dù nhóm {strongest} còn là điểm tựa tương đối ({strongestScore}/100), nhóm {weakest} ở mức {weakestScore}/100 làm giảm chất lượng hồ sơ tổng thể; độ lệch {spread} điểm, {warnings} cảnh báo và {imputed} feature suy diễn khiến mô hình ưu tiên hạ rủi ro."
+        },
+        "flowTitle": "IV. Hàm ý đối với dòng tiền và tâm lý thị trường",
+        "flow": {
+          "positive": "Khuyến nghị {recommendation} có hàm ý hỗ trợ tâm lý tích cực hơn đối với nhà đầu tư định lượng và nhà đầu tư theo xu hướng. Tuy nhiên, khả năng thu hút dòng tiền mới vẫn phụ thuộc vào thanh khoản xác nhận, diễn biến tín dụng và điều kiện thị trường chung. Số cảnh báo rủi ro hiện ghi nhận: {warnings}.",
+          "neutral": "Khuyến nghị {recommendation} thường phản ánh trạng thái cân bằng giữa cơ hội và rủi ro. Dòng tiền có xu hướng chờ thêm xác nhận từ BCTC/quý kế tiếp, tín dụng bất động sản, chính sách điều hành và tín hiệu giá. Tâm lý thị trường vì vậy nghiêng về thận trọng, ưu tiên quan sát hơn là mua đuổi. Số cảnh báo rủi ro hiện ghi nhận: {warnings}.",
+          "negative": "Khuyến nghị {recommendation} hàm ý tâm lý phòng thủ có thể gia tăng. Dòng tiền ngắn hạn có xu hướng giảm tỷ trọng hoặc dịch chuyển sang mã có hồ sơ rủi ro thấp hơn; khả năng quay lại phụ thuộc vào cải thiện rõ rệt về vĩ mô, tín dụng, pháp lý, thanh khoản hoặc kết quả kinh doanh. Số cảnh báo rủi ro hiện ghi nhận: {warnings}."
+        },
+        "source": {
+          "fundamental": "Nguồn: BCTC/quý",
+          "technical": "Nguồn: dữ liệu giá/khối lượng",
+          "macro": "Nguồn: vĩ mô/chính sách/tín dụng",
+          "realestate": "Nguồn: đặc thù BĐS/NAV/pháp lý",
+          "sentiment": "Nguồn: tin tức/sentiment"
+        }
       }
     },
     "feature": {
@@ -268,7 +311,7 @@
         "fundamental": "Cơ bản",
         "technical": "Kỹ thuật",
         "macro": "Vĩ mô",
-        "realestate": "Đặc thù BĐS",
+        "realestate": "đặc thù BĐS",
         "sentiment": "Sentiment"
       }
     },
@@ -297,6 +340,7 @@
       "allocation": {
         "title": "Phân bổ vốn",
         "skipped": "Bỏ qua phân bổ — run không nhập tổng vốn.",
+        "notBuy": "Không phân bổ vốn vì mã này đang là {recommendation}. Tổng vốn {total} VND chỉ được chia cho các mã MUA trong run.",
         "weight": "Tỷ trọng {pct}% trên các mã MUA",
         "basedOn": "Dựa trên tổng vốn {total} VND đã nhập khi chạy"
       },
@@ -315,6 +359,7 @@
     "loading": "Đang tải bảng giá…",
     "errorLoad": "Không tải được bảng giá. Vui lòng thử lại.",
     "subtitle": "{count} mã · cập nhật mock cho mỗi reload",
+    "missingData": "{count} mã đang ẩn — chưa có snapshot giá. Chạy /api/refresh/all để cập nhật.",
     "search": {
       "placeholder": "Tìm theo mã (VHM, KDH…)"
     },
@@ -353,6 +398,15 @@
   "news": {
     "loading": "Đang tải tin…",
     "errorLoad": "Không tải được tin. Vui lòng thử lại.",
+    "disclaimer": "Tin tức crawl từ CafeF/VnExpress/Vietstock/Batdongsan/ThanhNien — RSS first → HTML fallback. Bấm \"Cập nhật\" để fetch mới nhất.",
+    "refresh": {
+      "button": "Cập nhật",
+      "loading": "Đang cập nhật…",
+      "successTitle": "Đã cập nhật tin tức",
+      "successMessage": "Lưu {inserted} bài mới. Tổng crawl: {total} bài từ 5 nguồn.",
+      "partialTitle": "Một số nguồn lỗi",
+      "errorTitle": "Cập nhật thất bại"
+    },
     "filter": {
       "title": "Bộ lọc tin",
       "open": "Mở bộ lọc",
@@ -411,7 +465,8 @@
       "minutesAgo": "{n}p trước",
       "hoursAgo": "{n}h trước",
       "daysAgo": "{n} ngày trước",
-      "justNow": "vừa xong"
+      "justNow": "vừa xong",
+      "unknown": "chưa rõ thời gian"
     }
   },
   "portfolio": {
@@ -468,7 +523,7 @@
         "dateFuture": "Ngày mua không được sau hôm nay.",
         "serverError": "Lỗi máy chủ. Vui lòng thử lại."
       },
-      "add": "Thêm",
+      "submitAdd": "Thêm",
       "save": "Lưu",
       "cancel": "Hủy",
       "submitting": "Đang lưu…",
@@ -603,6 +658,7 @@
     }
   },
   "backtest": {
+    "disclaimer": "Backtest dùng heuristic mock: MUA → return dương, GIỮ → −7%..+12%, BÁN → return âm. Strict per-ticker so với VN-Index (PRD §4.5) là post-MVP.",
     "modal": {
       "title": "Chạy backtest",
       "description": "Chọn khoảng thời gian để chạy backtest. Hệ thống sẽ so điểm dự đoán với lợi nhuận thực tế 3 tháng.",
@@ -773,7 +829,8 @@
     "close": "Đóng",
     "preview": {
       "title": "Xem trước PDF",
-      "download": "Tải xuống"
+      "download": "Tải xuống",
+      "binaryReady": "PDF đã được tạo. Nếu trình duyệt không hiển thị bản xem trước, bấm Tải xuống để lưu file."
     },
     "error": {
       "title": "Lỗi xuất PDF"

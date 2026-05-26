@@ -47,11 +47,12 @@ class JobLock:
                 "started_at": _now_iso(),
                 "finished_at": None,
                 "error": None,
+                "stats": {},
             }
             return True
 
     def update(self, job_id: str, *, status: str | None = None, progress: int | None = None,
-               message: str | None = None) -> None:
+               message: str | None = None, stats: dict[str, Any] | None = None) -> None:
         with self._lock:
             entry = self._registry.get(job_id)
             if entry is None:
@@ -62,6 +63,8 @@ class JobLock:
                 entry["progress"] = progress
             if message is not None:
                 entry["message"] = message
+            if stats is not None:
+                entry["stats"] = dict(stats)
 
     def release(self, job_id: str, *, status: str, error: str | None = None) -> None:
         """Mark job terminal + clear active slot (nếu match)."""

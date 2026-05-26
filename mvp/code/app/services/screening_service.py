@@ -44,6 +44,7 @@ from app.services.risk_service import (
     allocate_capital,
     compute_risk,
 )
+from app.services.telegram_service import broadcast_run_summary
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +221,42 @@ def _apply_allocation(
             r["allocation_weight"] = None
 
 
+def _finalize_telegram_broadcast(run_id: str) -> str | None:
+    """Phase 23 — gọi `broadcast_run_summary` non-blocking, persist outcome.
+
+    Returns `telegram_error` cho warnings_json. `None` nếu skipped (telegram
+    disabled) hoặc gửi OK; chuỗi error nếu broadcast thất bại (AC-14-03 mapping
+    sang warning badge TELEGRAM_FAILED).
+
+    Open SessionLocal riêng — telegram broadcast là independent boundary,
+    không re-use session đã commit results.
+    """
+    try:
+        with SessionLocal() as db:
+            outcome = broadcast_run_summary(db, run_id)
+            if outcome.get("skipped"):
+                # AC-14-01: enabled=false không log telegram_sent; giữ default False/None.
+                return None
+            screening_repo.update_telegram_status(
+                db, run_id, sent=outcome["sent"], error=outcome["error"]
+            )
+            db.commit()
+            return outcome["error"] if not outcome["sent"] else None
+    except Exception as exc:  # noqa: BLE001
+        # Telegram NEVER blocks run finalize. Last-resort catch — log + mark
+        # warning, but don't crash the background driver.
+        logger.warning("[%s] telegram finalize crashed: %s", run_id, exc.__class__.__name__)
+        try:
+            with SessionLocal() as db:
+                screening_repo.update_telegram_status(
+                    db, run_id, sent=False, error=f"Telegram finalize {exc.__class__.__name__}"
+                )
+                db.commit()
+        except Exception:  # noqa: BLE001
+            pass
+        return f"Telegram finalize {exc.__class__.__name__}"
+
+
 def _summarize_warnings(*, data_from_cache: bool, imputed_count: int, telegram_error: str | None) -> list[str]:
     warnings: list[str] = []
     if data_from_cache:
@@ -336,15 +373,13 @@ def run_screening(
         # Allocation áp dụng sau khi đã có toàn bộ rows MUA
         _apply_allocation(scored, total_capital=total_capital, skip_allocation=skip_allocation)
 
-        # Bulk insert results + counts + warnings
+        # Bulk insert results + counts. Telegram broadcast (Phase 23) runs
+        # AFTER results are persisted (top-N query reads from screening_results)
+        # but BEFORE mark_completed so `telegram_error` can feed into the
+        # warnings_json + final status (COMPLETED vs COMPLETED_WITH_WARNINGS).
         buy_count = sum(1 for r in scored if r["recommendation"] == Recommendation.MUA.value)
         hold_count = sum(1 for r in scored if r["recommendation"] == Recommendation.GIU.value)
         sell_count = sum(1 for r in scored if r["recommendation"] == Recommendation.BAN.value)
-        warnings = _summarize_warnings(
-            data_from_cache=data_cache,
-            imputed_count=imputed_count,
-            telegram_error=None,  # Phase 8 wire telegram
-        )
 
         with SessionLocal() as db:
             results_repo.bulk_insert(db, scored)
@@ -355,7 +390,20 @@ def run_screening(
                 buy_count=buy_count,
                 hold_count=hold_count,
                 sell_count=sell_count,
-                warnings_json=json.dumps(warnings),
+            )
+            db.commit()
+
+        telegram_error = _finalize_telegram_broadcast(run_id)
+
+        warnings = _summarize_warnings(
+            data_from_cache=data_cache,
+            imputed_count=imputed_count,
+            telegram_error=telegram_error,
+        )
+
+        with SessionLocal() as db:
+            screening_repo.update_counts(
+                db, run_id, warnings_json=json.dumps(warnings)
             )
             duration = time.perf_counter() - ctx.started_perf
             screening_repo.mark_completed(

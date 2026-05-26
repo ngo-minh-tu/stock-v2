@@ -59,6 +59,8 @@ export function CapitalModal({ open, onClose, onSubmit }: Props) {
       className="fixed inset-0 z-[55] flex items-center justify-center px-4"
       style={{ backgroundColor: 'var(--color-theme-overlay)' }}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <form
         onSubmit={handleSubmit}

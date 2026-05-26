@@ -22,6 +22,10 @@ export function AiScoreRing({ score, size = 84, strokeWidth = 8, label }: Props)
   const circumference = 2 * Math.PI * radius;
   const dash = (clamped / 100) * circumference;
   const color = tierColor(clamped);
+  const scoreText = String(clamped);
+  const scoreFontSize = Math.round(
+    size * (scoreText.length >= 5 ? 0.25 : scoreText.length >= 4 ? 0.28 : 0.32),
+  );
 
   return (
     <div
@@ -57,10 +61,10 @@ export function AiScoreRing({ score, size = 84, strokeWidth = 8, label }: Props)
           className="font-bold tabular-nums"
           style={{
             color: 'var(--color-theme-text-tertiary)',
-            fontSize: Math.round(size * 0.32),
+            fontSize: scoreFontSize,
           }}
         >
-          {clamped}
+          {scoreText}
         </span>
         <span
           className="tabular-nums"

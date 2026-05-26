@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { NewsCard } from './NewsCard';
 import { useNews } from '@/lib/hooks/useStocks';
@@ -23,7 +23,7 @@ interface Props {
   resetKey: number;
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export function NewsList({
   sources,
@@ -40,7 +40,6 @@ export function NewsList({
   const [pageCount, setPageCount] = useState(1);
   const [accumulator, setAccumulator] = useState<NewsArticle[]>([]);
   const [lastResponse, setLastResponse] = useState<NewsListResponse | null>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Reset on filter change.
   useEffect(() => {
@@ -74,30 +73,6 @@ export function NewsList({
       return merged;
     });
   }, [data]);
-
-  // Infinite scroll: bump pageCount when sentinel enters viewport (200px below bottom).
-  // CRITICAL: skip while a fetch is in flight, otherwise a fast scroll fires the observer
-  // again before the in-flight page returns. useApiResource cancels the prior request when
-  // path changes (offset N → offset N+20), so the canceled page's data never lands in the
-  // accumulator and the user sees a gap of 20 missing articles.
-  useEffect(() => {
-    if (loading) return;
-    const node = sentinelRef.current;
-    if (!node) return;
-    if (!lastResponse) return;
-    const reachedEnd = accumulator.length >= lastResponse.total;
-    if (reachedEnd) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setPageCount((p) => p + 1);
-        }
-      },
-      { rootMargin: '200px 0px 200px 0px' },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [accumulator.length, lastResponse, loading]);
 
   if (loading && accumulator.length === 0) {
     return (
@@ -160,8 +135,6 @@ export function NewsList({
         <NewsCard key={article.article_id} article={article} />
       ))}
 
-      <div ref={sentinelRef} className="h-1" aria-hidden="true" />
-
       {loading && accumulator.length > 0 && (
         <div
           className="flex items-center gap-2 text-2xs"
@@ -169,6 +142,18 @@ export function NewsList({
         >
           <Loader2 size={14} className="animate-spin" aria-hidden="true" />
           {t('load.loading')}
+        </div>
+      )}
+
+      {!reachedEnd && !loading && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className="btn btn-ghost text-2xs px-3 py-1"
+            onClick={() => setPageCount((p) => p + 1)}
+          >
+            {t('load.more')}
+          </button>
         </div>
       )}
 

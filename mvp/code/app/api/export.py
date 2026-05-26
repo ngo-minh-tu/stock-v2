@@ -27,5 +27,9 @@ def export_pdf(
     return Response(
         content=body,
         media_type=content_type,
-        headers={"Content-Disposition": f'attachment; filename="run-{run_id}.pdf"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="run-{run_id}.pdf"',
+            "Cache-Control": "no-store, max-age=0",
+            "Pragma": "no-cache",
+        },
     )

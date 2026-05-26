@@ -93,6 +93,8 @@ export function ExportPdfButton({
           <PdfPreviewModal
             open={open}
             html={exportPdf.previewHtml}
+            pdfUrl={exportPdf.previewUrl}
+            canDownload={exportPdf.canDownload}
             loading={exportPdf.loading}
             error={exportPdf.error}
             runId={exportPdf.previewRunId}
@@ -123,6 +125,8 @@ export function ExportPdfButton({
         <PdfPreviewModal
           open={open}
           html={exportPdf.previewHtml}
+          pdfUrl={exportPdf.previewUrl}
+          canDownload={exportPdf.canDownload}
           loading={exportPdf.loading}
           error={exportPdf.error}
           runId={exportPdf.previewRunId}

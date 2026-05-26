@@ -15,11 +15,18 @@ interface Props {
   onSubmit: (input: PortfolioCreateRequest) => Promise<void>;
 }
 
-const TODAY = '2026-05-07'; // matches portfolio-store + news-fixture anchor
+// Phase 25 (carry Phase 19 REVIEW Low): runtime TODAY thay cho hard-code
+// `'2026-05-07'`. Tránh form expire khi clock vượt qua fixture anchor.
+function getTodayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export function HoldingFormModal({ open, initial, onClose, onSubmit }: Props) {
   const t = useTranslations('portfolio.modal');
   const isEdit = initial !== null;
+
+  // `today` resolved once mỗi lần modal mount, stable trong vòng đời open.
+  const TODAY = useMemo(() => getTodayIso(), []);
 
   const [ticker, setTicker] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -47,7 +54,7 @@ export function HoldingFormModal({ open, initial, onClose, onSubmit }: Props) {
     }
     setError(null);
     setSubmitting(false);
-  }, [open, initial]);
+  }, [open, initial, TODAY]);
 
   // ESC closes.
   useEffect(() => {
@@ -238,7 +245,7 @@ export function HoldingFormModal({ open, initial, onClose, onSubmit }: Props) {
             {t('cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={submitting}>
-            {submitting ? t('submitting') : isEdit ? t('save') : t('add')}
+            {submitting ? t('submitting') : isEdit ? t('save') : t('submitAdd')}
           </button>
         </div>
       </form>

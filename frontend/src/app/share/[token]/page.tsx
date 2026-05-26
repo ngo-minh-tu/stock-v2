@@ -7,10 +7,12 @@ import { SharedView } from '@/components/share/SharedView';
 // Tokens are dynamic; we must not statically generate this route.
 export const dynamic = 'force-dynamic';
 
+// Next 15+ async params (Phase 24): dynamic route params resolve via a Promise.
 interface PageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
-export default function SharePage({ params }: PageProps) {
-  return <SharedView token={params.token} />;
+export default async function SharePage({ params }: PageProps) {
+  const { token } = await params;
+  return <SharedView token={token} />;
 }

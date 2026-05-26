@@ -1,7 +1,7 @@
 'use client';
 
-// Sticky header strip — ticker + name + exchange/sector on the left, price + delta in the
-// middle, AI score ring + recommendation pill on the right. Run selector lives in the sub-row.
+// Sticky header strip — ticker + name + exchange/sector on the left, price and AI score
+// decision cards on the right. Run selector lives in the sub-row.
 
 import { useTranslations } from 'next-intl';
 
@@ -96,7 +96,7 @@ export function StockHeader({ detail, runs, selectedRunId, onSelectRun }: Props)
     <section className="card p-4 flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-4">
         {/* Left — ticker / name / exchange / sector */}
-        <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex flex-col gap-1 min-w-[220px] flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1
               className="text-2xl font-bold tracking-wide"
@@ -118,46 +118,52 @@ export function StockHeader({ detail, runs, selectedRunId, onSelectRun }: Props)
           </p>
         </div>
 
-        {/* Center — current price + delta with TTCK arrow */}
-        <div className="flex flex-col items-end sm:items-center text-right sm:text-center">
-          <span
-            className="text-3xl font-bold tabular-nums leading-none"
-            style={{ color }}
+        <div className="flex flex-wrap items-stretch justify-end gap-3">
+          <div
+            className="flex min-w-[160px] flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-theme-charcoal) 16%, transparent)',
+              border: '1px solid var(--color-theme-charcoal)',
+            }}
           >
-            {detail.static.current_price.toFixed(2)}
             <span
-              className="text-sm font-medium ml-1"
+              className="text-2xs uppercase tracking-[0.18em]"
               style={{ color: 'var(--color-theme-text-secondary)' }}
             >
-              k
+              {t('currentPrice')}
             </span>
-          </span>
-          <span
-            className="inline-flex items-center gap-1 text-xs tabular-nums mt-1"
-            style={{ color }}
-          >
-            {pct !== 0 && <DeltaArrow up={pct > 0} />}
-            {pct > 0 ? '+' : ''}
-            {pct.toFixed(2)}%
-          </span>
-        </div>
+            <span className="text-3xl font-bold tabular-nums leading-none" style={{ color }}>
+              {detail.static.current_price.toFixed(2)}
+              <span
+                className="text-sm font-medium ml-1"
+                style={{ color: 'var(--color-theme-text-secondary)' }}
+              >
+                k
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs tabular-nums" style={{ color }}>
+              {pct !== 0 && <DeltaArrow up={pct > 0} />}
+              {pct > 0 ? '+' : ''}
+              {pct.toFixed(2)}%
+            </span>
+          </div>
 
-        {/* Right — AI score "decision panel" (ring + pill stacked) */}
-        <div
-          className="flex flex-col items-center gap-2 px-3 py-2 rounded-lg"
-          style={{
-            backgroundColor: 'color-mix(in srgb, var(--color-theme-charcoal) 16%, transparent)',
-            border: '1px solid var(--color-theme-charcoal)',
-          }}
-        >
-          <span
-            className="text-2xs uppercase tracking-[0.18em]"
-            style={{ color: 'var(--color-theme-text-secondary)' }}
+          <div
+            className="flex flex-col items-center gap-2 px-3 py-2 rounded-lg"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--color-theme-charcoal) 16%, transparent)',
+              border: '1px solid var(--color-theme-charcoal)',
+            }}
           >
-            {t('aiScore')}
-          </span>
-          <AiScoreRing score={detail.scoring.ai_score} size={84} strokeWidth={8} label={t('aiScore')} />
-          <RecommendationPill value={detail.scoring.recommendation} />
+            <span
+              className="text-2xs uppercase tracking-[0.18em]"
+              style={{ color: 'var(--color-theme-text-secondary)' }}
+            >
+              {t('aiScore')}
+            </span>
+            <AiScoreRing score={detail.scoring.ai_score} size={84} strokeWidth={8} label={t('aiScore')} />
+            <RecommendationPill value={detail.scoring.recommendation} />
+          </div>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { BacktestModal } from '@/components/backtest/BacktestModal';
 import { BacktestResultCard } from '@/components/backtest/BacktestResultCard';
+import { InfoBanner } from '@/components/common/InfoBanner';
 import { ComparePanel } from '@/components/run-history/ComparePanel';
 import { DeleteRunModal } from '@/components/run-history/DeleteRunModal';
 import { RunHistoryKPI } from '@/components/run-history/RunHistoryKPI';
@@ -208,6 +209,12 @@ export default function RunHistoryPage() {
               <h2 className="text-sm font-medium" style={{ color: 'var(--color-theme-text-tertiary)' }}>
                 {tBack('section.title')}
               </h2>
+
+              <InfoBanner
+                testId="backtest-disclaimer"
+                storageKey="backtest-disclaimer-v1"
+                text={tBack('disclaimer')}
+              />
 
               {backtest.isRunning && (
                 <div className="card p-4 flex items-center gap-3">

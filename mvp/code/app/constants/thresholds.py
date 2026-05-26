@@ -51,14 +51,13 @@ SCORE_DISTRIBUTION_BUCKETS: list[tuple[str, float, float]] = [
 # VND unit conversion (TAD g02 §M cluster 4)
 VND_RAW_TO_NGAN_DONG = 1_000.0  # close=35_000 raw → 35.0 ngàn đồng
 
-# Dashboard alpha proxy — placeholder cho VN-Index 3M return
-# Rationale: backtest engine (Phase 8) sẽ replace bằng historical VN-Index actual.
+# Dashboard alpha proxy + fallback cho VN-Index 3M return khi DB chưa có M05 history.
 DASHBOARD_VNINDEX_3M_PROXY_PCT = 5.0
 
-# Backtest constants — SRS g03 §K + AC-12-23 heuristic (mock, NOT strict per PRD §4.5)
+# Backtest constants — SRS g03 §K + PRD §4.5 strict correctness
 BACKTEST_HOLD_RETURN_MIN = -7.0  # %
 BACKTEST_HOLD_RETURN_MAX = 12.0  # %
-BACKTEST_SELL_UNDERPERFORM = 5.0  # % vs VN-Index (post-MVP strict mode)
+BACKTEST_SELL_UNDERPERFORM = 5.0  # % vs VN-Index
 
 # Backtest mock state machine — total ~1.5s simulated
 BACKTEST_MOCK_STEP_DELAY_S = 0.3  # 4 transitions × 0.3s ≈ 1.2s

@@ -1,9 +1,9 @@
-"""Backtest service — TAD g02 §8.5-8.6 + SRS f12 UC-12-03 + cluster-5-summary.
+"""Backtest service — TAD g02 §8.5-8.6 + SRS f12 UC-12-03 + PRD §4.5.
 
-Mock heuristic (NOT strict per PRD §4.5 — backend trade-off documented Phase 8):
-- MUA correct: actual_return_3m > 0
+Recommendation correctness is strict per PRD §4.5:
+- MUA correct: actual_return_3m > 0 AND actual_return_3m outperforms VN-Index
 - GIU correct: BACKTEST_HOLD_RETURN_MIN ≤ actual_return_3m ≤ BACKTEST_HOLD_RETURN_MAX
-- BAN correct: actual_return_3m < 0
+- BAN correct: actual_return_3m < 0 OR underperforms VN-Index by >5%
 
 Universe: scored results của latest COMPLETED run (~70-78 mã sau 4-round filter), KHÔNG full
 81-ticker whitelist (TAD §8.6 explicit "total_count = scored_count latest run, NOT 81").
@@ -28,11 +28,13 @@ from app.constants.thresholds import (
     BACKTEST_HOLD_RETURN_MAX,
     BACKTEST_HOLD_RETURN_MIN,
     BACKTEST_MOCK_STEP_DELAY_S,
+    BACKTEST_SELL_UNDERPERFORM,
+    DASHBOARD_VNINDEX_3M_PROXY_PCT,
 )
 from app.core.errors import AppError
 from app.db.session import SessionLocal
 from app.job_lock import job_lock
-from app.repositories import backtest_repo, results_repo, screening_repo
+from app.repositories import backtest_repo, macro_repo, results_repo, screening_repo
 
 
 def validate_period(period_from: date, period_to: date) -> None:
@@ -51,14 +53,28 @@ def validate_period(period_from: date, period_to: date) -> None:
         )
 
 
-def _is_correct(rec: str, actual_return: float) -> bool:
+def _is_correct(rec: str, actual_return: float, vnindex_return: float) -> bool:
     if rec == "MUA":
-        return actual_return > 0
+        return actual_return > 0 and actual_return > vnindex_return
     if rec == "GIU":
         return BACKTEST_HOLD_RETURN_MIN <= actual_return <= BACKTEST_HOLD_RETURN_MAX
     if rec == "BAN":
-        return actual_return < 0
+        return actual_return < 0 or (vnindex_return - actual_return) > BACKTEST_SELL_UNDERPERFORM
     return False
+
+
+def _vnindex_return_for_period(db: Session, period_from: date, period_to: date) -> float:
+    """VN-Index benchmark for PRD §4.5 correctness.
+
+    Prefer real M05 macro history (written by macro crawler with ISO-date periods).
+    Existing DBs may only have the original seed row (`2026Q2`); in that case keep
+    the documented dashboard proxy so backtest remains runnable instead of silently
+    reverting to the old no-benchmark heuristic.
+    """
+    actual = macro_repo.return_between(db, "M05", period_from, period_to)
+    if actual is not None:
+        return round(actual, 2)
+    return DASHBOARD_VNINDEX_3M_PROXY_PCT
 
 
 def _build_roi_curve(period_from: date, period_to: date, port_total: float, vn_total: float) -> list[dict]:
@@ -83,7 +99,7 @@ def _build_roi_curve(period_from: date, period_to: date, port_total: float, vn_t
     return curve
 
 
-def _generate_results(scored_rows: list, seed: int) -> list[dict]:
+def _generate_results(scored_rows: list, seed: int, *, vnindex_return: float) -> list[dict]:
     """Mock per-ticker results — heuristic correctness based on actual_return_3m mock.
 
     `target_price_3m` (ngàn đồng saved by Phase 5 raw VND ÷1000 by results_service) is
@@ -102,7 +118,7 @@ def _generate_results(scored_rows: list, seed: int) -> list[dict]:
         err_pct = abs(rng.gauss(0.0, err_base))
         sign = 1 if rng.random() > 0.5 else -1
         actual_ngan = round(predicted_ngan * (1 + sign * err_pct), 2)
-        price_error_pct = round(abs(actual_ngan - predicted_ngan) / max(predicted_ngan, 0.01) * 100.0, 2)
+        price_error_pct = round(abs(actual_ngan - predicted_ngan) / max(abs(actual_ngan), 0.01) * 100.0, 2)
         # Mock actual_return_3m theo upside_pct + noise; bias by recommendation
         upside = float(r.upside_pct or 0.0)
         if rec == "MUA":
@@ -120,7 +136,7 @@ def _generate_results(scored_rows: list, seed: int) -> list[dict]:
                 "actual_price": actual_ngan,
                 "price_error_pct": price_error_pct,
                 "actual_return_3m": actual_return,
-                "recommendation_correct": _is_correct(rec, actual_return),
+                "recommendation_correct": _is_correct(rec, actual_return, vnindex_return),
             }
         )
     return rows
@@ -192,7 +208,8 @@ def run_backtest(backtest_id: int, *, baseline_run_id: str, job_key: str) -> Non
                 error_msg = "baseline run has no scored rows"
                 return
 
-            mock_rows = _generate_results(scored, seed=backtest_id)
+            vn_roi = _vnindex_return_for_period(db, row.period_from, row.period_to)
+            mock_rows = _generate_results(scored, seed=backtest_id, vnindex_return=vn_roi)
             backtest_repo.insert_results(db, backtest_id, mock_rows)
 
             # Aggregate metrics
@@ -207,8 +224,6 @@ def run_backtest(backtest_id: int, *, baseline_run_id: str, job_key: str) -> Non
                 if mua_rows
                 else 0.0
             )
-            # VN-Index ROI: heuristic — slightly less than mean of all return
-            vn_roi = round(sum(r["actual_return_3m"] for r in mock_rows) / total - 1.5, 2) if total else 0.0
             alpha = round(port_roi - vn_roi, 2)
 
             backtest_repo.mark_completed(

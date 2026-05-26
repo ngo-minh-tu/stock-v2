@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class RefreshPricesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    resume_failed: bool = False
+    tickers: list[str] | None = Field(default=None, max_length=200)
 
 
 class RefreshAcceptedResponse(BaseModel):
@@ -23,3 +30,4 @@ class RefreshStatusResponse(BaseModel):
     started_at: str
     finished_at: str | None
     error: str | None
+    stats: dict

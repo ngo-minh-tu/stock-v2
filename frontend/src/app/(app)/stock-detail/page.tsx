@@ -20,7 +20,7 @@ import {
   useStockPrices,
   useTickerRuns,
 } from '@/lib/hooks/useStockDetail';
-import type { CandleInterval, CandleLookback, RunSummary } from '@/lib/types';
+import type { CandleInterval, CandleLookback, ExcludedStock, RunSummary } from '@/lib/types';
 
 export default function StockDetailPage() {
   const t = useTranslations('stockDetail');
@@ -47,6 +47,10 @@ export default function StockDetailPage() {
     runId ? `/api/runs/${runId}` : null,
     reloadKey,
   );
+  const excludedRes = useApiResource<{ items: ExcludedStock[]; total: number }>(
+    runId ? `/api/runs/${runId}/excluded` : null,
+    reloadKey,
+  );
 
   const [candleInterval, setCandleInterval] = useState<CandleInterval>('D');
   const [lookback, setLookback] = useState<CandleLookback>('6T');
@@ -67,6 +71,11 @@ export default function StockDetailPage() {
       target_3m: detailRes.data.scoring.target_price_3m,
     };
   }, [detailRes.data]);
+
+  const excludedItem = useMemo(() => {
+    if (!ticker || !excludedRes.data) return null;
+    return excludedRes.data.items.find((item) => item.ticker === ticker) ?? null;
+  }, [excludedRes.data, ticker]);
 
   // No ticker in URL — direct nav. Show a hint.
   if (!ticker) {
@@ -105,12 +114,30 @@ export default function StockDetailPage() {
   }
 
   if (detailRes.error || !detailRes.data) {
+    if (excludedRes.loading && !excludedRes.data) {
+      return (
+        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-theme-text-secondary)' }}>
+          <Loader2 size={14} aria-hidden="true" className="animate-spin" />
+          {t('loading')}
+        </div>
+      );
+    }
+
     return (
       <div className="card p-6 text-sm" style={{ borderColor: 'var(--ssi-down)' }}>
         <h1 className="text-base font-medium mb-2" style={{ color: 'var(--ssi-down)' }}>
-          {t('errorTitle')}
+          {excludedItem ? t('excludedTitle') : t('errorTitle')}
         </h1>
-        <p>{detailRes.error?.message ?? t('errorBody')}</p>
+        <p>
+          {excludedItem
+            ? t('excludedBody', {
+                ticker: excludedItem.ticker,
+                round: excludedItem.excluded_round,
+                reason: excludedItem.reason_text,
+                code: excludedItem.reason_code,
+              })
+            : detailRes.error?.message ?? t('errorBody')}
+        </p>
       </div>
     );
   }

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import random
 from datetime import datetime, timedelta
 
@@ -42,32 +43,32 @@ logger = logging.getLogger(__name__)
 # --- Stock fixture (port từ FE stocks-fixture.ts) ---
 
 REAL_TICKERS: list[tuple[str, str, str]] = [
-    ("VHM", "Vinhomes", "HOSE"),
-    ("VIC", "Vingroup", "HOSE"),
-    ("NVL", "No Va Land Investment", "HOSE"),
-    ("KDH", "Khang Điền", "HOSE"),
-    ("NLG", "Nam Long Investment", "HOSE"),
-    ("DXG", "Đất Xanh Group", "HOSE"),
-    ("PDR", "Phát Đạt Real Estate", "HOSE"),
-    ("KBC", "Kinh Bắc City", "HOSE"),
-    ("BCM", "Becamex IDC", "HOSE"),
-    ("VRE", "Vincom Retail", "HOSE"),
-    ("HDC", "Bà Rịa Vũng Tàu Housing", "HOSE"),
-    ("IJC", "IDICO", "HOSE"),
-    ("DIG", "DIC Corp", "HOSE"),
-    ("CEO", "C.E.O Group", "HNX"),
-    ("HQC", "Hoàng Quân Consultant", "HOSE"),
-    ("TIG", "Thăng Long Invest Group", "HNX"),
-    ("LDG", "LDG Investment", "HOSE"),
-    ("ITC", "Intresco", "HOSE"),
-    ("SCR", "Sài Gòn Thương Tín Real Estate", "HOSE"),
-    ("AGG", "An Gia Investment", "HOSE"),
-    ("TCH", "Hoàng Huy Investment", "HOSE"),
-    ("HDG", "Hà Đô Group", "HOSE"),
-    ("SZC", "Sonadezi Châu Đức", "HOSE"),
-    ("SIP", "Sài Gòn IDC", "UPCOM"),
-    ("KOS", "Kosy Real Estate", "HOSE"),
-    ("NTL", "Tudico", "HOSE"),
+    ("VHM", "Công ty Cổ phần Vinhomes", "HOSE"),
+    ("VIC", "Tập đoàn Vingroup", "HOSE"),
+    ("NVL", "Công ty Cổ phần Tập đoàn Đầu tư Địa ốc No Va", "HOSE"),
+    ("KDH", "Công ty Cổ phần Đầu tư và Kinh doanh Nhà Khang Điền", "HOSE"),
+    ("NLG", "Công ty Cổ phần Đầu tư Nam Long", "HOSE"),
+    ("DXG", "Công ty Cổ phần Tập đoàn Đất Xanh", "HOSE"),
+    ("PDR", "Công ty Cổ phần Phát triển Bất động sản Phát Đạt", "HOSE"),
+    ("KBC", "Tổng Công ty Phát triển Đô thị Kinh Bắc - CTCP", "HOSE"),
+    ("BCM", "Tổng Công ty Đầu tư và Phát triển Công nghiệp - CTCP", "HOSE"),
+    ("VRE", "Công ty Cổ phần Vincom Retail", "HOSE"),
+    ("HDC", "Công ty Cổ phần Phát triển Nhà Bà Rịa - Vũng Tàu", "HOSE"),
+    ("IJC", "Công ty Cổ phần Phát triển Hạ tầng Kỹ thuật", "HOSE"),
+    ("DIG", "Tổng Công ty Cổ phần Đầu tư Phát triển Xây dựng", "HOSE"),
+    ("CEO", "Công ty Cổ phần Tập đoàn C.E.O", "HNX"),
+    ("HQC", "Công ty Cổ phần Tư vấn - Thương mại - Dịch vụ Địa ốc Hoàng Quân", "HOSE"),
+    ("TIG", "Công ty Cổ phần Tập đoàn Đầu tư Thăng Long", "HNX"),
+    ("LDG", "Công ty Cổ phần Đầu tư LDG", "HOSE"),
+    ("ITC", "Công ty Cổ phần Đầu tư - Kinh doanh Nhà", "HOSE"),
+    ("SCR", "Công ty Cổ phần Địa ốc Sài Gòn Thương Tín", "HOSE"),
+    ("AGG", "Công ty Cổ phần Đầu tư và Phát triển Bất động sản An Gia", "HOSE"),
+    ("TCH", "Công ty Cổ phần Đầu tư Dịch vụ Tài chính Hoàng Huy", "HOSE"),
+    ("HDG", "Công ty Cổ phần Tập đoàn Hà Đô", "HOSE"),
+    ("SZC", "Công ty Cổ phần Sonadezi Châu Đức", "HOSE"),
+    ("SIP", "Công ty Cổ phần Đầu tư Sài Gòn VRG", "UPCOM"),
+    ("KOS", "Công ty Cổ phần Kosy", "HOSE"),
+    ("NTL", "Công ty Cổ phần Phát triển Đô thị Từ Liêm", "HOSE"),
 ]
 
 ANCHOR_MOCKS: list[tuple[str, str, str, str]] = [
@@ -252,12 +253,24 @@ def build_cache_seeds() -> list[dict]:
 
 
 def seed_stocks(db: Session) -> int:
-    if db.scalar(select(Stock).limit(1)) is not None:
-        logger.info("stocks already seeded; skipping")
-        return 0
     rows = build_stock_seeds()
-    db.bulk_insert_mappings(Stock, rows)
-    return len(rows)
+    existing = {s.ticker: s for s in db.scalars(select(Stock)).all()}
+    changed = 0
+    inserts: list[dict] = []
+
+    for row in rows:
+        stock = existing.get(row["ticker"])
+        if stock is None:
+            inserts.append(row)
+            continue
+        for field in ("name", "exchange", "sector", "newly_listed"):
+            if getattr(stock, field) != row[field]:
+                setattr(stock, field, row[field])
+                changed += 1
+
+    if inserts:
+        db.bulk_insert_mappings(Stock, inserts)
+    return len(inserts) + changed
 
 
 def seed_settings(db: Session) -> int:
@@ -287,7 +300,7 @@ def seed_news(db: Session) -> int:
     if db.scalar(select(NewsArticle).limit(1)) is not None:
         logger.info("news already seeded; skipping")
         return 0
-    tickers = [r["ticker"] for r in build_stock_seeds()]
+    tickers = [r["ticker"] for r in build_stock_seeds() if not r["ticker"].startswith("MOCK")]
     rows = build_news_seeds(tickers)
     db.bulk_insert_mappings(NewsArticle, rows)
     return len(rows)
@@ -306,8 +319,8 @@ MACRO_DEFAULTS: list[tuple[str, str, float]] = [
 def seed_macro(db: Session) -> int:
     """Seed M01-M05 stub values cho 2026Q2. Idempotent: skip nếu existing.
 
-    Production sẽ refresh qua macro crawler post-MVP. MVP dùng hardcode để engines pipeline
-    có dữ liệu macro features (M01-M05).
+    Production refresh-all sẽ upsert macro rows qua `macro_crawler`; seed chỉ giữ
+    baseline fallback để engines pipeline luôn có M01-M05 lần boot đầu.
     """
     inserted = 0
     for indicator, period, value in MACRO_DEFAULTS:
@@ -341,19 +354,39 @@ def seed_cache_metadata(db: Session) -> int:
     return inserted
 
 
-def run() -> dict[str, int]:
-    """Run all seeders. Returns count per entity."""
+def run(*, seed_news_fixture: bool | None = None) -> dict[str, int]:
+    """Run all seeders. Returns count per entity.
+
+    `seed_news_fixture` — bật seed 150 fixture articles (Phase 9 stopgap).
+    Default theo env `SEED_NEWS_FIXTURE` ("1"/"true" → True), else False khi
+    APP_ENV=production hoặc unset, True ở test (back-compat cho test_seed.py).
+    Real production: gọi POST /api/news/refresh để crawl 5 nguồn thật.
+    """
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+    if seed_news_fixture is None:
+        env_flag = os.environ.get("SEED_NEWS_FIXTURE", "").lower()
+        if env_flag in ("1", "true", "yes"):
+            seed_news_fixture = True
+        elif env_flag in ("0", "false", "no"):
+            seed_news_fixture = False
+        else:
+            # Default: True ở test env (back-compat), False ở real run.
+            seed_news_fixture = os.environ.get("APP_ENV", "").lower() == "test"
+
     counts: dict[str, int] = {}
     with SessionLocal() as db:
         counts["stocks"] = seed_stocks(db)
         counts["settings"] = seed_settings(db)
         counts["user"] = seed_user(db)
-        counts["news"] = seed_news(db)
+        if seed_news_fixture:
+            counts["news"] = seed_news(db)
+        else:
+            counts["news"] = 0
         counts["macro"] = seed_macro(db)
         counts["cache_metadata"] = seed_cache_metadata(db)
         db.commit()
-    logger.info("seed counts: %s", counts)
+    logger.info("seed counts: %s (news_fixture=%s)", counts, seed_news_fixture)
     return counts
 
 

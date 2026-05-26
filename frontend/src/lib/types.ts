@@ -181,7 +181,9 @@ export interface RunsListResponse {
 // Cluster 3: Stock Detail (TAD g02 §4) + price history
 // =====================================================================
 
-// Static info — also used by /api/stocks/{ticker}.
+// Stock Detail per-run `static` block (TAD g02 §4) — served by
+// `GET /api/runs/{run_id}/stocks/{ticker}`. `current_price` ở đây là ngàn đồng
+// snapshot tại thời điểm run, KHÔNG phải BE `StockListItem.latest`.
 export interface StockStaticInfo {
   ticker: string;
   name: string;
@@ -235,7 +237,7 @@ export interface StockDetailResponse {
   };
   reasons: ScreeningReason[];
   features: Record<string, number>; // 32-38 of the 38-feature dict (some imputed)
-  imputed_features: string[]; // feature IDs marked as imputed
+  imputed_features?: string[]; // feature IDs marked as imputed
   feature_availability: number; // 32..38
   radar: {
     fundamental: number;
@@ -307,9 +309,18 @@ export interface LatestPrice {
   volume: number;    // share count (raw; format K/M in UI)
 }
 
-export interface StockListItem extends StockStaticInfo {
-  latest_price: LatestPrice;
+// Price Board row shape — served by `GET /api/stocks`.
+// Phase 25: standalone interface (KHÔNG extend StockStaticInfo) vì BE
+// `StockListItem` schema khác hẳn (`latest: LatestPrice | null` thay vì
+// `current_price` flat field). `StockStaticInfo` riêng cho Stock Detail.
+export interface StockListItem {
+  ticker: string;
+  name: string;
+  exchange: 'HOSE' | 'HNX' | 'UPCOM';
+  sector: string;
   newly_listed: boolean;
+  // Nullable per BE schema — null khi ticker chưa có price snapshot.
+  latest: LatestPrice | null;
 }
 
 // GET /api/stocks?limit=100&offset=0 — paginated envelope per g02 §2.
@@ -329,8 +340,8 @@ export interface NewsArticle {
   source: NewsSource;
   title: string;
   url: string;
-  published_at: string;             // ISO8601
-  related_tickers: string[];        // 0-3 tickers from STOCK_FIXTURE
+  published_at: string | null;      // ISO8601, null when HTML source has no timestamp
+  related_tickers: string[];        // 0-3 real tickers
   content_snippet: string;          // ~150 chars
   sentiment_label: SentimentLabel;
   sentiment_score: number;          // -1..+1, 2 decimals
@@ -349,12 +360,17 @@ export interface NewsListResponse {
 // GET /api/news/sentiment/{ticker} — 30-day rollup.
 export interface SentimentSummaryResponse {
   ticker: string;
-  window_days: number;              // typically 30 — surfaced so UI can label correctly
-  count: number;                    // 0 → label=NEUTRAL, score=0 (GUARD-08)
-  label: SentimentLabel;
-  score: number;                    // avg across articles, -1..+1
-  breakdown: { label: SentimentLabel; count: number }[];
-  source_breakdown: { source: NewsSource; count: number }[];
+  window_days?: number;             // mock shape
+  count?: number;                   // mock shape
+  total?: number;                   // backend shape
+  label?: SentimentLabel;           // mock shape
+  score?: number;                   // mock shape
+  score_avg?: number;               // backend shape
+  breakdown?: { label: SentimentLabel; count: number }[];
+  label_counts?: Partial<Record<SentimentLabel, number>>;
+  source_breakdown:
+    | { source: NewsSource; count: number }[]
+    | Partial<Record<NewsSource, number>>;
 }
 
 // =====================================================================

@@ -15,12 +15,17 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ExchangeBadge } from '@/components/badges/ExchangeBadge';
 import { priceColor } from '@/lib/constants';
-import type { StockListItem } from '@/lib/types';
+import type { LatestPrice, StockListItem } from '@/lib/types';
 
 import { PriceCell } from './PriceCell';
 
+// Phase 25: BE `StockListItem.latest` nullable; PriceBoard chỉ render rows đã có
+// snapshot (page-level filter `row.latest !== null`). Narrowed prop type lets
+// columns access `r.latest` without optional-chain noise.
+type PriceBoardRow = StockListItem & { latest: LatestPrice };
+
 interface Props {
-  rows: StockListItem[];
+  rows: PriceBoardRow[];
   /** Render the search input externally? Default true (lives at top of table). */
   searchPlaceholder: string;
   emptyTitle: string;
@@ -70,7 +75,7 @@ export function PriceBoardTable({
     );
   }, [rows, debounced]);
 
-  const columns = useMemo<ColumnDef<StockListItem>[]>(
+  const columns = useMemo<ColumnDef<PriceBoardRow>[]>(
     () => [
       {
         id: 'ticker',
@@ -109,42 +114,42 @@ export function PriceBoardTable({
       },
       {
         id: 'reference',
-        accessorFn: (r) => r.latest_price.reference,
+        accessorFn: (r) => r.latest.reference,
         header: () => tCol('reference'),
         cell: ({ row }) => (
-          <PriceCell mode="static" fixedColor="ref" value={row.original.latest_price.reference} />
+          <PriceCell mode="static" fixedColor="ref" value={row.original.latest.reference} />
         ),
       },
       {
         id: 'ceiling',
-        accessorFn: (r) => r.latest_price.ceiling,
+        accessorFn: (r) => r.latest.ceiling,
         header: () => tCol('ceiling'),
         cell: ({ row }) => (
-          <PriceCell mode="static" fixedColor="ceil" value={row.original.latest_price.ceiling} />
+          <PriceCell mode="static" fixedColor="ceil" value={row.original.latest.ceiling} />
         ),
       },
       {
         id: 'floor',
-        accessorFn: (r) => r.latest_price.floor,
+        accessorFn: (r) => r.latest.floor,
         header: () => tCol('floor'),
         cell: ({ row }) => (
-          <PriceCell mode="static" fixedColor="floor" value={row.original.latest_price.floor} />
+          <PriceCell mode="static" fixedColor="floor" value={row.original.latest.floor} />
         ),
       },
       {
         id: 'open',
-        accessorFn: (r) => r.latest_price.open,
+        accessorFn: (r) => r.latest.open,
         header: () => tCol('open'),
         cell: ({ row }) => (
-          <PriceCell mode="static" fixedColor="primary" value={row.original.latest_price.open} />
+          <PriceCell mode="static" fixedColor="primary" value={row.original.latest.open} />
         ),
       },
       {
         id: 'high',
-        accessorFn: (r) => r.latest_price.high,
+        accessorFn: (r) => r.latest.high,
         header: () => tCol('high'),
         cell: ({ row }) => {
-          const p = row.original.latest_price;
+          const p = row.original.latest;
           return (
             <PriceCell
               mode="dynamic"
@@ -158,10 +163,10 @@ export function PriceBoardTable({
       },
       {
         id: 'low',
-        accessorFn: (r) => r.latest_price.low,
+        accessorFn: (r) => r.latest.low,
         header: () => tCol('low'),
         cell: ({ row }) => {
-          const p = row.original.latest_price;
+          const p = row.original.latest;
           return (
             <PriceCell
               mode="dynamic"
@@ -175,10 +180,10 @@ export function PriceBoardTable({
       },
       {
         id: 'close',
-        accessorFn: (r) => r.latest_price.close,
+        accessorFn: (r) => r.latest.close,
         header: () => tCol('close'),
         cell: ({ row }) => {
-          const p = row.original.latest_price;
+          const p = row.original.latest;
           return (
             <span className="font-medium">
               <PriceCell
@@ -194,10 +199,10 @@ export function PriceBoardTable({
       },
       {
         id: 'change',
-        accessorFn: (r) => r.latest_price.close - r.latest_price.reference,
+        accessorFn: (r) => r.latest.close - r.latest.reference,
         header: () => tCol('change'),
         cell: ({ row }) => {
-          const p = row.original.latest_price;
+          const p = row.original.latest;
           const change = p.close - p.reference;
           return (
             <PriceCell
@@ -215,12 +220,12 @@ export function PriceBoardTable({
       {
         id: 'changePct',
         accessorFn: (r) =>
-          r.latest_price.reference === 0
+          r.latest.reference === 0
             ? 0
-            : ((r.latest_price.close - r.latest_price.reference) / r.latest_price.reference) * 100,
+            : ((r.latest.close - r.latest.reference) / r.latest.reference) * 100,
         header: () => tCol('changePct'),
         cell: ({ row }) => {
-          const p = row.original.latest_price;
+          const p = row.original.latest;
           const pct = p.reference === 0 ? 0 : ((p.close - p.reference) / p.reference) * 100;
           return (
             <PriceCell
@@ -237,11 +242,11 @@ export function PriceBoardTable({
       },
       {
         id: 'volume',
-        accessorFn: (r) => r.latest_price.volume,
+        accessorFn: (r) => r.latest.volume,
         header: () => tCol('volume'),
         cell: ({ row }) => (
           <span className="tabular-nums" style={{ color: 'var(--color-theme-text-primary)' }}>
-            {formatVolume(row.original.latest_price.volume)}
+            {formatVolume(row.original.latest.volume)}
           </span>
         ),
       },
@@ -348,7 +353,7 @@ export function PriceBoardTable({
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => {
-                const p = row.original.latest_price;
+                const p = row.original.latest;
                 // Color test marker — read once per row so the color flag is visible to a11y tools.
                 const closeColor = priceColor(p.close, p.ceiling, p.floor, p.reference);
                 return (

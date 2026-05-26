@@ -32,6 +32,7 @@ interface DotProps {
   cy?: number;
   index?: number;
   value?: number;
+  payload?: Record<string, unknown>;
 }
 
 export function createRadarHoverDot({
@@ -39,18 +40,31 @@ export function createRadarHoverDot({
   color,
   onHover,
   seriesName,
+  values,
+  valueKey,
 }: {
   axes: string[];
   color: string;
   onHover: (state: RadarHoverState | null) => void;
   seriesName?: string;
+  values?: number[];
+  valueKey: string;
 }) {
   const total = axes.length;
   return function RadarHoverDot(props: DotProps) {
-    const { cx, cy, index, value } = props;
+    const { cx, cy, index, value, payload } = props;
     if (typeof cx !== 'number' || typeof cy !== 'number' || typeof index !== 'number') {
-      return <g />;
+      return <g key={`radar-dot-empty-${index ?? 'unknown'}`} />;
     }
+    const rawPayloadValue = payload?.[valueKey];
+    const resolvedValue =
+      typeof values?.[index] === 'number'
+        ? values[index]
+        : typeof rawPayloadValue === 'number'
+        ? rawPayloadValue
+        : typeof value === 'number'
+        ? value
+        : 0;
     const { dx, dy } = radarOutwardVector(index, total);
     const enter = () =>
       onHover({
@@ -61,13 +75,13 @@ export function createRadarHoverDot({
         // axes lookup is more reliable than payload.axis (recharts dot props
         // can vary by version / lose original data fields after transform).
         axis: axes[index] ?? '',
-        value: typeof value === 'number' ? value : 0,
+        value: resolvedValue,
         color,
         seriesName,
       });
     const leave = () => onHover(null);
     return (
-      <g>
+      <g key={`radar-dot-${seriesName ?? 'series'}-${index}`}>
         <circle
           cx={cx}
           cy={cy}
@@ -136,9 +150,11 @@ export function createOutwardTick(axes: string[], push = 5) {
 export function RadarHoverTooltip({
   state,
   offset = 24,
+  valueLabel = 'Score',
 }: {
   state: RadarHoverState | null;
   offset?: number;
+  valueLabel?: string;
 }) {
   if (!state) return null;
   // Position INWARD (toward chart center) so the tooltip never lands on top
@@ -170,12 +186,24 @@ export function RadarHoverTooltip({
         zIndex: 5,
       }}
     >
-      {state.axis && <div className="font-bold text-sm mb-0.5">{state.axis}</div>}
-      <div style={{ color: state.color }}>
+      {state.axis && (
+        <div className="font-bold text-sm mb-1" style={{ color: 'var(--color-theme-text-tertiary)' }}>
+          {state.axis}
+        </div>
+      )}
+      <div className="flex items-center gap-1.5">
+        <span
+          aria-hidden="true"
+          className="inline-block rounded-full"
+          style={{ width: 7, height: 7, backgroundColor: state.color }}
+        />
         {state.seriesName && (
-          <span style={{ opacity: 0.85, marginRight: 4 }}>{state.seriesName}:</span>
+          <span style={{ color: 'var(--color-theme-text-secondary)' }}>{state.seriesName}</span>
         )}
-        <span className="font-semibold">{state.value}</span>
+        <span style={{ color: 'var(--color-theme-text-secondary)' }}>{valueLabel}:</span>
+        <span className="font-semibold tabular-nums" style={{ color: 'var(--color-theme-text-tertiary)' }}>
+          {Number(state.value).toFixed(2)}/100
+        </span>
       </div>
     </div>
   );

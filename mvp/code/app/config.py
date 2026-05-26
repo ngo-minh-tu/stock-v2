@@ -4,7 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Multiple env files: later overrides earlier. `.env.telegram` is gitignored
+    # local-only secret store (Phase 20); when absent, telegram_* fall back to
+    # defaults / explicit env vars.
+    model_config = SettingsConfigDict(env_file=(".env", ".env.telegram"), extra="ignore")
 
     app_env: str = "development"
     app_version: str = "0.1.0"
@@ -20,8 +23,9 @@ class Settings(BaseSettings):
 
     frontend_origin: str = "http://localhost:3000"
 
-    vnstock_rate_limit_s: float = 0.5
+    vnstock_rate_limit_s: float = 6.5
     vnstock_timeout_s: int = 10
+    vnstock_client_stub: bool = False
 
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""

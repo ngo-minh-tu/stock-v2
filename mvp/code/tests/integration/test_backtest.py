@@ -1,6 +1,6 @@
 """Backtest endpoints — TAD g02 §8.5-8.6 + SRS f12 UC-12-03 AC-12-17..26.
 
-Coverage: 4 endpoints (POST start + 3 GET) + period validation + heuristic correctness
+ Coverage: 4 endpoints (POST start + 3 GET) + period validation + PRD §4.5 correctness
 + job_lock conflict (409) + terminal status correctness on early-return paths.
 """
 
@@ -187,28 +187,32 @@ def test_results_404_unknown_id(client, auth_headers):
 
 
 # ---------------------------------------------------------------------------
-# Heuristic correctness — AC-12-23
+# PRD §4.5 strict correctness — AC-12-23 backend phase
 # ---------------------------------------------------------------------------
 
 
-def test_heuristic_correctness_per_recommendation(client, auth_headers, completed_run):
-    """SRS f12 AC-12-23: MUA correct=return>0; GIU correct=-7..+12; BAN correct=return<0."""
+def test_strict_correctness_compares_recommendation_to_vnindex(client, auth_headers, completed_run):
+    """PRD §4.5: MUA/BAN must compare against VN-Index benchmark."""
     bid = client.post(
         "/api/backtest",
         json={"period_from": _3mo_ago(), "period_to": _yesterday()},
         headers=auth_headers,
     ).json()["data"]["backtest_id"]
+    metrics = client.get(f"/api/backtest/{bid}", headers=auth_headers).json()["data"]
+    vnindex = metrics["vnindex_roi"]
     items = client.get(f"/api/backtest/{bid}/results", headers=auth_headers).json()["data"]["results"]
     for r in items:
         rec = r["predicted_recommendation"]
         ret = r["actual_return_3m"]
         expected = (
-            ret > 0 if rec == "MUA"
+            (ret > 0 and ret > vnindex) if rec == "MUA"
             else -7.0 <= ret <= 12.0 if rec == "GIU"
-            else ret < 0 if rec == "BAN"
+            else (ret < 0 or (vnindex - ret) > 5.0) if rec == "BAN"
             else False
         )
-        assert r["recommendation_correct"] is expected, f"{r['ticker']} rec={rec} ret={ret}"
+        assert r["recommendation_correct"] is expected, (
+            f"{r['ticker']} rec={rec} ret={ret} vnindex={vnindex}"
+        )
 
 
 # ---------------------------------------------------------------------------

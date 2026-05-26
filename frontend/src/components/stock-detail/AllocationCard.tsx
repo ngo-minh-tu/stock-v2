@@ -4,15 +4,37 @@
 
 import { useTranslations } from 'next-intl';
 
+import type { Recommendation } from '@/lib/constants';
+
 interface Props {
-  allocationAmount: number;
-  allocationWeight: number;
+  allocationAmount?: number;
+  allocationWeight?: number;
   totalCapital: number;
+  recommendation: Recommendation;
 }
 
-export function AllocationCard({ allocationAmount, allocationWeight, totalCapital }: Props) {
+export function AllocationCard({
+  allocationAmount,
+  allocationWeight,
+  totalCapital,
+  recommendation,
+}: Props) {
   const t = useTranslations('stockDetail.risk.allocation');
-  if (totalCapital <= 0 || allocationAmount <= 0) {
+  const tRecommendation = useTranslations('recommendation');
+  const hasAllocation =
+    typeof allocationAmount === 'number' &&
+    allocationAmount > 0 &&
+    typeof allocationWeight === 'number';
+
+  if (!hasAllocation) {
+    const message =
+      totalCapital > 0 && recommendation !== 'MUA'
+        ? t('notBuy', {
+            recommendation: tRecommendation(recommendation),
+            total: totalCapital.toLocaleString('fr-FR'),
+          })
+        : t('skipped');
+
     return (
       <div className="card p-4 flex flex-col gap-2">
         <h3
@@ -22,7 +44,7 @@ export function AllocationCard({ allocationAmount, allocationWeight, totalCapita
           {t('title')}
         </h3>
         <span className="text-base" style={{ color: 'var(--color-theme-text-secondary)' }}>
-          {t('skipped')}
+          {message}
         </span>
       </div>
     );

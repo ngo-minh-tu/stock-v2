@@ -17,12 +17,86 @@ Output:
     FeatureBundle(features={F01..S03: float}, raw_indicators={...}, availability=int, warnings=[])
 """
 
+import logging
 from dataclasses import dataclass, field
 from math import sqrt
 from statistics import mean
 
 from app.models.financial import FinancialReport
 from app.models.stock import StockPrice
+
+logger = logging.getLogger(__name__)
+
+# Phase 25 (Phase 22 REVIEW High carry) — sanity range cho VND raw fields sau khi
+# source-aware scaling. Mọi mã BĐS niêm yết VN có realistic minimum ≥ 1e9 (1 tỷ
+# VND). < 1e9 = signal source-unit drift, parser regression, hoặc test data leak.
+# Warn-log only — KHÔNG block screening.
+_VND_FIELD_SANITY_FLOOR = 1e9
+# Backward-compat alias (Phase 25 callers may import name).
+_TOTAL_ASSETS_SANITY_FLOOR_VND = _VND_FIELD_SANITY_FLOOR
+
+# Phase 28 — consolidated sanity check across multiple VND fields. Each entry =
+# (attr_name, extra_hint). Extra hint surfaces operator-audit context (e.g. bvps
+# fallback divisor → hint mentions multiplier risk).
+_SANITY_VND_FIELDS: tuple[tuple[str, str], ...] = (
+    ("total_assets", ""),
+    ("total_equity", "bvps fallback có thể sai 1000×"),
+)
+
+
+def _warn_low_value_field(
+    ticker: str,
+    latest: FinancialReport,
+    *,
+    field_name: str,
+    hint: str = "",
+) -> None:
+    """Phase 28 — consolidated sentinel cho VND raw fields below sanity floor.
+
+    Warn-log only; do NOT raise. False-positives possible cho ticker mới list
+    với BCTC chưa kịp populate, nhưng > 99% case là source-unit drift.
+
+    Bypass khi value ≤ 0 (insolvent / missing — handled bởi consumer logic).
+    """
+    raw = getattr(latest, field_name, None)
+    if raw is None:
+        return
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        return
+    if 0 < val < _VND_FIELD_SANITY_FLOOR:
+        suffix = f" — {hint}" if hint else ""
+        logger.warning(
+            "[%s] %s=%s (period=%s) below sanity floor %s VND "
+            "— possible unit mismatch / source drift%s",
+            ticker, field_name, val, latest.period,
+            _VND_FIELD_SANITY_FLOOR, suffix,
+        )
+
+
+def _warn_total_assets_range(ticker: str, latest: FinancialReport) -> None:
+    """Phase 25 — backward-compat wrapper (delegates to consolidated helper)."""
+    _warn_low_value_field(ticker, latest, field_name="total_assets")
+
+
+def _warn_total_equity_range(ticker: str, latest: FinancialReport) -> None:
+    """Phase 27 — backward-compat wrapper (delegates to consolidated helper)."""
+    _warn_low_value_field(
+        ticker, latest, field_name="total_equity",
+        hint="bvps fallback có thể sai 1000×",
+    )
+
+
+def _warn_all_sanity_fields(ticker: str, latest: FinancialReport) -> None:
+    """Phase 28 — iterate all `_SANITY_VND_FIELDS` and warn-log each below floor.
+
+    Single entry point replacing scattered `_warn_total_*_range` invocations.
+    Future fields: extend `_SANITY_VND_FIELDS` tuple — KHÔNG cần edit `compute()`.
+    """
+    for field_name, hint in _SANITY_VND_FIELDS:
+        _warn_low_value_field(ticker, latest, field_name=field_name, hint=hint)
+
 
 REQUIRED_FUNDAMENTAL_FEATURES = {"F05", "F06"}
 REQUIRED_TECHNICAL_FEATURES = {"T01", "T02", "T03", "T04", "T05", "T06"}
@@ -177,6 +251,11 @@ class FeatureService:
             latest = financials[0]
             prev = financials[1] if len(financials) > 1 else None
             close_now = float(prices[-1].close) if prices and prices[-1].close else None
+
+            # Phase 25+27+28 sanity guards — flag implausibly-low VND fields
+            # (post Phase 22 source-aware scaling). Log-only, không block scoring.
+            # Consolidated Phase 28: iterate `_SANITY_VND_FIELDS` tuple.
+            _warn_all_sanity_fields(ticker, latest)
 
             # F05 EPS REQUIRED
             if latest.eps is not None:

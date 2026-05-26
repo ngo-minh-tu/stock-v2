@@ -6,12 +6,12 @@ import {
   Legend,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 
+import { ResponsiveChart } from '@/components/charts/ResponsiveChart';
 import type { BacktestMetrics } from '@/lib/types';
 
 interface Props {
@@ -22,7 +22,7 @@ export function BacktestRoiChart({ data }: Props) {
   const t = useTranslations('backtest.chart');
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveChart>
       <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-theme-charcoal)" opacity={0.4} />
         <XAxis
@@ -64,6 +64,6 @@ export function BacktestRoiChart({ data }: Props) {
           dot={false}
         />
       </LineChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

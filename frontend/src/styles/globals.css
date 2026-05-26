@@ -1,8 +1,12 @@
+@import './themes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import './themes.css';
+:root {
+  --font-roboto: Roboto, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
 
 html,
 body {

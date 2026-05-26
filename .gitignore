@@ -25,6 +25,8 @@ pnpm-debug.log*
 
 # Coverage / testing
 coverage/
+playwright-report/
+test-results/
 
 # Backend (cluster sau)
 backend/__pycache__/

@@ -1,8 +1,8 @@
 {
   "app": {
     "brand": {
-      "name": "Ngô Minh Tú",
-      "tagline": "Navigation data, the decision is yours"
+      "name": "Founder: Ngô Minh Tú",
+      "tagline": "Slogan: Dữ liệu dẫn đường, quyết định thuộc về bạn!"
     }
   },
   "auth": {
@@ -93,6 +93,7 @@
     "loading": "Loading dashboard…",
     "errorLoad": "Could not load dashboard. Please retry.",
     "runId": "Run: {id}",
+    "disclaimer": "Macro inputs (interest, credit, CPI, VN-Index) are hardcoded Q2 2026 stubs. Alpha vs VN-Index uses heuristic proxy (mean MUA upside − 5%). SBV/GSO crawler and per-ticker VN-Index strict comparison are post-MVP.",
     "empty": {
       "message": "No data yet — press Run to start your first screening."
     },
@@ -111,19 +112,28 @@
       },
       "pie": {
         "title": "Recommendation breakdown",
-        "subtitle": "BUY / HOLD / SELL"
+        "subtitle": "BUY / HOLD / SELL",
+        "insight": "General view: {leader} is the largest group with {leaderCount}/{total} tickers. The current structure contains {buy} BUY, {hold} HOLD, and {sell} SELL tickers; when HOLD/SELL dominates, the market is leaning toward confirmation-seeking rather than aggressive position expansion.",
+        "insightEmpty": "General view: there is not enough recommendation data to assess the BUY/HOLD/SELL structure."
       },
       "line": {
         "title": "VN-Index & Real Estate trend",
-        "subtitle": "Last 6 months"
+        "subtitle": "Last 6 months",
+        "insight": "General view: over the displayed period, VN-Index changed {vnindex}, while the real-estate group changed {sector}. The sector's relative spread versus the market is {spread}; a positive spread indicates stronger sector flow, while a negative spread calls for relative-strength caution."
       },
       "bar": {
         "title": "Top 10 by AI Score",
-        "subtitle": "Sorted descending"
+        "subtitle": "Sorted descending",
+        "insight": "General view: {ticker} leads with an AI Score of {topScore}; the average score of the top {total} is {avgScore}. This group contains {buyCount}/{total} BUY tickers, indicating how concentrated high-quality opportunities are in the current run.",
+        "insightEmpty": "General view: there is not enough top-score data to assess the leading group.",
+        "tooltip": {
+          "recommendation": "Recommendation"
+        }
       },
       "radar": {
         "title": "5-group feature radar",
-        "subtitle": "Sector average"
+        "subtitle": "Sector average",
+        "insight": "General view: the run-level radar shows Fundamental at {fundamental}/100, Technical at {technical}/100, Macro at {macro}/100, Real estate at {realestate}/100, and Sentiment at {sentiment}/100. The strongest contributor is {strongest} ({strongestScore}/100), while the main constraint is {weakest} ({weakestScore}/100). Therefore, the tables below should be read by checking whether leading tickers are supported by company fundamentals, macro/credit context, or mostly short-term price action."
       }
     },
     "runSelector": {
@@ -136,9 +146,12 @@
     "searchPlaceholder": "Search ticker or name…",
     "noMatch": "No tickers match the filter.",
     "exportPdfTopMua": "Export Top BUY PDF",
+    "sectionTitle": "Top {recommendation}",
+    "sectionSubtitle": "Top {count} tickers by AI Score",
     "empty": {
       "title": "No BUY recommendations in this run",
-      "hint": "Try lowering the BUY threshold in Settings (Cluster 6)."
+      "hint": "Try lowering the BUY threshold in Settings (Cluster 6).",
+      "notice": "Note: No {recommendation} recommendations in this run. The table will appear automatically when {recommendation} recommendations exist."
     },
     "column": {
       "ticker": "Ticker",
@@ -158,6 +171,7 @@
       "allocation": "Allocation",
       "confidence": "Confidence raw − penalty",
       "warnings": "Warnings",
+      "noReasons": "No detailed reasons are available for this ticker in the current run.",
       "noWarnings": "No warnings.",
       "viewDetail": "View detail"
     }
@@ -201,10 +215,13 @@
     "loading": "Loading stock detail…",
     "errorTitle": "Failed to load stock detail",
     "errorBody": "Ticker not in this run or was excluded.",
+    "excludedTitle": "Ticker was excluded from this run",
+    "excludedBody": "{ticker} was excluded in round {round}: {reason} ({code}).",
     "noRun": "No runs yet — press \"Run\" in the header to start an analysis.",
     "missingTicker": "URL is missing a ticker. Open Top MUA and click \"View detail\" to land here with the right context.",
     "header": {
       "aiScore": "AI Score",
+      "currentPrice": "Current price",
       "runSelector": "Runs that scored this ticker"
     },
     "candlestick": {
@@ -248,11 +265,37 @@
     "breakdown": {
       "title": "Score breakdown",
       "subtitle": "5-axis radar · {availability}/38 features available",
+      "scoreLabel": "Score",
       "showFeatures": "Show 38 features",
       "hideFeatures": "Hide 38 features",
       "legend": {
         "ticker": "{ticker}",
         "industry": "Industry avg"
+      },
+      "narrative": {
+        "title": "Investment thesis",
+        "inputsTitle": "I. Data scope and synthesis method",
+        "inputsBody": "The model evaluates five classes of variables: (1) quarterly financial statements and earnings quality; (2) capital structure, leverage, and operating cash flow; (3) technical market signals and price-volume state; (4) macro conditions, policy, interest rates, and credit; and (5) real-estate-specific attributes, news flow, and sentiment. In the current observation set, the most supportive group is {strongest} ({strongestScore}/100), while the most restrictive group is {weakest} ({weakestScore}/100).",
+        "evidenceTitle": "II. Traceable quantitative evidence",
+        "decisionTitle": "III. Quantitative conclusion: {recommendation}",
+        "decision": {
+          "positive": "With an AI score of {score}/100, expected upside of {upside}%, and confidence of {confidence}%, the BUY conclusion is supported by {strongest} as the main pillar ({strongestScore}/100), an average radar score of {radarAverage}/100, and a {spread}-point spread between the strongest and weakest groups. The constraint to monitor is {weakest} ({weakestScore}/100); with {warnings} warnings and {imputed} imputed features, the buy case remains preferable only if the weakest group does not deteriorate.",
+          "neutral": "With an AI score of {score}/100, expected upside of {upside}%, and confidence of {confidence}%, the HOLD conclusion reflects insufficient agreement across score groups. {strongest} is currently the strongest support ({strongestScore}/100), but {weakest} is only {weakestScore}/100, creating a {spread}-point gap versus the leading group. The average radar score is {radarAverage}/100; together with {warnings} warnings and {imputed} imputed features, this favors observation over adding exposure.",
+          "negative": "With an AI score of {score}/100, expected upside of {upside}%, and confidence of {confidence}%, the SELL conclusion follows from a weaker reward/risk profile and an average radar score of {radarAverage}/100. Although {strongest} remains the relative support ({strongestScore}/100), {weakest} at {weakestScore}/100 lowers the overall profile; the {spread}-point dispersion, {warnings} warnings, and {imputed} imputed features make risk reduction the preferred stance."
+        },
+        "flowTitle": "IV. Implications for money flow and market psychology",
+        "flow": {
+          "positive": "{recommendation} implies a more constructive psychological regime for quantitative and trend-following investors. Nevertheless, incremental inflow still depends on confirming liquidity, credit conditions, and the broader market backdrop. Current risk warnings: {warnings}.",
+          "neutral": "{recommendation} reflects an equilibrium between opportunity and risk. Capital flows are likely to await additional confirmation from the next quarterly financial statements, real-estate credit, policy execution, and price action. Market psychology therefore remains cautious, favoring observation over aggressive accumulation. Current risk warnings: {warnings}.",
+          "negative": "{recommendation} implies a more defensive psychological regime. Short-term capital may reduce exposure or rotate toward lower-risk tickers; re-entry depends on clear improvement in macro, credit, legal, liquidity, or earnings conditions. Current risk warnings: {warnings}."
+        },
+        "source": {
+          "fundamental": "Source: quarterly financials",
+          "technical": "Source: price/volume data",
+          "macro": "Source: macro/policy/credit",
+          "realestate": "Source: RE-specific/NAV/legal",
+          "sentiment": "Source: news/sentiment"
+        }
       }
     },
     "feature": {
@@ -297,6 +340,7 @@
       "allocation": {
         "title": "Capital allocation",
         "skipped": "Allocation skipped — no total capital entered for this run.",
+        "notBuy": "No capital allocated because this ticker is {recommendation}. The {total} VND total capital is allocated only across BUY recommendations in this run.",
         "weight": "{pct}% weight across MUA tickers",
         "basedOn": "Based on total capital {total} VND entered when running"
       },
@@ -315,6 +359,7 @@
     "loading": "Loading price board…",
     "errorLoad": "Could not load the price board. Please retry.",
     "subtitle": "{count} tickers · mock refreshes per page reload",
+    "missingData": "{count} ticker(s) hidden — no price snapshot yet. Run /api/refresh/all to backfill.",
     "search": {
       "placeholder": "Search ticker (VHM, KDH…)"
     },
@@ -353,6 +398,15 @@
   "news": {
     "loading": "Loading news…",
     "errorLoad": "Could not load news. Please retry.",
+    "disclaimer": "News crawled from CafeF/VnExpress/Vietstock/Batdongsan/ThanhNien — RSS first → HTML fallback. Click \"Refresh\" to fetch latest.",
+    "refresh": {
+      "button": "Refresh",
+      "loading": "Refreshing…",
+      "successTitle": "News refreshed",
+      "successMessage": "Stored {inserted} new articles. Total crawled: {total} from 5 sources.",
+      "partialTitle": "Some sources failed",
+      "errorTitle": "Refresh failed"
+    },
     "filter": {
       "title": "News filters",
       "open": "Open filters",
@@ -411,7 +465,8 @@
       "minutesAgo": "{n}m ago",
       "hoursAgo": "{n}h ago",
       "daysAgo": "{n}d ago",
-      "justNow": "just now"
+      "justNow": "just now",
+      "unknown": "time unknown"
     }
   },
   "portfolio": {
@@ -468,7 +523,7 @@
         "dateFuture": "Buy date cannot be in the future.",
         "serverError": "Server error. Please retry."
       },
-      "add": "Add",
+      "submitAdd": "Add",
       "save": "Save",
       "cancel": "Cancel",
       "submitting": "Saving…",
@@ -603,6 +658,7 @@
     }
   },
   "backtest": {
+    "disclaimer": "Backtest uses a heuristic mock: MUA → positive return, GIU → −7%..+12%, BAN → negative return. Strict per-ticker VN-Index comparison (PRD §4.5) is post-MVP.",
     "modal": {
       "title": "Run a backtest",
       "description": "Pick a window. The system compares predictions with actual 3-month returns.",
@@ -773,7 +829,8 @@
     "close": "Close",
     "preview": {
       "title": "PDF preview",
-      "download": "Download"
+      "download": "Download",
+      "binaryReady": "The PDF is ready. If your browser cannot show the preview, click Download to save the file."
     },
     "error": {
       "title": "Export failed"

@@ -96,24 +96,25 @@ function SRBar({
         style={{ left: `calc(${pos}% - 2px)`, backgroundColor: 'var(--color-theme-text-tertiary)' }}
       />
       <span
-        className="absolute -top-3.5 text-2xs tabular-nums"
-        style={{ left: `${supX}%`, transform: 'translateX(-50%)', color: 'var(--ssi-up)' }}
+        className="absolute text-2xs tabular-nums whitespace-nowrap leading-none"
+        style={{ left: `${supX}%`, transform: 'translateX(-50%)', top: -20, color: 'var(--ssi-up)' }}
       >
         S {support.toFixed(2)}
       </span>
       <span
-        className="absolute -bottom-4 text-2xs tabular-nums"
+        className="absolute text-2xs tabular-nums whitespace-nowrap leading-none"
         style={{
           left: `calc(${pos}% - 2px)`,
           transform: 'translateX(-50%)',
+          bottom: -18,
           color: 'var(--color-theme-text-tertiary)',
         }}
       >
         ▲ {current.toFixed(2)}
       </span>
       <span
-        className="absolute -top-3.5 text-2xs tabular-nums"
-        style={{ left: `${resX}%`, transform: 'translateX(-50%)', color: 'var(--ssi-down)' }}
+        className="absolute text-2xs tabular-nums whitespace-nowrap leading-none"
+        style={{ left: `${resX}%`, transform: 'translateX(-50%)', top: -20, color: 'var(--ssi-down)' }}
       >
         R {resistance.toFixed(2)}
       </span>
