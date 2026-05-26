@@ -7,7 +7,7 @@ Retrospective focus: PLAN scope chỉ 1 file (mvp/README.md), user expand → 3 
 
 ## Surprises / non-obvious
 
-- **PLAN.md row 11 đã obsolete partially**: PLAN ghi "poetry install, alembic upgrade, seed, uvicorn run" — nhưng Phase 0 chốt uv 2026-05-10. README phải dùng `uv sync` + `uv run`. PLAN doc historical, không touch ngược. **Lesson: PLAN.md là build-time spec, post-build doc (README) phải follow reality, không PLAN.**
+- **PLAN.md row 11 đã obsolete partially**: PLAN ghi "poetry install, alembic upgrade, seed, uvicorn run" — nhưng Phase 0 chốt uv 2026-05-10. README phải dùng `uv sync` + `uv run`. Tại Phase 11, PLAN được giữ như build-time spec; ghi chú này đã được supersede ngày 2026-05-19 khi PLAN.md được cập nhật ledger Phase 0-15. **Lesson: post-build docs phải follow reality, không follow spec cũ.**
 - **frontend/README cluster-1-era confused nhiều hơn empty**: Existing FE README phản ánh trạng thái cluster 1 (Shell + Foundation, 8 ComingSoon pages, MSW always-on). Sau cluster 2-6 + Phase 9 swap, README mismatch ~80% nội dung. **Patch không khả thi — phải replace toàn bộ.** Lesson: stale README tệ hơn no README vì người đọc tin nội dung sai.
 - **`script/run-prototype.sh` vẫn trỏ `prototype/` (frozen 2026-05-08)**: Initial instinct: update script trỏ `frontend/`. Nhưng prototype frozen làm reference snapshot — script still useful khi cần xem UI cluster 1-6 state. Không touch. Document trong root README §2 rằng prototype = frozen.
 - **Idempotent seed silent: "stocks already seeded; skipping"**: smoke verify seed lần 2 (Phase 0-10 đã seed) → log all "already seeded; skipping", seed_counts `{stocks: 0, settings: 0, ...}`. Behavior đúng nhưng user lần đầu chạy có thể nhầm "seed fail". README §2.4 nói rõ "idempotent — re-run an toàn".
@@ -23,9 +23,9 @@ Retrospective focus: PLAN scope chỉ 1 file (mvp/README.md), user expand → 3 
 - **Endpoint examples = happy path đầy đủ (login → run → portfolio → share + PDF)**: Cover 80% case tester verify. Còn 20% explore qua FastAPI auto-docs `/docs` (Swagger UI built-in). Không cần list 39 endpoint với curl từng cái — cost > benefit.
 - **Docker section trong mvp/README chỉ, không root**: Root README giữ quick-start tối giản (5 phút). Docker = backend ops concern, người cần Docker đã tới mvp/. Phân tách đúng audience.
 - **Troubleshooting top 5 entries thực sự encountered**: DB locked (operational), fixture pollution (Phase 10 hit), vnstock fail (Phase 3 design), telegram empty (Phase 8 default), port conflict (basic). High-signal vì là pain points thực, không hypothetical.
-- **PLAN.md không update ngược**: PLAN row 11 còn ghi "poetry install". README dùng `uv`. PLAN = historical build-time spec, README = current-state ops doc. Update PLAN sẽ rewrite lịch sử build → reject. Documented mismatch trong Phase 11 SUMMARY §2 #1.
+- **PLAN.md update ngược**: tại Phase 11, PLAN row 11 còn ghi "poetry install" và được giữ như historical build-time spec. Quyết định này đã được supersede ngày 2026-05-19: PLAN.md hiện được cập nhật thành ledger Phase 0-15 để khớp README/report hiện hành.
 - **Smoke test commands BEFORE commit README**: Phase 11 §4 verify thực sự chạy `uv sync` + `alembic upgrade` + `seed` + `uvicorn` + `curl health/version/login/pwd-change`. Không trust spec — verify reality match README claim. Cost: +5 phút, savings: zero "README says X but actually Y" support requests.
-- **TAD §1 endpoint registry gap KHÔNG update Phase 11**: out of scope. Documented trong `report/mvp-build-summary.md §4.C` + Phase 6 SUMMARY drift carryover. Post-MVP TAD doc patch task.
+- **TAD §1 endpoint registry gap KHÔNG update Phase 11**: out of scope. Documented trong `report/mvp-build/SUMMARY.md §4.C` + Phase 6 SUMMARY drift carryover. Post-MVP TAD doc patch task.
 
 ## To revisit
 

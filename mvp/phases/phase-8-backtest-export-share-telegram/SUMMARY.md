@@ -2,7 +2,7 @@
 
 **Status:** COMPLETED 2026-05-10
 **Estimate vs actual:** 1.5d / ~3h
-**Spec ref:** [PLAN.md §3 row 8](../../PLAN.md), [SRS f12](../../../docs/srs/f12-run-history-backtest.md), [SRS f13](../../../docs/srs/f13-export-share.md), [SRS f14](../../../docs/srs/f14-telegram-bot.md), [TAD g02 §1+§8.5-8.6+§9](../../../docs/tad/g02-api.md), [TAD c06](../../../docs/tad/c06-pdf-share.md), [TAD c07](../../../docs/tad/c07-telegram.md), [cluster-5-summary](../../../report/cluster-5-summary.md), [cluster-6-summary](../../../report/cluster-6-summary.md)
+**Spec ref:** [PLAN.md §3 row 8](../../PLAN.md), [SRS f12](../../../docs/srs/f12-run-history-backtest.md), [SRS f13](../../../docs/srs/f13-export-share.md), [SRS f14](../../../docs/srs/f14-telegram-bot.md), [TAD g02 §1+§8.5-8.6+§9](../../../docs/tad/g02-api.md), [TAD c06](../../../docs/tad/c06-pdf-share.md), [TAD c07](../../../docs/tad/c07-telegram.md), [cluster-5-summary](../../../report/cluster-prompts/cluster-5-summary.md), [cluster-6-summary](../../../report/cluster-prompts/cluster-6-summary.md)
 
 ## 1. Scope
 

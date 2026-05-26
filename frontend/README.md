@@ -2,15 +2,15 @@
 
 > *Dữ liệu dẫn đường, quyết định thuộc về bạn* — Ngô Minh Tú
 
-Next.js 14 App Router frontend cho VN RE AI Screener. Fork từ [prototype/](../prototype/) ngày 2026-05-09; Phase 9 đã swap MSW → backend FastAPI thực ([mvp/](../mvp/)).
+Next.js **16** App Router frontend cho VN RE AI Screener. Fork từ [prototype/](../prototype/) ngày 2026-05-09; Phase 9 đã swap MSW → backend FastAPI thực ([mvp/](../mvp/)).
 
-**Status (2026-05-20):** Phase 9 complete + Phase 10 bug fix integrated. Cluster 1-6 UI features hoàn chỉnh. Backend đã ship qua Phase 18 (Mốc 2 + Mốc 3 steps 1-7) với prod-screener.db real data; FE chưa cần thay đổi cho phần đó. ⚠️ Phase 18 audit phát hiện 3 FE vulns (1 critical `next` + 2 moderate `next-intl`/`postcss`) — cần Next 16 breaking upgrade trong cycle riêng (Phase 19+). Playwright critical-path smoke Phase 19 sẽ chạy ở đây.
+**Status (2026-05-24):** Phase 9 swap MSW→real done; cluster 1-6 UI hoàn chỉnh. Backend đã ship qua Phase 28 + post-Phase deferral closure (macro crawler, PRD §4.5 backtest strict, Turbopack). **Phase 24 đóng Track 1 Security:** Next 14.2.15 → **16.2.6** + next-intl 4.12.0 + eslint 9 + eslint-config-next 16. **Turbopack migration closed:** `npm run dev` / `npm run build` dùng Next 16 default Turbopack, không còn `--webpack`; production build 14 routes pass. **Phase 19 (E2E):** `@playwright/test` + `tests/e2e/smoke.spec.ts` (8-path stateful journey login → refresh → run → dashboard → portfolio → backtest → share → PDF); 8/8 pass. ✅ **Ngrok hand-off blocker cleared.**
 
 ---
 
 ## 1. Yêu cầu môi trường
 
-- Node 20+ (Next 14 không hỗ trợ Node 17 cũ)
+- Node 20.9+ (Next 16 yêu cầu — Node 18 không còn support)
 - npm 10+ (đi kèm Node 20)
 - Backend MVP chạy ở `http://localhost:8000` (xem [mvp/README.md](../mvp/README.md)). Với demo ổn định, backend nên dùng `mvp/code/env.demo.example` + `app.db.demo_seed`.
 
@@ -54,13 +54,21 @@ Frontend hỗ trợ 2 chế độ qua env var:
 
 ```bash
 npm install          # install deps
-npm run dev          # dev server, port 3000
-npm run build        # next build (TypeScript + ESLint) — 14 routes
+npm run dev          # dev server (next dev / Turbopack), port 3000
+npm run build        # next build / Turbopack (TypeScript + route prerender) — 14 routes
 npm run start        # production server (sau npm run build)
 npm run lint         # next lint
 npm run msw:init     # regenerate public/mockServiceWorker.js (1 lần đã sẵn)
 npx tsc --noEmit     # type check thuần (không emit)
+
+# E2E (Phase 19)
+npm run e2e          # CI=1 npx playwright test (8/8 smoke)
+npm run e2e:headed   # visible browser, debug
+npm run e2e:ui       # Playwright UI mode (timeline + traces)
+npm run e2e:report   # open last HTML report
 ```
+
+E2E webServer tự bật BE + FE prod build qua `playwright.config.ts`; BE chạy `script/e2e-start-backend.sh` ở mode `APP_ENV=demo` + `VNSTOCK_CLIENT_STUB=true` + `EXPORT_PDF_MODE=html_mock`. Spec: [tests/e2e/smoke.spec.ts](tests/e2e/smoke.spec.ts). Detail: [phase-19 SUMMARY](../mvp/phases/phase-19-playwright-smoke/SUMMARY.md).
 
 ---
 
@@ -68,15 +76,16 @@ npx tsc --noEmit     # type check thuần (không emit)
 
 | Package | Vai trò | Notes |
 |---|---|---|
-| `next` 14 | App Router + RSC | Single-user, không locale URL prefix |
-| `react` 18 + `react-dom` | Core | Client components dùng `'use client'` |
+| `next` **16.2.6** | App Router + RSC | Single-user, không locale URL prefix. Turbopack default đã pass build; `--webpack` pin removed |
+| `react` 18.3.1 + `react-dom` | Core | Client components dùng `'use client'`. React 19 defer (Recharts/lightweight-charts compat) |
 | `tailwindcss` | Styling | CSS variables cho 4 theme (TAD g09) |
-| `lightweight-charts` | Candlestick chart | Stock Detail page (cluster 3) |
-| `recharts` | Radar / treemap / line / doughnut | Dashboard + Backtest + Risk panels |
+| `lightweight-charts` 4.2 | Candlestick chart | Stock Detail page (cluster 3) |
+| `recharts` 2.13 | Radar / treemap / line / doughnut | Dashboard + Backtest + Risk panels |
 | `@tanstack/react-table` | Tables + sorting + filtering | Top MUA, Red Flags, Run History |
-| `next-intl` | i18n VIE/ENG | Default + fallback VIE |
+| `next-intl` **4.12.0** | i18n VIE/ENG | Default + fallback VIE. v4 client API zero breaking trên codebase hiện tại |
 | `lucide-react` | Icons | Lightweight SVG set |
 | `msw` | Mock Service Worker | Opt-in fallback cho offline demo |
+| `eslint` 9 + `eslint-config-next` 16 | Lint | Peer-dep block trên Next 16 — bump cùng phase |
 
 ---
 
@@ -202,4 +211,4 @@ Tham khảo Phase 18 SUMMARY [report/phase-mvp/phase-18-mvp-release-hardening/SU
 
 ---
 
-*Cập nhật 2026-05-20 (Phase 18 release hardening đã đóng — backend side; FE security upgrade defer Phase 19+).*
+*Cập nhật 2026-05-24 (Phase 24 đóng — Next 14.2.15 → 16.2.6 + next-intl 4.12 + eslint 9; Turbopack default; Playwright 8/8 vẫn pass trên Next 16; ngrok hand-off blocker cleared. Phase 25-28 đóng các polish kèm theo: schema `latest_price`→`latest`, disclaimer banner + InfoBanner dismiss/LocalStorage, bvps fallback + KBS snapshot, useExportPdf binary-safe, PriceBoard placeholder.).*

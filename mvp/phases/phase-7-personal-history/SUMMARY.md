@@ -2,7 +2,7 @@
 
 **Status:** COMPLETED 2026-05-10
 **Estimate vs actual:** 1d / ~2h
-**Spec ref:** [PLAN.md §3 row 7](../../PLAN.md), [SRS f11](../../../docs/srs/f11-portfolio-lite.md), [SRS g03 §S](../../../docs/srs/g03-appendix-enums-constants.md), [TAD g02 §1 + §8.1 + §8.2](../../../docs/tad/g02-api.md), [cluster-5-summary §3](../../../report/cluster-5-summary.md)
+**Spec ref:** [PLAN.md §3 row 7](../../PLAN.md), [SRS f11](../../../docs/srs/f11-portfolio-lite.md), [SRS g03 §S](../../../docs/srs/g03-appendix-enums-constants.md), [TAD g02 §1 + §8.1 + §8.2](../../../docs/tad/g02-api.md), [cluster-5-summary §3](../../../report/cluster-prompts/cluster-5-summary.md)
 
 ## 1. Scope
 

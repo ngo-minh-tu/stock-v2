@@ -4,6 +4,8 @@
 **Estimate vs actual:** 1.5d / ~2h
 **Spec ref:** [PLAN.md §3 row 3](../../PLAN.md), [TAD g01](../../../docs/tad/g01-runtime.md), [TAD g04](../../../docs/tad/g04-cache.md), [TAD g05](../../../docs/tad/g05-cross-cutting.md), [SRS f01](../../../docs/srs/f01-core-screening-pipeline.md)
 
+> Cập nhật 2026-05-19: ghi chú `fetch_financials()` là stub chỉ đúng tại thời điểm Phase 3. Phase 15 đã thay bằng ingestion BCTC thật qua `vnstock.api.financial.Finance` và upsert `financial_reports`.
+
 ## 1. Scope
 
 - **Job lock singleton** (TAD g05 §1) — single heavy job rule, in-memory registry

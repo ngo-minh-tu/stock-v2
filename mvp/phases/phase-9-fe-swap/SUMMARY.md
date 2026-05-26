@@ -174,7 +174,7 @@ Phase 10 (Integration QA + bug fixes — 1d) sẽ:
 - Run AC checklist 17 SRS files end-to-end với real backend
 - Regression theo cluster summaries §11 manual test
 - Bug fix nhỏ phát sinh khi user duyệt 8 page routes + 4 themes + VIE/EN
-- Generate `report/mvp-build-summary.md` document drift / TODO post-MVP
+- Generate `report/mvp-build/SUMMARY.md` document drift / TODO post-MVP
 
 Đã sẵn sàng:
 - 39 backend endpoints (Phase 0-8) — full TAD g02 §1 registry covered
@@ -195,7 +195,7 @@ Phase 10 (Integration QA + bug fixes — 1d) sẽ:
 - Compare panel 4-section render từ real /api/runs/{a}/compare/{b}
 - Portfolio CRUD → backend persist; reload page giữ nguyên (KHÔNG reset như prototype mock)
 - News page 150 articles seed — verify pagination + filter
-- Phase 10 generate `report/mvp-build-summary.md`
+- Phase 10 generate `report/mvp-build/SUMMARY.md`
 
 ## 9. Post-phase fixes
 

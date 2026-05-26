@@ -18,6 +18,7 @@ version: v1.4 LOCKED (cluster 5 reconciliation)
 ## Changelog
 
 - **v1.4 (2026-05-09, cluster 5 reconciliation):** ❌ REMOVED UC-12-02 old compare schema `{ added_to_buy, removed_from_buy, score_changes, new_warnings, resolved_warnings }` → ✅ REPLACED bằng prototype shape `{ summary_diff, recommendation_changes, new_entries, removed, score_distribution }` (cluster 5 chose prompt §4.3 over old SRS for richer compare UX). ❌ REMOVED UC-12-01 list display 6-col stub → ✅ REPLACED bằng 11-col detailed spec. ❌ REMOVED AC-12-01 mơ hồ "Compare hiển thị mã thay đổi khuyến nghị" → ✅ REPLACED bằng AC cụ thể. ➕ ADDED 3 KPI cards (Total runs / Last run hover absolute / Avg accuracy backtest), MiniBars 3-bar pattern, Compare button A/B label, 7 historical seed runs + 5 new RunSummary fields (model_version, settings_version, duration_seconds, warnings_count, avg_score), DeleteRunModal, 4-branch compare toggle UX, ComparePanel 4 sections detailed (CompareSummary positiveIsGood, RecommendationChangesTable row tint, NewRemovedSection 2-col, ScoreHistogram 6 buckets), BacktestModal date cross-validation, 2-stage polling pattern + 1.5s timing, BacktestResultCard 4 metric cards (accuracy threshold ≥60% green/red), BacktestRoiChart 2-series Recharts, BacktestDetailTable error DESC. AC-12-07..18.
+- **Implementation note (2026-05-24):** Backend now uses strict PRD §4.5 correctness for backtest, comparing each recommendation against VN-Index benchmark where applicable. Static prototype data can stay illustrative; backend runtime follows the strict rules in AC-12-23.
 
 ## UC-12-01: View Run History
 
@@ -301,12 +302,12 @@ Gap giữa 2 line ≈ alpha (visualization).
 
 `results[]` rows dùng từ scored_count run mới nhất (~70-78 mã sau khi loại 4 vòng), KHÔNG full 81 universe. Lý do: nếu dùng 81 → có MOCK_INSUFFICIENT + mã loại 4 vòng → không có recommendation hợp lệ để compare. Card subtitle ghi rõ `correct/total`.
 
-**Heuristic correctness** (mock-only, prototype):
-- MUA correct: `actual_return_3m > 0`
-- GIỮ correct: `-7% ≤ actual_return_3m ≤ +12%`
-- BÁN correct: `actual_return_3m < 0`
+**Strict correctness** (backend runtime, PRD §4.5):
+- MUA correct: `actual_return_3m > 0` và `actual_return_3m > vnindex_roi`.
+- GIỮ correct: `-7% ≤ actual_return_3m ≤ +12%`.
+- BÁN correct: `actual_return_3m < 0` hoặc `vnindex_roi - actual_return_3m > BACKTEST_SELL_UNDERPERFORM`.
 
-Per [PRD §4.5 strict](../PRD_v0.5A_Final_Locked.md), backend phase phải check outperform VN-Index per-ticker — mock không track per-ticker VN-Index reference. **Trade-off:** acceptable cho prototype UX; backend (Phase 4) implement strict version.
+Prototype/mock-only builds may still use the old heuristic for static UX data, but backend runtime is the strict version above.
 
 ### Acceptance Criteria — Backtest
 
@@ -318,7 +319,7 @@ Per [PRD §4.5 strict](../PRD_v0.5A_Final_Locked.md), backend phase phải check
 | AC-12-20 | BacktestRoiChart 2-series LineChart; gap giữa 2 line ≈ alpha; theme-aware qua CSS var |
 | AC-12-21 | BacktestDetailTable 7 cột default sort `[price_error_pct DESC]`; "Đúng?" icon green check / red X |
 | AC-12-22 | Đang backtest → button "Run Backtest" disabled với label "Đang backtest…"; chưa có run nào → button disabled với title hint |
-| AC-12-23 | Recommendation accuracy mock dùng heuristic (MUA: return>0, GIỮ: -7..+12, BÁN: return<0); backend Phase 4 strict per [PRD §4.5](../PRD_v0.5A_Final_Locked.md) outperform VN-Index |
+| AC-12-23 | Recommendation accuracy backend dùng strict per [PRD §4.5](../PRD_v0.5A_Final_Locked.md): MUA phải dương và outperform VN-Index; GIỮ nằm trong band `BACKTEST_HOLD_RETURN_MIN/MAX`; BÁN âm hoặc underperform VN-Index vượt `BACKTEST_SELL_UNDERPERFORM`. |
 | AC-12-24 | Price error là mean absolute (không signed) |
 | AC-12-25 | Portfolio ROI giả lập dùng allocation weights từ run, chưa tính phí/slippage (post-MVP per PRD §3.4) |
 | AC-12-26 | Alpha = Portfolio ROI − VN-Index ROI; signed +/− render |

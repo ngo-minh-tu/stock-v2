@@ -12,7 +12,7 @@ End-to-end Integration QA cho MVP backend Phase 0-8 + FE Phase 9 swap. Three goa
 2. **AC checklist 17 SRS files** — audit code-level coverage cho mỗi SRS feature; identify drift hoặc missing implementation.
 3. **End-to-end smoke** — backend uvicorn live + curl across critical user flows (login → run lifecycle → results → portfolio CRUD → backtest → share + PDF → telegram).
 4. **Bug fix** — fix mọi schema drift hoặc runtime issue phát hiện trong QA.
-5. **Deliverable** — `report/mvp-build-summary.md` document drift + post-MVP TODO.
+5. **Deliverable** — `report/mvp-build/SUMMARY.md` document drift + post-MVP TODO.
 
 KHÔNG scope:
 - Visual / interactive browser QA (no Playwright/Cypress) — accepted as Phase 9 §6 followup.
@@ -59,7 +59,7 @@ Subagent-driven AC coverage audit của 17 SRS files vs backend implementation:
 | Path | Nội dung |
 |---|---|
 | [mvp/phases/phase-10-integration-qa/SUMMARY.md](.) | This file. |
-| [report/mvp-build-summary.md](../../../report/mvp-build-summary.md) | MVP build-wide summary — drift register, post-MVP backlog, ship-readiness checklist. |
+| [report/mvp-build/SUMMARY.md](../../../report/mvp-build/SUMMARY.md) | MVP build-wide summary — drift register, post-MVP backlog, ship-readiness checklist. |
 
 ### Sửa — Bug-1 schema reconcile (3 FE files)
 | Path | Thay đổi |
@@ -125,7 +125,7 @@ Subagent-driven AC coverage audit của 17 SRS files vs backend implementation:
 - **Phase 9 §6 carryovers still open**:
   - Stock Detail page interactive smoke (need real screened data) — verified via curl `/stocks/{ticker}` endpoint shape correct; FE compose pattern unchanged.
   - No FE unit tests / Playwright — accepted post-MVP backlog.
-  - `@/mocks/data/*` static reference imports — accepted, document in mvp-build-summary post-MVP backlog.
+  - `@/mocks/data/*` static reference imports — accepted, document in mvp-build/SUMMARY post-MVP backlog.
 
 ## 7. Test commands (reproducible)
 

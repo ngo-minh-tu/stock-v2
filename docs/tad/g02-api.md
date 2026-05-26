@@ -17,6 +17,7 @@ version: v1.5 LOCKED (cluster 6 reconciliation)
 - **v1.3 (2026-05-09, cluster 4 reconciliation):** ➕ Bổ sung §7 Key Response Shapes (Cluster 4): `GET /api/stocks` (LatestPrice + newly_listed flag), `GET /api/news` (source_errors envelope + pagination), `GET /api/news/sentiment/{ticker}` (30-day rollup, count=0 → NEUTRAL/0.0/empty breakdown). Bump `srs_version: v1.2 → v1.4`, `tad_version: v1.2 → v1.3`.
 - **v1.4 (2026-05-09, cluster 5 reconciliation):** ❌ §1 endpoint registry: `DELETE /portfolio/{id}` 204 → **200 + envelope** (rationale §8.1). ➕ ADDED `DELETE /runs/{id}` (cluster 5 missing in original registry); ➕ ADDED `GET /backtest/{id}/status` + `GET /backtest/{id}/results` (cluster 5 2-stage polling). ➕ Bổ sung §8 Key Response Shapes (Cluster 5): PortfolioListResponse + HoldingRow joined, validateHolding mirror, DELETE 200+envelope rationale, CompareResponse 4 sub-shapes, RunSummary expanded với 5 new fields, Backtest 2-stage polling shapes + 1.5s timing. Bump `srs_version: v1.4`, `tad_version: v1.3 → v1.4`.
 - **v1.5 (2026-05-09, cluster 6 reconciliation):** ➕ §1 ADDED `DELETE /share/{token}` 200+envelope (cluster 6); UPDATE `POST /share`, `GET /share` (list active), `GET /share/{token}` (public, no auth). ➕ Bổ sung §9 Key Response Shapes (Cluster 6): PDF Content-Disposition, Share CRUD shapes (uuid v4 + 7-day TTL), Telegram test mock 70/30, Password change return new token. Bump `tad_version: v1.4 → v1.5`.
+- **Implementation note (2026-05-24):** Backtest `recommendation_correct` now follows strict PRD §4.5 rather than prototype heuristic.
 
 ---
 
@@ -518,17 +519,17 @@ type BacktestResultsResponse = {
     actual_price: number;                 // mock: predicted × (1 ± errPct)
     price_error_pct: number;
     actual_return_3m: number;             // signed %
-    recommendation_correct: boolean;       // heuristic — xem SRS f12 AC-12-23
+    recommendation_correct: boolean;       // strict PRD §4.5 — xem SRS f12 AC-12-23
   }>;
 };
 ```
 
-**Mock heuristic correctness** (prototype, KHÔNG strict per PRD §4.5):
-- MUA: `actual_return_3m > 0`
+**Strict correctness** (backend runtime):
+- MUA: `actual_return_3m > 0` và `actual_return_3m > vnindex_roi`
 - GIỮ: `-7% ≤ actual_return_3m ≤ +12%` (xem g03 §K BACKTEST_HOLD_RETURN_*)
-- BÁN: `actual_return_3m < 0`
+- BÁN: `actual_return_3m < 0` hoặc `(vnindex_roi - actual_return_3m) > BACKTEST_SELL_UNDERPERFORM`
 
-Backend Phase 4 phải implement strict version với per-ticker VN-Index reference (mock không track).
+VN-Index benchmark lấy từ macro indicator `M05` trong cùng period khi có dữ liệu; nếu DB legacy chỉ có seed quarterly row thì fallback sang `DASHBOARD_VNINDEX_3M_PROXY_PCT`.
 
 ---
 
