@@ -1,6 +1,6 @@
 # VN Real Estate AI Screener
 
-> *Dữ liệu dẫn đường, quyết định thuộc về bạn* — Ngô Minh Tú
+> *Dữ liệu dẫn đường, quyết định thuộc về bạn* — Founder: Ngô Minh Tú
 
 AI-assisted screener cho cổ phiếu bất động sản niêm yết Việt Nam. Single-user MVP — frontend Next.js + backend FastAPI + SQLite.
 
