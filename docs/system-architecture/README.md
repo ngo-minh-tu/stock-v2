@@ -2,6 +2,7 @@
 title: System Architecture — Mermaid Diagrams
 source: tổng hợp từ docs/tad/ (00, g01-g08, c01-c10)
 generated: 2026-05-10
+reconciled: 2026-06-03 — synced tới code @ Phase 28 (FE Next 16.2.6 + Turbopack; macro fetch = World Bank API + vnstock VN-Index)
 status: companion to TAD v1.5 LOCKED
 ---
 
@@ -41,7 +42,7 @@ Bộ sơ đồ Mermaid tổng hợp kiến trúc hệ thống **VN Real Estate A
 
 | Layer | Stack |
 |---|---|
-| Frontend | Next.js 14+ App Router, React 18, TanStack Table v8, Recharts, Lightweight Charts v4.2.3, next-intl, Tailwind, Lucide, MSW (dev) |
+| Frontend | Next.js 16.2.6 App Router + Turbopack, React 18.3.1, TanStack Table v8, Recharts, Lightweight Charts v4.2.3, next-intl 4.12.0, Tailwind, Lucide, MSW (dev opt-in) |
 | Backend | Python 3.11+, FastAPI, SQLAlchemy 2.0 async, Alembic, Pydantic 2, httpx, pandas/numpy, scikit-learn, xgboost, tensorflow, vnstock, weasyprint |
 | Database | SQLite (WAL + busy_timeout=30s), 16 tables — migration-ready PostgreSQL |
 | Auth | JWT 24h + bcrypt, single-user MVP, localStorage token |

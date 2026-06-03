@@ -16,7 +16,7 @@ flowchart TB
     Viewer(["👤 Public viewer<br/>(read-only via /share/{token})"])
 
     %% Frontend
-    subgraph FE["🖥️ Frontend — Next.js 14+ App Router"]
+    subgraph FE["🖥️ Frontend — Next.js 16.2.6 App Router"]
         direction TB
         AppGroup["(app) — protected routes<br/>Dashboard · Top MUA · Red Flags<br/>Stock Detail · Price Board · News<br/>Portfolio · Run History · Settings"]
         AuthRoute["(auth) /login"]
@@ -40,7 +40,7 @@ flowchart TB
         direction TB
         VN["vnstock<br/>0.5s rate limit"]
         RSS["5 RSS feeds<br/>CafeF · VnExpress · Vietstock<br/>Batdongsan · ThanhNien"]
-        Macro["SBV / GSO<br/>(rates, CPI, FDI, credit)"]
+        Macro["World Bank API + vnstock<br/>(rates, CPI, credit, FDI proxies)<br/>VN-Index via vnstock<br/>→ cache buckets MACRO_SBV/GSO"]
         TG["Telegram Bot API"]
     end
 
@@ -80,5 +80,5 @@ flowchart TB
 ## Notes
 
 - **Single user MVP:** chỉ 1 PO duy nhất login bằng password → nhận JWT 24h. Public viewer của `/share/{token}` không có session, được bảo vệ bởi ngrok Basic Auth ở production (xem [c06 §8](../tad/c06-pdf-share.md)).
-- **External 4 nhóm:** vnstock (price + financials), 5 RSS news, SBV/GSO macro, Telegram outbound. Refresh chỉ chạy thủ công 1 lần/ngày — screening **không** fetch external (xem [g01 §1](../tad/g01-runtime.md)).
+- **External 4 nhóm:** vnstock (price + financials), 5 RSS news, macro (World Bank API + vnstock VN-Index — lưu vào cache buckets `MACRO_SBV`/`MACRO_GSO`; SBV/GSO = gốc chỉ báo, không crawl trực tiếp vì không có JSON endpoint ổn định; seed = fallback), Telegram outbound. Refresh chỉ chạy thủ công 1 lần/ngày — screening **không** fetch external (xem [g01 §1](../tad/g01-runtime.md)).
 - **Job lock** ngăn refresh/screening/backtest chạy đồng thời — chi tiết [diagram 07](07-cache-cross-cutting.md) và [g05 §1](../tad/g05-cross-cutting.md).

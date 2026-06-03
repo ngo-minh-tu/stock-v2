@@ -53,7 +53,7 @@ sequenceDiagram
     participant Reg as Job Registry<br/>(in-memory)
     participant Crawl as Crawlers
     participant DB as SQLite
-    participant Ext as vnstock /<br/>RSS / SBV / GSO
+    participant Ext as vnstock / RSS /<br/>World Bank + vnstock (macro)
 
     PO->>FE: Click "Cập nhật dữ liệu"
     FE->>API: POST /api/refresh/all
@@ -70,7 +70,7 @@ sequenceDiagram
         Crawl->>DB: upsert stock_prices
         Crawl->>Ext: GET financials (quarterly)
         Crawl->>DB: upsert financial_reports
-        Crawl->>Ext: GET macro (SBV/GSO)
+        Crawl->>Ext: GET macro (World Bank API M01-M04 + vnstock VN-Index M05)
         Crawl->>DB: upsert macro_data
         Crawl->>Ext: RSS crawl 5 sources
         Crawl->>Crawl: sentiment classify (keyword MVP)

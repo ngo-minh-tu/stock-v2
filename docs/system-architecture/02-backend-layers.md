@@ -54,7 +54,7 @@ flowchart TB
         direction LR
         c_vn[vnstock_client<br/>0.5s rate limit]
         c_news[news_crawler<br/>RSS → HTML fallback]
-        c_macro[macro_crawler<br/>SBV / GSO]
+        c_macro[macro_crawler<br/>World Bank + vnstock]
         c_cache[cache_manager<br/>source-level TTL]
     end
 

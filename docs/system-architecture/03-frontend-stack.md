@@ -5,7 +5,7 @@ source: TAD g05 §4 (provider stack), c08, c09, g01 §4 (hooks), g02 §5 (apiFet
 
 # 03 — Frontend Stack
 
-Next.js 14+ App Router. Single-user MVP, không SSR session — auth + theme + locale persist trong `localStorage`.
+Next.js 16.2.6 App Router + Turbopack (default, không còn `--webpack`). Single-user MVP, không SSR session — auth + theme + locale persist trong `localStorage`.
 
 ## Provider stack — 7 layers (cluster 2)
 

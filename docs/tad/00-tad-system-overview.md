@@ -107,7 +107,7 @@ Module-specific designs. Each component file points to its implementing SRS file
     │ SQLite  │ (16 tables)
     └─────────┘
          │
-    External: vnstock │ 5 news RSS │ SBV/GSO │ Telegram
+    External: vnstock │ 5 news RSS │ World Bank+vnstock (macro) │ Telegram
 ```
 
 ---
