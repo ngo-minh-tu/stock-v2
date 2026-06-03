@@ -981,7 +981,41 @@ Các bước người vận hành (operator) làm theo công thức này:
 
 ---
 
-## 6. License & author
+## 6. Vận hành theo quý — Quarterly refresh checklist
+
+> **Tại sao tách riêng theo quý?** Cron refresh hàng ngày ([script/cron-refresh.sh](script/cron-refresh.sh), 16:30 ICT) giữ **giá + tin tức** tươi. Nhưng **fundamentals (BCTC)** chỉ đổi **theo quý** khi doanh nghiệp công bố báo cáo — và đó là input làm dịch chuyển kết quả screening (Top Mua) mạnh nhất. TTL cache `VNSTOCK_FINANCIAL` = **30 ngày** ([sources.py](mvp/code/app/constants/sources.py)), nên refresh hàng ngày chỉ re-fetch BCTC khi đã stale. Mục này là **checkpoint thủ công** sau mỗi mùa BCTC.
+
+**Lịch công bố BCTC VN (tham chiếu — kiểm tra theo quy định hiện hành, TT96/2020 + sửa đổi):**
+
+| Quý | Doanh nghiệp công bố | Cửa sổ refresh nên chạy |
+|---|---|---|
+| Q1 | ~20-45 ngày sau 31/03 | đầu tháng 5 |
+| Q2 | ~20-45 ngày sau 30/06 | đầu tháng 8 |
+| Q3 | ~20-45 ngày sau 30/09 | đầu tháng 11 |
+| Q4 + năm (kiểm toán) | trong vòng 90 ngày sau 31/12 | cuối tháng 3 |
+
+> Mã công bố sớm/muộn khác nhau. Nên chạy 1 lần khi đa số đã ra (early window) + 1 lần "quét vét" ~2 tuần sau cho mã trễ.
+
+**Checklist mỗi quý (không cần cơ chế mới — tái dùng `refresh/all` sẵn có):**
+
+1. **Backup trước:** `bash script/backup-db.sh` (hot-backup + `PRAGMA integrity_check`).
+2. **Trigger refresh:** UI "Cập nhật dữ liệu" hoặc `bash script/cron-refresh.sh` (login → `POST /api/refresh/all` → poll `GET /api/refresh/{id}`). BG task ~14 phút (demo) / ~22 phút (full prod).
+   - *Tùy chọn hard-reset:* nếu nghi data trộn đơn vị (pre-Phase-22) hoặc muốn re-baseline → `bash script/pre-handoff-refresh.sh` (WIPE `financial_reports` rồi full refresh trên `prod-screener.db`, có prompt `[y/N]`).
+3. **Sanity-check sau refresh** (BCTC mới đã về đúng chưa):
+   - [ ] `financial_reports` có row `(year, quarter)` mới nhất cho các mã (Phase 15/21).
+   - [ ] No-downgrade upsert giữ giá trị tốt, không bị ghi đè bằng null (Phase 21 — [financial_repo.py](mvp/code/app/repositories/financial_repo.py)).
+   - [ ] Unit scaling đúng — đối chiếu vài mã với CafeF (vd NLG revenue ~1.279T VND, total_assets ~25.894T VND) (Phase 22).
+   - [ ] `bvps` có fallback khi nguồn thiếu (Phase 26).
+4. **Chạy lại screening** (`POST /api/run`): screening đọc DB/cache, **KHÔNG** fetch external → **bắt buộc chạy lại** thì scoring mới phản ánh BCTC mới.
+   - [ ] `scored_count` hợp lý, không sụt bất thường (mã rớt vòng data-quality vì BCTC thiếu?).
+   - [ ] Soát vài mã **flip in/out Top Mua** so với quý trước — đây là tín hiệu BCTC đã ngấm vào điểm.
+5. **Telegram (nếu bật):** xác nhận broadcast run-summary gửi được (Phase 23/28 — 429 retry).
+
+> Quy trình deploy/SSL/secret cho operator: [docs/DEPLOY.md](docs/DEPLOY.md). Mục này chỉ là nhịp dữ liệu theo quý, nằm trên cùng nền refresh hàng ngày.
+
+---
+
+## 7. License & author
 
 - **Author:** Ngô Minh Tú (Business-Analyst: Claude AI-OpenAI Codex)
 - **License:** Private — chưa cấp phép phân phối công khai.
