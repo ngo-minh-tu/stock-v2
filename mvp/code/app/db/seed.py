@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 REAL_TICKERS: list[tuple[str, str, str]] = [
     ("VHM", "Công ty Cổ phần Vinhomes", "HOSE"),
-    ("VIC", "Tập đoàn Vingroup", "HOSE"),
+    ("VIC", "Công ty Cổ phần Tập đoàn Vingroup", "HOSE"),
     ("NVL", "Công ty Cổ phần Tập đoàn Đầu tư Địa ốc No Va", "HOSE"),
     ("KDH", "Công ty Cổ phần Đầu tư và Kinh doanh Nhà Khang Điền", "HOSE"),
     ("NLG", "Công ty Cổ phần Đầu tư Nam Long", "HOSE"),

@@ -18,7 +18,7 @@ export interface StockSeed {
 
 const REAL_TICKERS: { ticker: string; name: string; exchange: 'HOSE' | 'HNX' | 'UPCOM' }[] = [
   { ticker: 'VHM', name: 'Vinhomes', exchange: 'HOSE' },
-  { ticker: 'VIC', name: 'Vingroup', exchange: 'HOSE' },
+  { ticker: 'VIC', name: 'Công ty Cổ phần Tập đoàn Vingroup', exchange: 'HOSE' },
   { ticker: 'NVL', name: 'No Va Land Investment', exchange: 'HOSE' },
   { ticker: 'KDH', name: 'Khang Điền', exchange: 'HOSE' },
   { ticker: 'NLG', name: 'Nam Long Investment', exchange: 'HOSE' },

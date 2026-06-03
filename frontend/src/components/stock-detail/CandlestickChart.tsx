@@ -24,6 +24,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useTheme } from '@/contexts/ThemeContext';
 import type {
   CandleInterval,
   CandleLookback,
@@ -173,6 +174,7 @@ export function CandlestickChart({
   loading,
 }: Props) {
   const t = useTranslations('stockDetail.candlestick');
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -442,39 +444,29 @@ export function CandlestickChart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overlays, t]);
 
-  // 4) Re-apply layout colors + repaint colored data when [data-theme] changes.
+  // 4) Re-apply layout colors + repaint colored data when theme changes.
   useEffect(() => {
-    const root = document.documentElement;
-    const apply = () => {
-      const chart = chartRef.current;
-      const candle = candleRef.current;
-      if (!chart || !candle) return;
-      chart.applyOptions(buildLayoutOptions());
-      const upColor = readVar('--ssi-up') || '#0bdf39';
-      const downColor = readVar('--ssi-down') || '#ff0017';
-      candle.applyOptions({
-        upColor,
-        downColor,
-        borderUpColor: upColor,
-        borderDownColor: downColor,
-        wickUpColor: upColor,
-        wickDownColor: downColor,
-      });
-      // Volume tints + overlay line colors are baked from CSS vars at draw time —
-      // re-paint them so they follow the new theme. MA lines use hard-coded
-      // hex (theme-agnostic) so they don't need re-tinting, but their data must
-      // be re-set if the candle series was replaced.
-      repaintData(barsRef.current);
-      if (indicatorsRef.current) repaintIndicators(barsRef.current, indicatorsRef.current);
-      if (overlaysRef.current) repaintOverlays(overlaysRef.current);
-    };
-    const observer = new MutationObserver((muts) => {
-      if (muts.some((m) => m.attributeName === 'data-theme')) apply();
+    const chart = chartRef.current;
+    const candle = candleRef.current;
+    if (!chart || !candle) return;
+    chart.applyOptions(buildLayoutOptions());
+    const upColor = readVar('--ssi-up') || '#0bdf39';
+    const downColor = readVar('--ssi-down') || '#ff0017';
+    candle.applyOptions({
+      upColor,
+      downColor,
+      borderUpColor: upColor,
+      borderDownColor: downColor,
+      wickUpColor: upColor,
+      wickDownColor: downColor,
     });
-    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
+    // Volume tints + overlay line colors are baked from CSS vars at draw time —
+    // re-paint them so they follow the new theme.
+    repaintData(barsRef.current);
+    if (indicatorsRef.current) repaintIndicators(barsRef.current, indicatorsRef.current);
+    if (overlaysRef.current) repaintOverlays(overlaysRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [theme]);
 
   const toggleMA = useCallback((key: MAKey) => {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -548,7 +540,7 @@ export function CandlestickChart({
                 ? 'var(--color-theme-text-tertiary)'
                 : 'var(--color-theme-text-secondary)',
               fontWeight: active ? 600 : 400,
-              backgroundColor: active ? 'var(--color-theme-input-bg)' : 'transparent',
+              backgroundColor: active ? 'var(--color-theme-input-background)' : 'transparent',
               opacity: disabled ? 0.35 : 1,
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
@@ -607,7 +599,7 @@ export function CandlestickChart({
             <div
               className="flex flex-wrap gap-x-3 gap-y-0.5 text-2xs px-2 py-1 rounded pointer-events-auto"
               style={{
-                backgroundColor: withAlpha(readVar('--color-theme-card-bg') || '#1e1e1e', 0.85),
+                backgroundColor: 'var(--color-theme-chart-overlay-bg)',
                 color: 'var(--color-theme-text-secondary)',
                 backdropFilter: 'blur(2px)',
               }}
@@ -658,10 +650,7 @@ export function CandlestickChart({
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded transition-opacity"
                     style={{
                       opacity: active ? 1 : 0.45,
-                      backgroundColor: withAlpha(
-                        readVar('--color-theme-card-bg') || '#1e1e1e',
-                        0.85,
-                      ),
+                      backgroundColor: 'var(--color-theme-chart-overlay-bg)',
                       color: 'var(--color-theme-text-secondary)',
                     }}
                   >
