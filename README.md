@@ -439,7 +439,7 @@ Phase folder 0-28 (mirror phase ledger §4) + phase-29 draft backlog:
 
 ### 5.5 `prototype/` — Reference FROZEN
 
-Layout Next.js giống `frontend/`. **Không sửa.** Chỉ dùng tham chiếu visual/behavior (cluster 1-6) cho `frontend/` active fork. Frozen 2026-05-08.
+Layout Next.js giống `frontend/`. **Không sửa.** Chỉ dùng tham chiếu visual/behavior (cluster 1-6) cho `frontend/` active fork. Frozen 2026-05-08. Đã bỏ script launcher riêng (`run-prototype.sh`); muốn xem lại chạy tay: `cd prototype && npm install && npm run dev`.
 
 ### 5.6 `plan/`, `prompts/`, `report/`
 
@@ -467,10 +467,9 @@ Layout Next.js giống `frontend/`. **Không sửa.** Chỉ dùng tham chiếu v
 
 | File | Công dụng | Liên hệ với file/folder nào |
 |---|---|---|
-| `run-frontend.sh` | Boot FE active `frontend/` ở chế độ dev, cài dependency nếu thiếu rồi chạy `npm run dev` theo `$PORT` (mặc định 3000). | **Chạm `frontend/`** — dùng cho app active, thay cho `run-prototype.sh` khi test sản phẩm hiện tại. Pair được với `run-ngrok.sh`. |
+| `run-frontend.sh` | Boot FE active `frontend/`: mặc định `dev` (hot reload); thêm `--prod` để `build`+`start` (bundle nhỏ ~10×, dùng khi share qua ngrok). Theo `$PORT` (mặc định 3000), tự `npm install` nếu thiếu. | **Chạm `frontend/`** — dùng cho app active. Pair được với `run-ngrok.sh` (dùng `--prod` khi expose ra ngoài). |
 | `run-backend.sh` | Boot backend local từ `mvp/code/`, dùng `uv run uvicorn app.main:app` theo `$PORT` (mặc định 8000). | **Chạm `mvp/code/`** — đọc env local/demo tuỳ cấu hình. Pair với `frontend/README.md` hoặc `run-frontend.sh` để chạy full stack. |
-| `run-prototype.sh` | Boot Next.js dev server của `prototype/` (cd vào `prototype/`, `npm install` nếu chưa có `node_modules/`, rồi `npm run dev -p $PORT`, mặc định 3000). | **Chỉ chạm `prototype/`** — không liên quan `frontend/` (FE active có quy trình riêng theo `frontend/README.md`). Pair với `run-ngrok.sh` để expose. |
-| `run-ngrok.sh` | Expose `http://localhost:$PORT` ra internet qua `ngrok http`. | **Cặp đôi với `run-frontend.sh` / `run-prototype.sh`** (cùng `$PORT`). Trong giai đoạn ngrok hand-off MVP cũng có thể trỏ vào FE active port 3000 hoặc backend port 8000 — tùy operator. Tham chiếu Phase 24 (BLOCKING ngrok cleared) trong [project_phase24_plus_roadmap]. |
+| `run-ngrok.sh` | Expose `http://localhost:$PORT` ra internet qua `ngrok http`. | **Cặp đôi với `run-frontend.sh`** (cùng `$PORT`; dùng `run-frontend.sh --prod` để share mượt qua tunnel). Trong giai đoạn ngrok hand-off MVP cũng có thể trỏ vào FE active port 3000 hoặc backend port 8000 — tùy operator. Tham chiếu Phase 24 (BLOCKING ngrok cleared) trong [project_phase24_plus_roadmap]. |
 | `backup-db.sh` | Hot-backup SQLite an toàn khi uvicorn đang serve qua `sqlite3 .backup`. Verify `PRAGMA integrity_check` rồi purge backup > `RETENTION_DAYS`. | **Đọc `mvp/code/data/screener.db`** (override qua `DB_PATH`). Ghi vào `BACKUP_DIR` (mặc định `./backups`). Documented trong **Phase 18 / Mốc 3 step 3** ([mvp/phases/phase-18-mvp-release-hardening/SUMMARY.md](mvp/phases/phase-18-mvp-release-hardening/SUMMARY.md)). Chạy qua cron trên server deploy template (xem `nginx.conf` + `docker-compose.yml`). |
 | `restore-db.sh` | Phục hồi SQLite từ backup do `backup-db.sh` tạo. Refuse chạy nếu `pgrep uvicorn app.main:app` đang chạy; move file hiện tại sang `.pre-restore-<ts>` trước khi overwrite (kể cả `-wal`/`-shm` sidecar). | **Ghi vào `mvp/code/data/screener.db`** (override qua arg 2). Đầu vào là file output của `backup-db.sh`. Cũng documented trong **Phase 18 / Mốc 3 step 3**. |
 | `cron-refresh.sh` | Login backend qua `POST /api/auth/login`, lấy JWT, gọi `POST /api/refresh/all`, poll `GET /api/refresh/{id}` đến terminal status. Schedule cron 09:30 UTC = 16:30 ICT. | **Gọi 3 endpoint thuộc `mvp/code/app/api/`**: `auth.py` (`/auth/login`), `refresh.py` (`POST /refresh/all` + `GET /refresh/{id}`). Service phía sau: `app/services/auth_service.py`, `app/services/refresh_service.py`. Documented trong **Phase 18 / Mốc 3 step 6** + TAD `g05` §3 refresh schedule. |
@@ -909,7 +908,7 @@ Mỗi thư mục `phase-N-…/` chứa 2 tờ:
 
 #### 5.8.6 Bản dựng thử đóng băng (`prototype/`)
 
-Bố cục giống `frontend/`. **Không sửa.** Chỉ xem lại để tham khảo cách làm cũ. Đã đóng băng từ 2026-05-08.
+Bố cục giống `frontend/`. **Không sửa.** Chỉ xem lại để tham khảo cách làm cũ. Đã đóng băng từ 2026-05-08. Không còn nút bấm riêng — muốn xem phải mở thư mục `prototype/` chạy tay.
 
 #### 5.8.7 Các thư mục phụ (`plan/`, `prompts/`, `report/`)
 
@@ -947,8 +946,7 @@ Bố cục giống `frontend/`. **Không sửa.** Chỉ xem lại để tham kh�
 |---|---|
 | `run-frontend.sh` | Bật giao diện chính (`frontend/`) lên xem ở máy mình. |
 | `run-backend.sh` | Bật máy chủ chính (`mvp/code/`) lên ở máy mình. |
-| `run-prototype.sh` | Bật bản dựng thử (`prototype/`) lên xem ở máy mình. |
-| `run-ngrok.sh` | Mở "đường hầm" cho người khác trên mạng vào máy mình xem được. Hay đi đôi với `run-frontend.sh` hoặc `run-prototype.sh`. |
+| `run-ngrok.sh` | Mở "đường hầm" cho người khác trên mạng vào máy mình xem được. Hay đi đôi với `run-frontend.sh` (thêm `--prod` để chạy mượt khi share). |
 | `backup-db.sh` | Sao lưu file dữ liệu chính (`screener.db`) sang chỗ an toàn. Có thể chạy lúc máy chủ đang phục vụ, không sao. |
 | `restore-db.sh` | Phục hồi dữ liệu từ bản sao lưu. Bắt buộc phải tắt máy chủ trước khi chạy. |
 | `cron-refresh.sh` | Đăng nhập máy chủ rồi bấm nút "làm mới dữ liệu" hàng ngày lúc 16:30 giờ Việt Nam. |

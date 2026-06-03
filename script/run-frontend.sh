@@ -8,7 +8,6 @@
 #   --rebuild    Bắt buộc build lại (chỉ áp dụng với --prod). Mặc định reuse `.next/` nếu có.
 #
 # Đổi port: PORT=3001 ./script/run-frontend.sh --prod
-#hãy
 # Ghi chú: không file data nào (DB, .env, telegram secret) bị động bởi build.
 # `.next/` chỉ là JS bundle compile output.
 set -euo pipefail

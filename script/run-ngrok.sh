@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Terminal 1 — chạy prototype
-# ./script/run-prototype.sh
+# Terminal 1 — chạy frontend (dùng --prod để share mượt qua tunnel, xem run-frontend.sh)
+# ./script/run-frontend.sh --prod
 #
 # Terminal 2 — expose ra internet
 # ./script/run-ngrok.sh
-# Đổi port nếu cần: PORT=3001 ./script/run-prototype.sh rồi PORT=3001 ./script/run-ngrok.sh.
+# Đổi port nếu cần: PORT=3001 ./script/run-frontend.sh --prod rồi PORT=3001 ./script/run-ngrok.sh.
 #
 # Public URL hiện tại (ngrok-free static domain):
 #   https://underpaid-nautical-revival.ngrok-free.dev
