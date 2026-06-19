@@ -2,7 +2,7 @@
 
 > *Slogan: Dữ liệu dẫn đường, quyết định thuộc về bạn* — Founder: Ngô Minh Tú
 
-AI-assisted screener cho cổ phiếu bất động sản niêm yết Việt Nam. Single-user MVP — frontend Next.js + backend FastAPI + SQLite.
+AI-assisted screener cho cổ phiếu bất động sản niêm yết trên sàn chứng khoán Việt Nam. Single-user MVP — frontend Next.js + backend FastAPI + SQLite.
 
 **Status (2026-05-24):** MVP Phase 0-28 đã ship + post-Phase deferral closure cho **Macro real crawler**, **Backtest strict PRD §4.5**, **Turbopack migration**. **Mốc 1+2+3+4 + Track 1+2+3+4+5+6 đóng.** Prod DB scored=17 với real vnstock data; financial values khớp CafeF (NLG revenue 1.279T VND, total_assets 25.894T VND). FE Next **16.2.6** + next-intl 4.12.0, `npm run dev/build` dùng Turbopack default (không còn `--webpack`). Playwright critical-path **8/8 pass**. InfoBanner dismiss + LocalStorage persist (Phase 28). Telegram 429 retry. Consolidated sanity guards. Extensible production secret-file guard. Period suffix log DEBUG. `useExportPdf` binary-safe (Phase 27). PriceBoard "Chưa có dữ liệu" placeholder. bvps fallback + KBS snapshot (Phase 26). Schema FE `latest_price`→`latest` (Phase 25). 3 disclaimer banner. Telegram broadcast wired. `docker-compose.yml` + `script/nginx.conf` + `docs/DEPLOY.md` production deploy template. BE **311/311 tests** baseline; latest targeted deferral regression **55/55 pass** + Turbopack build 14 routes pass. 0 known BE vulns · FE 0 critical. **Next:** operator deploy via Phase 27 template + `script/pre-handoff-refresh.sh` → ngrok hand-off → trader feedback → Phase 29+ optional.
 
